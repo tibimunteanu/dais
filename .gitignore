@@ -1,0 +1,16 @@
+# Binaries
+**/bin/
+!vendor/premake/bin/
+bin-int/
+
+# Custom files
+*.log
+**Profile*.json
+
+# Visual Studio files and folders
+.vs/
+**.sln
+**.vcxproj
+**.vcxproj.filters
+**.vcxproj.user
+
