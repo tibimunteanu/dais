@@ -21,6 +21,7 @@ namespace dais
         {
             for (size_t i = 0; i < m_Monitors.size(); i++)
             {
+                //TODO: m_Monitors[i]->RestoreOriginalGammaRamp();
                 delete m_Monitors[i];
             }
         }

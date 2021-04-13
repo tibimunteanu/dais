@@ -108,8 +108,8 @@ namespace dais
         VideoMode m_CurrentVideoMode = {};
         std::vector<VideoMode*> m_VideoModes = {};
 
-        GammaRamp m_OriginalGammaRamp;
-        GammaRamp m_CurrentGammaRamp;
+        GammaRamp m_OriginalGammaRamp = {};
+        GammaRamp m_CurrentGammaRamp = {};
 
     protected:
         Monitor();
@@ -124,8 +124,6 @@ namespace dais
         void GetPhysicalSize(int32_t* widthInMillimeters, int32_t* heightInMillimeters) const;
         const std::vector<VideoMode*>& GetVideoModes();
         VideoMode* GetVideoMode();
-        //void SetVideoMode(const VideoMode* desired);
-        //void RestoreVideoMode();
         void SetGamma(float gamma);
         const GammaRamp* GetGammaRamp();
         void SetGammaRamp(GammaRamp* ramp);
@@ -139,10 +137,8 @@ namespace dais
         virtual void PlatformGetContentScale(float* xScale, float* yScale) const = 0;
         virtual void PlatformGetVideoModes(std::vector<VideoMode*>& videoModes) = 0;
         virtual void PlatformGetVideoMode(VideoMode* videoMode) = 0;
-        //virtual void PlatformSetVideoMode(const VideoMode* desired);
-        //virtual void PlatformRestoreVideoMode();
-        virtual bool PlatformGetGammaRamp(GammaRamp* ramp);
-        virtual void PlatformSetGammaRamp(const GammaRamp* ramp);
+        virtual bool PlatformGetGammaRamp(GammaRamp* ramp) = 0;
+        virtual void PlatformSetGammaRamp(const GammaRamp* ramp) = 0;
 
     protected:
         static void SplitBPP(int32_t bpp, int32_t* red, int32_t* green, int32_t* blue);

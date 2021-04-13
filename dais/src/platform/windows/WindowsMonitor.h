@@ -26,7 +26,7 @@ namespace dais
         void PlatformGetContentScale(float* xScale, float* yScale) const override;
         void PlatformGetVideoModes(std::vector<VideoMode*>& videoModes) override;
         void PlatformGetVideoMode(VideoMode* videoMode) override;
-        void PlatformGetGammaRamp(GammaRamp* ramp) override;
+        bool PlatformGetGammaRamp(GammaRamp* ramp) override;
         void PlatformSetGammaRamp(const GammaRamp* ramp) override;
 
     public:

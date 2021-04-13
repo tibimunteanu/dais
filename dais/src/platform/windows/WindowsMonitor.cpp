@@ -225,6 +225,49 @@ namespace dais
         Monitor::SplitBPP(dm.dmBitsPerPel, &videoMode->RedBits, &videoMode->GreenBits, &videoMode->BlueBits);
     }
 
+    bool WindowsMonitor::PlatformGetGammaRamp(GammaRamp* ramp)
+    {
+        HDC dc = CreateDCW(L"DISPLAY", m_AdapterName, nullptr, nullptr);
+
+        WORD values[3][256];
+        GetDeviceGammaRamp(dc, values);
+
+        DeleteDC(dc);
+
+        ramp->Clear();
+        ramp->Size = 256;
+
+        for (int i = 0; i < 256; i++)
+        {
+            ramp->Red.push_back(values[0][i]);
+            ramp->Green.push_back(values[1][i]);
+            ramp->Blue.push_back(values[2][i]);
+        }
+
+        return true;
+    }
+
+    void WindowsMonitor::PlatformSetGammaRamp(const GammaRamp* ramp)
+    {
+        WORD values[3][256];
+
+        if (ramp->Size != 256)
+        {
+            throw new std::exception("Gamma ramp size must be 256!");
+        }
+
+        for (int i = 0; i < 256; i++)
+        {
+            values[0][i] = ramp->Red[i];
+            values[1][i] = ramp->Green[i];
+            values[2][i] = ramp->Blue[i];
+        }
+
+        HDC dc = CreateDCW(L"DISPLAY", m_AdapterName, nullptr, nullptr);
+        SetDeviceGammaRamp(dc, values);
+        DeleteDC(dc);
+    }
+
 
     BOOL CALLBACK WindowsMonitor::SetHandle(HMONITOR handle, HDC dc, RECT* rect, LPARAM data)
     {

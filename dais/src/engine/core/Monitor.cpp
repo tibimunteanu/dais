@@ -113,15 +113,34 @@ namespace dais
             throw new std::exception("Invalid gamma value!");
         }
 
-        const GammaRamp* originalRamp = GetGammaRamp();
+        const GammaRamp* currentRamp = GetGammaRamp();
 
-        if (!originalRamp)
+        if (!currentRamp)
         {
             return;
         }
 
+        GammaRamp* ramp = new GammaRamp(currentRamp->Size);
 
+        for (int i = 0; i < currentRamp->Size; i++)
+        {
+            //calculate intensity
+            float value = i / (float)(currentRamp->Size - 1);
 
+            //apply gamma curve
+            value = powf(value, 1.0f / gamma) * 65535.0f + 0.5f;
+
+            //clamp to value range
+            value = Utils::fminf(value, 65535.0f);
+
+            ramp->Red.push_back((uint16_t)value);
+            ramp->Green.push_back((uint16_t)value);
+            ramp->Blue.push_back((uint16_t)value);
+        }
+
+        SetGammaRamp(ramp);
+
+        delete ramp;
     }
 
     const GammaRamp* Monitor::GetGammaRamp()
