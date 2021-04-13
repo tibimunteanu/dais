@@ -11,9 +11,8 @@ namespace dais
     class Platform
     {
     protected:
-        Window* m_Window;
-
-        std::vector<Monitor*> m_Monitors;
+        Window* m_Window = nullptr;
+        std::vector<Monitor*> m_Monitors = {};
 
     protected:
         struct Callbacks
@@ -23,10 +22,12 @@ namespace dais
         } m_Callbacks;
 
     protected:
-        Platform(Callbacks callbacks);
+        Platform();
 
     public:
         virtual ~Platform();
+
+        virtual void Init() = 0;
 
         Window* OpenWindow(const std::string& title, uint32_t width, uint32_t height);
         Window* GetPrimaryWindow() const;
@@ -38,6 +39,6 @@ namespace dais
         void SetMonitorDisconnectedCallback(MonitorConnectedCallback callback);
 
     public:
-        static Platform* Create(Callbacks callbacks);
+        static Platform* Create();
     };
 }

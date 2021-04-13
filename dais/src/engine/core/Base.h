@@ -9,6 +9,7 @@
 #include <cfloat>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include <malloc.h>
 
 

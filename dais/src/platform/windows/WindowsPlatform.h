@@ -10,8 +10,10 @@ namespace dais
     class WindowsPlatform : public Platform
     {
     public:
-        WindowsPlatform(Callbacks callbacks);
+        WindowsPlatform();
         virtual ~WindowsPlatform();
+
+        void Init() override;
 
     private:
         void PollMonitors();

@@ -268,6 +268,7 @@ namespace dais
     public:
         static bool LoadLibraries();
         static void FreeLibraries();
+        static void SetProcessDpiAware();
 
         static bool IsWindowsVersionOrGreater(WORD major, WORD minor, WORD sp);
         static bool IsWindowsVistaOrGreater();

@@ -8,10 +8,10 @@ namespace dais
     class Window
     {
     protected:
-        std::string m_Title;
-        uint32_t m_Width;
-        uint32_t m_Height;
-        Monitor* m_Monitor;
+        std::string m_Title = {};
+        uint32_t m_Width = 0;
+        uint32_t m_Height = 0;
+        Monitor* m_Monitor = nullptr;
 
     protected:
         Window(const std::string& title, uint32_t width, uint32_t height);

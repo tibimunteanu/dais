@@ -2,19 +2,14 @@
 
 namespace dais
 {
-    Platform* Platform::Create(Callbacks callbacks)
+    Platform* Platform::Create()
     {
-        return new WindowsPlatform(callbacks);
+        return new WindowsPlatform();
     }
 
-    WindowsPlatform::WindowsPlatform(Callbacks callbacks)
-        : Platform(callbacks)
+    WindowsPlatform::WindowsPlatform()
     {
         std::cout << "[WindowsPlatform] Constructor" << std::endl;
-
-        WindowsBase::LoadLibraries();
-
-        PollMonitors();
     }
 
     WindowsPlatform::~WindowsPlatform()
@@ -24,13 +19,23 @@ namespace dais
         WindowsBase::FreeLibraries();
     }
 
+    void WindowsPlatform::Init()
+    {
+        WindowsBase::LoadLibraries();
+
+        WindowsBase::SetProcessDpiAware();
+
+        PollMonitors();
+    }
 
     void WindowsPlatform::PollMonitors()
     {
         std::cout << "[WindowsPlatform] PollMonitors" << std::endl;
 
+        //copy the array of pointers to the monitors
         std::vector<Monitor*> disconnected = m_Monitors;
 
+        //loop display adapters
         uint32_t adapterIndex;
         for (adapterIndex = 0; ; adapterIndex++)
         {
@@ -53,6 +58,7 @@ namespace dais
                 insertFirst = true;
             }
 
+            //loop adapter monitors
             uint32_t displayIndex;
             for (displayIndex = 0; ; displayIndex++)
             {
@@ -68,6 +74,7 @@ namespace dais
                     continue;
                 }
 
+                //if this monitor is in the disconnected array, set the position as null and just refresh the handle
                 uint32_t d;
                 for (d = 0; d < disconnected.size(); d++)
                 {
@@ -86,12 +93,14 @@ namespace dais
                     continue;
                 }
 
+                //if the monitor didn't already exist, create a new one
                 WindowsMonitor* monitor = new WindowsMonitor(&adapter, &display);
                 if (!monitor)
                 {
                     return;
                 }
 
+                //insert it in the m_Monitors array
                 if (insertFirst)
                 {
                     m_Monitors.insert(m_Monitors.begin(), monitor);
@@ -102,16 +111,17 @@ namespace dais
                 }
                 insertFirst = false;
 
+                //call the MonitorConnected callback
                 if (m_Callbacks.MonitorConnected)
                 {
                     m_Callbacks.MonitorConnected((Monitor*)monitor);
                 }
             }
 
+            //if an active adapter does not have any display devices add it as a monitor
             if (displayIndex == 0)
             {
-                //NOTE: an active adapter could not have any display devices
-                //      just add it as a monitor
+                //if this adapter (as monitor) is in the disconnected array, set the position as null and just refresh the handle
                 uint32_t d;
                 for (d = 0; d < disconnected.size(); d++)
                 {
@@ -128,21 +138,17 @@ namespace dais
                     continue;
                 }
 
+                //if the monitor didn't already exist, create a new one
                 WindowsMonitor* monitor = new WindowsMonitor(&adapter, nullptr);
                 if (!monitor)
                 {
                     return;
                 }
 
-                if (insertFirst)
-                {
-                    m_Monitors.insert(m_Monitors.begin(), monitor);
-                }
-                else
-                {
-                    m_Monitors.push_back(monitor);
-                }
+                //insert it in the m_Monitors array
+                m_Monitors.push_back(monitor);
 
+                //call the MonitorConnected callback
                 if (m_Callbacks.MonitorConnected)
                 {
                     m_Callbacks.MonitorConnected((Monitor*)monitor);
@@ -150,15 +156,20 @@ namespace dais
             }
         }
 
+        //release remaining monitors in the disconnected array since they were not found
         for (uint32_t d = 0; d < disconnected.size(); d++)
         {
             if (disconnected[d])
             {
                 Monitor* monitor = m_Monitors[d];
 
+                //remove this monitor from the m_Monitors array
                 m_Monitors.erase(m_Monitors.begin() + d);
+
+                //also remove this monitor from the disconnected array to keep indices in sync with m_Monitors array
                 disconnected.erase(disconnected.begin() + d);
 
+                //call the MonitorDisconnected callback
                 if (m_Callbacks.MonitorDisconnected)
                 {
                     m_Callbacks.MonitorDisconnected((Monitor*)monitor);

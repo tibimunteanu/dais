@@ -11,8 +11,6 @@ namespace dais
         : Window(title, width, height)
     {
         std::cout << "[WindowsWindow] Constructor" << std::endl;
-
-        m_Handle = nullptr;
     }
 
     WindowsWindow::~WindowsWindow()

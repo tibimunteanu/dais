@@ -2,30 +2,32 @@
 
 static void OnMonitorConnected(dais::Monitor* monitor)
 {
-    std::cout << "Monitor connected callback: " << monitor->GetName() << std::endl;
+    std::cout << "[MAIN] OnMonitorConnected: " << std::endl << "\t" << monitor->GetName() << std::endl;
 }
 
 static void OnMonitorDisconnected(dais::Monitor* monitor)
 {
-    std::cout << "Monitor disconnected callback: " << monitor->GetName() << std::endl;
+    std::cout << "[MAIN] OnMonitorDisconnected: " << std::endl << "\t" << monitor->GetName() << std::endl;
 }
 
 int main(int argc, char** argv)
 {
-    dais::Platform* platform = dais::Platform::Create(
-    {
-        OnMonitorConnected,
-        OnMonitorDisconnected
-    });
+    dais::Platform* platform = dais::Platform::Create();
 
+    platform->SetMonitorConnectedCallback(OnMonitorConnected);
+    platform->SetMonitorDisconnectedCallback(OnMonitorDisconnected);
+
+    platform->Init();
+
+    //test window api
     dais::Window* window = platform->OpenWindow("Test", 960, 540);
     if (!window)
     {
         throw std::runtime_error("Could not open window!");
     }
 
-    const std::vector<dais::Monitor*> monitors = platform->GetMonitors();
-    std::cout << "GetMonitors result:" << std::endl;
+    //test monitor api
+    const std::vector<dais::Monitor*>& monitors = platform->GetMonitors();
     for (int32_t m = 0; m < monitors.size(); m++)
     {
         std::cout << "\t" << monitors[m]->GetName() << std::endl;
@@ -34,10 +36,36 @@ int main(int argc, char** argv)
     dais::Monitor* currentMonitor = platform->GetPrimaryMonitor();
     if (currentMonitor)
     {
-        std::cout << "GetPrimaryMonitor result" << std::endl << "\t" << currentMonitor->GetName() << std::endl;
+        std::cout << "\t" << currentMonitor->GetName() << std::endl;
 
-        int32_t videoModeCount;
-        dais::VideoMode* videoModes = currentMonitor->GetVideoModes(&videoModeCount);
+        const std::vector<dais::VideoMode*>& videoModes = currentMonitor->GetVideoModes();
+
+        std::cout << "\t" << videoModes.size() << " modes" << std::endl;
+        for (int32_t m = 0; m < videoModes.size(); m++)
+        {
+            std::cout << "\t" << *videoModes[m] << std::endl;
+        }
+
+        dais::VideoMode* currentVideoMode = currentMonitor->GetVideoMode();
+        if (currentVideoMode)
+        {
+            std::cout << "\t" << *currentVideoMode << std::endl;
+        }
+
+        int32_t x, y;
+        currentMonitor->GetPosition(&x, &y);
+        std::cout << "\tx: " << x << ", y: " << y << std::endl;
+
+        int32_t w, h;
+        currentMonitor->GetWorkarea(&x, &y, &w, &h);
+        std::cout << "\tx: " << x << ", y: " << y << ", w: " << w << ", h: " << h << std::endl;
+
+        currentMonitor->GetPhysicalSize(&w, &h);
+        std::cout << "\tw: " << w << "mm, h: " << h << "mm" << std::endl;
+
+        float xScale, yScale;
+        currentMonitor->GetContentScale(&xScale, &yScale);
+        std::cout << "\txScale: " << xScale << ", yScale: " << yScale << std::endl;
     }
 
     window->Close();

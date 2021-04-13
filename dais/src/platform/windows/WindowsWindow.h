@@ -9,7 +9,7 @@ namespace dais
     class WindowsWindow : public Window
     {
     private:
-        HWND m_Handle;
+        HWND m_Handle = nullptr;
 
     public:
         WindowsWindow(const std::string& title, uint32_t width, uint32_t height);

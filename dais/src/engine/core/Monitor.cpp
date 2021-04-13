@@ -5,91 +5,170 @@ namespace dais
     Monitor::Monitor()
     {
         std::cout << "[Monitor] Constructor" << std::endl;
-
-        m_Name = "Invalid Monitor";
-        m_WidthInMillimeters = 0;
-        m_HeightInMillimeters = 0;
-        m_VideoModeCount = 0;
-        m_VideoModes = nullptr;
-        m_CurrentVideoMode = {};
     }
 
     Monitor::~Monitor()
     {
         std::cout << "[Monitor] Destructor" << std::endl;
+
+        if (m_VideoModes.size())
+        {
+            for (int32_t i = 0; i < m_VideoModes.size(); i++)
+            {
+                delete m_VideoModes[i];
+            }
+            m_VideoModes.clear();
+        }
     }
+
 
     const std::string& Monitor::GetName() const
     {
+        std::cout << "[Monitor] GetName: ";
+
         return m_Name;
     }
 
     void Monitor::GetPosition(int32_t* x, int32_t* y) const
     {
+        std::cout << "[Monitor] GetPosition" << std::endl;
+
         return PlatformGetPosition(x, y);
     }
 
     void Monitor::GetWorkarea(int32_t* x, int32_t* y, int32_t* width, int32_t* height) const
     {
+        std::cout << "[Monitor] GetWorkarea" << std::endl;
+
         return PlatformGetWorkarea(x, y, width, height);
     }
 
     void Monitor::GetContentScale(float* xScale, float* yScale) const
     {
+        std::cout << "[Monitor] GetContentScale" << std::endl;
+
         return PlatformGetContentScale(xScale, yScale);
     }
 
     void Monitor::GetPhysicalSize(int32_t* widthInMillimeters, int32_t* heightInMillimeters) const
     {
+        std::cout << "[Monitor] GetPhysicalSize" << std::endl;
+
         *widthInMillimeters = m_WidthInMillimeters;
         *heightInMillimeters = m_HeightInMillimeters;
     }
 
-    bool Monitor::RefreshVideoModes()
+    void Monitor::RefreshVideoModes()
     {
-        if (m_VideoModes)
+        std::cout << "[Monitor] RefreshVideoModes" << std::endl;
+
+        if (m_VideoModes.size())
         {
-            //NOTE: since video modes will not change at runtime, this method's purpose is only for lazy loading
-            return true;
+            //since video modes will not change at runtime, this method's purpose is only for lazy loading
+            return;
         }
 
-        int32_t modeCount;
-        VideoMode* modes = PlatformGetVideoModes(&modeCount);
-        if (!modes)
+        //clear existing video modes
+        if (m_VideoModes.size())
         {
-            return false;
+            for (int32_t i = 0; i < m_VideoModes.size(); i++)
+            {
+                delete m_VideoModes[i];
+            }
+            m_VideoModes.clear();
         }
 
-        //TODO: sort modes
+        PlatformGetVideoModes(m_VideoModes);
 
-        free(m_VideoModes);
-
-        m_VideoModes = modes;
-        m_VideoModeCount = modeCount;
-
-        return true;
+        if (m_VideoModes.size())
+        {
+            std::sort(m_VideoModes.begin(), m_VideoModes.end(), [](VideoMode* a, VideoMode* b) { return *a < *b; });
+        }
     }
 
-    VideoMode* Monitor::GetVideoModes(int32_t* count)
+    const std::vector<VideoMode*>& Monitor::GetVideoModes()
     {
         std::cout << "[Monitor] GetVideoModes" << std::endl;
 
-        if (!RefreshVideoModes())
-        {
-            *count = 0;
-            return nullptr;
-        }
+        RefreshVideoModes();
 
-        *count = m_VideoModeCount;
         return m_VideoModes;
     }
 
     VideoMode* Monitor::GetVideoMode()
     {
-        if (!PlatformGetVideoMode(&m_CurrentVideoMode))
-        {
-            return nullptr;
-        }
+        std::cout << "[Monitor] GetVideoMode" << std::endl;
+
+        PlatformGetVideoMode(&m_CurrentVideoMode);
+
         return &m_CurrentVideoMode;
+    }
+
+    void Monitor::SetGamma(float gamma)
+    {
+        if (gamma != gamma 
+            || gamma <= 0.0f
+            || gamma > FLT_MAX)
+        {
+            throw new std::exception("Invalid gamma value!");
+        }
+
+        const GammaRamp* originalRamp = GetGammaRamp();
+
+        if (!originalRamp)
+        {
+            return;
+        }
+
+
+
+    }
+
+    const GammaRamp* Monitor::GetGammaRamp()
+    {
+        m_CurrentGammaRamp.Clear();
+
+        PlatformGetGammaRamp(&m_CurrentGammaRamp);
+
+        return &m_CurrentGammaRamp;
+    }
+
+    void Monitor::SetGammaRamp(GammaRamp* ramp)
+    {
+        if (!ramp
+            || !ramp->IsValid())
+        {
+            throw new std::exception("Invalid gamma ramp!");
+        }
+
+        //make sure we have the original ramp
+        if (!m_OriginalGammaRamp.Size
+            && !PlatformGetGammaRamp(&m_OriginalGammaRamp))
+        {
+            return;
+        }
+
+        PlatformSetGammaRamp(ramp);
+    }
+
+
+    void Monitor::SplitBPP(int32_t bpp, int32_t* red, int32_t* green, int32_t* blue)
+    {
+        int32_t delta;
+
+        //we assume that by 32 the user really meant 24
+        if (bpp == 32) bpp = 24;
+
+        //convert "bits per pixel" to red, gree and blue sizes
+        *red = *green = *blue = bpp / 3;
+        delta = bpp - (*red * 3);
+        if (delta >= 1)
+        {
+            *green = *green + 1;
+        }
+        if (delta == 2)
+        {
+            *red = *red + 1;
+        }
     }
 }

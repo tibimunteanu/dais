@@ -8,11 +8,9 @@ namespace dais
         return m_Window;
     }
 
-    Platform::Platform(Callbacks callbacks)
+    Platform::Platform()
     {
         std::cout << "[Platform] Constructor" << std::endl;
-
-        m_Callbacks = callbacks;
     }
 
     Platform::~Platform()

@@ -9,7 +9,6 @@ namespace dais
         m_Title = title;
         m_Width = width;
         m_Height = height;
-        m_Monitor = nullptr;
     }
 
     Window::~Window()

@@ -101,6 +101,22 @@ namespace dais
         if (Libs.Ntdll.Instance) FreeLibrary(Libs.Ntdll.Instance);
     }
 
+    void WindowsBase::SetProcessDpiAware()
+    {
+        if (IsWindows10CreatorsUpdateOrGreater())
+        {
+            Libs.User32.SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        }
+        else if (IsWindows8Point1OrGreater())
+        {
+            Libs.Shcore.SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+        }
+        else if (IsWindowsVistaOrGreater())
+        {
+            Libs.User32.SetProcessDPIAware();
+        }
+    }
+
 
     bool WindowsBase::IsWindowsVersionOrGreater(WORD major, WORD minor, WORD sp)
     {
