@@ -4,8 +4,9 @@ namespace dais
 {
     Window* Platform::OpenWindow(const std::string& title, uint32_t width, uint32_t height)
     {
-        m_Window = Window::Create(title, width, height);
-        return m_Window;
+        Window* window = Window::Create(title, width, height);
+        m_Windows.push_back(window);
+        return window;
     }
 
     Platform::Platform()
@@ -26,15 +27,29 @@ namespace dais
             }
         }
 
-        if (m_Window)
+        if (m_Windows.size() > 0)
         {
-            delete m_Window;
+            for (size_t i = 0; i < m_Windows.size(); i++)
+            {
+                delete m_Windows[i];
+            }
         }
+    }
+
+    const std::vector<Window*>& Platform::GetWindows() const
+    {
+        std::cout << "[Platform] GetWindows" << std::endl;
+
+        return m_Windows;
     }
 
     Window* Platform::GetPrimaryWindow() const
     {
-        return m_Window;
+        std::cout << "[Platform] GetPrimaryWindow" << std::endl;
+
+        return m_Windows.size() > 0
+            ? m_Windows[0]
+            : nullptr;
     }
 
     const std::vector<Monitor*>& Platform::GetMonitors() const

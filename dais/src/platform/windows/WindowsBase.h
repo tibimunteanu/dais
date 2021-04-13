@@ -91,6 +91,9 @@
 #define OCR_HAND 32649
 #endif
 
+static const GUID GUID_DEVINTERFACE_HID_ = {0x4d1e55b2,0xf16f,0x11cf,{0x88,0xcb,0x00,0x11,0x11,0x00,0x00,0x30}};
+#define GUID_DEVINTERFACE_HID GUID_DEVINTERFACE_HID_
+
 #if WINVER < 0x0601
 typedef struct
 {

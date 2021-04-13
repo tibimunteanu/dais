@@ -21,7 +21,8 @@ namespace dais
         m_ModeChanged = false;
 
         //get device properties
-        DEVMODEW dm = { sizeof(dm) };
+        DEVMODEW dm = {};
+        dm.dmSize = sizeof(dm);
         EnumDisplaySettingsW(adapter->DeviceName, ENUM_CURRENT_SETTINGS, &dm);
 
         //get dimensions in millimeters
@@ -253,7 +254,8 @@ namespace dais
 
         if (ramp->Size != 256)
         {
-            throw new std::exception("Gamma ramp size must be 256!");
+            std::cout << "Gamma ramp size must be 256!" << std::endl;
+            return;
         }
 
         for (int i = 0; i < 256; i++)
@@ -271,7 +273,8 @@ namespace dais
 
     BOOL CALLBACK WindowsMonitor::SetHandle(HMONITOR handle, HDC dc, RECT* rect, LPARAM data)
     {
-        MONITORINFOEXW mi = { sizeof(mi) };
+        MONITORINFOEXW mi = {};
+        mi.cbSize = sizeof(mi);
 
         if (GetMonitorInfoW(handle, (MONITORINFO*)&mi))
         {

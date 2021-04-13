@@ -28,7 +28,7 @@ namespace dais
         virtual void SetTitle(const std::string& title) override;
 
         virtual bool IsFullscreen() const override;
-        virtual void SetFullscreen(bool fullscreen) override; 
+        virtual void SetFullscreen(bool fullscreen) override;
 
         virtual void GetSize(uint32_t* width, uint32_t& height) const override;
         virtual void SetSize(uint32_t width, uint32_t height) override;
@@ -45,5 +45,10 @@ namespace dais
         virtual void Restore() override;
         virtual bool ShouldClose() const override; // Close icon pressed
         virtual void Close() override;
+
+        LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    public:
+        static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     };
 }

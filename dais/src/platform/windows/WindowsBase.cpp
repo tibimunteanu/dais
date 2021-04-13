@@ -43,7 +43,7 @@ namespace dais
         Libs.Winmm.Instance = LoadLibraryA("winmm.dll");
         if (!Libs.Winmm.Instance)
         {
-            throw std::runtime_error("[WindowsBase] LoadLibraries(): Failed to load winmm.dll!");
+            std::cout << "[WindowsBase] LoadLibraries(): Failed to load winmm.dll!" << std::endl;
             return false;
         }
 
@@ -52,7 +52,7 @@ namespace dais
         Libs.User32.Instance = LoadLibraryA("user32.dll");
         if (!Libs.User32.Instance)
         {
-            throw std::runtime_error("[WindowsBase] LoadLibraries(): Failed to load user32.dll!");
+            std::cout << "[WindowsBase] LoadLibraries(): Failed to load user32.dll!" << std::endl;
             return false;
         }
 

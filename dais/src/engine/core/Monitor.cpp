@@ -110,7 +110,8 @@ namespace dais
             || gamma <= 0.0f
             || gamma > FLT_MAX)
         {
-            throw new std::exception("Invalid gamma value!");
+            std::cout << "Invalid gamma value!" << std::endl;
+            return;
         }
 
         const GammaRamp* currentRamp = GetGammaRamp();
@@ -157,7 +158,8 @@ namespace dais
         if (!ramp
             || !ramp->IsValid())
         {
-            throw new std::exception("Invalid gamma ramp!");
+            std::cout << "Invalid gamma ramp!" << std::endl;
+            return;
         }
 
         //make sure we have the original ramp

@@ -16,16 +16,44 @@ namespace dais
     {
         std::cout << "[WindowsPlatform] Destructor" << std::endl;
 
+        if (m_DeviceNotificationHandle)
+        {
+            UnregisterDeviceNotification(m_DeviceNotificationHandle);
+        }
+
+        if (m_HelperWindowHandle)
+        {
+            DestroyWindow(m_HelperWindowHandle);
+        }
+
+        UnregisterWindowClass();
+        RestoreForegroundLockTimeout();
+
         WindowsBase::FreeLibraries();
     }
 
     void WindowsPlatform::Init()
     {
-        WindowsBase::LoadLibraries();
+        SetForegroundLockTimeout();
 
+        WindowsBase::LoadLibraries();
         WindowsBase::SetProcessDpiAware();
 
+        RegisterWindowClass();
+        CreateHelperWindow();
         PollMonitors();
+    }
+
+
+    void WindowsPlatform::SetForegroundLockTimeout()
+    {
+        SystemParametersInfoW(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &m_ForegroundLockTimeout, 0);
+        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UIntToPtr(0), SPIF_SENDCHANGE);
+    }
+
+    void WindowsPlatform::RestoreForegroundLockTimeout()
+    {
+        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UIntToPtr(m_ForegroundLockTimeout), SPIF_SENDCHANGE);
     }
 
     void WindowsPlatform::PollMonitors()
@@ -41,7 +69,8 @@ namespace dais
         {
             bool insertFirst = false;
 
-            DISPLAY_DEVICEW adapter = { sizeof(adapter) };
+            DISPLAY_DEVICEW adapter = {};
+            adapter.cb = sizeof(adapter);
 
             if (!EnumDisplayDevicesW(nullptr, adapterIndex, &adapter, 0))
             {
@@ -62,7 +91,8 @@ namespace dais
             uint32_t displayIndex;
             for (displayIndex = 0; ; displayIndex++)
             {
-                DISPLAY_DEVICEW display = { sizeof(display) };
+                DISPLAY_DEVICEW display = {};
+                display.cb = sizeof(display);
 
                 if (!EnumDisplayDevicesW(adapter.DeviceName, displayIndex, &display, 0))
                 {
@@ -178,5 +208,77 @@ namespace dais
                 delete monitor;
             }
         }
+    }
+
+    bool WindowsPlatform::RegisterWindowClass()
+    {
+        WNDCLASSEXW wc = {};
+        wc.cbSize = sizeof(wc);
+        wc.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+        wc.lpfnWndProc = WindowsWindow::WindowProc;
+        wc.hInstance = GetModuleHandleW(nullptr);
+        wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+        wc.lpszClassName = L"DAIS_WINDOW_CLASS";
+
+        //load user provided icon if available
+        wc.hIcon = (HICON)LoadImageW(GetModuleHandleW(nullptr), L"DAIS_ICON", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+        if (!wc.hIcon)
+        {
+            //no user provided icon found, load default icon
+            wc.hIcon = (HICON)LoadImageW(nullptr, IDI_APPLICATION, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+        }
+
+        if (!RegisterClassExW(&wc))
+        {
+            std::cout << "Failed to register window class!" << std::endl;
+            return false;
+        }
+
+        return true;
+    }
+
+    void WindowsPlatform::UnregisterWindowClass()
+    {
+        UnregisterClassW(L"DAIS_WINDOW_CLASS", GetModuleHandleW(nullptr));
+    }
+
+    bool WindowsPlatform::CreateHelperWindow()
+    {
+        m_HelperWindowHandle = CreateWindowExW(WS_EX_OVERLAPPEDWINDOW,
+            L"DAIS_WINDOW_CLASS",
+            L"DAIS_HELPER_WINDOW",
+            WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+            0, 0, 1, 1,
+            nullptr, nullptr,
+            GetModuleHandleW(nullptr),
+            nullptr);
+
+        if (!m_HelperWindowHandle)
+        {
+            std::cout << "Failed to create helper window!" << std::endl;
+            return false;
+        }
+
+        ShowWindow(m_HelperWindowHandle, SW_HIDE);
+
+        //register for HID device notifications
+        DEV_BROADCAST_DEVICEINTERFACE_W dbi = {};
+        dbi.dbcc_size = sizeof(dbi);
+        dbi.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+        dbi.dbcc_classguid = GUID_DEVINTERFACE_HID;
+
+        m_DeviceNotificationHandle = RegisterDeviceNotificationW(m_HelperWindowHandle,
+            (DEV_BROADCAST_HDR*)&dbi,
+            DEVICE_NOTIFY_WINDOW_HANDLE);
+
+        //process messages
+        MSG msg;
+        while (PeekMessageW(&msg, m_HelperWindowHandle, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
+
+        return true;
     }
 }
