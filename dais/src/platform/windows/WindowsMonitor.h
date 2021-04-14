@@ -31,5 +31,6 @@ namespace dais
 
     public:
         static BOOL CALLBACK SetHandle(HMONITOR handle, HDC dc, RECT* rect, LPARAM data);
+        static void GetContentScale(HMONITOR handle, float* xScale, float* yScale);
     };
 }

@@ -20,6 +20,10 @@ namespace dais
 
         void Init() override;
 
+        virtual void PollEvents() override;
+        virtual void WaitEvents() override;
+        virtual void WaitEventsTimeout(double timeout) override;
+
     private:
         void PollMonitors();
         void SetForegroundLockTimeout();

@@ -4,7 +4,7 @@ namespace dais
 {
     WindowsMonitor::WindowsMonitor(DISPLAY_DEVICEW* adapter, DISPLAY_DEVICEW* display)
     {
-        std::cout << "[WindowsMonitor] Constructor" << std::endl;
+        DAIS_TRACE("[WindowsMonitor] Constructor");
 
         WindowsBase::WideStringToUTF8(display ? display->DeviceString : adapter->DeviceString, m_Name);
 
@@ -56,13 +56,13 @@ namespace dais
 
     WindowsMonitor::~WindowsMonitor()
     {
-        std::cout << "[WindowsMonitor] Destructor" << std::endl;
+        DAIS_TRACE("[WindowsMonitor] Destructor");
     }
 
 
     void WindowsMonitor::PlatformGetPosition(int32_t* x, int32_t* y) const
     {
-        std::cout << "[WindowsMonitor] PlatformGetMonitorPosition" << std::endl;
+        DAIS_TRACE("[WindowsMonitor] PlatformGetMonitorPosition");
 
         DEVMODEW dm = {};
         dm.dmSize = sizeof(dm);
@@ -81,7 +81,7 @@ namespace dais
 
     void WindowsMonitor::PlatformGetWorkarea(int32_t* x, int32_t* y, int32_t* width, int32_t* height) const
     {
-        std::cout << "[WindowsMonitor] PlatformGetWorkarea" << std::endl;
+        DAIS_TRACE("[WindowsMonitor] PlatformGetWorkarea");
 
         MONITORINFO mi = {};
         mi.cbSize = sizeof(mi);
@@ -108,35 +108,14 @@ namespace dais
 
     void WindowsMonitor::PlatformGetContentScale(float* xScale, float* yScale) const
     {
-        std::cout << "[WindowsMonitor] PlatformGetContentScale" << std::endl;
+        DAIS_TRACE("[WindowsMonitor] PlatformGetContentScale");
 
-        UINT xdpi, ydpi;
-
-        if (WindowsBase::IsWindows8Point1OrGreater())
-        {
-            WindowsBase::Libs.Shcore.GetDpiForMonitor(m_Handle, MDT_EFFECTIVE_DPI, &xdpi, &ydpi);
-        }
-        else
-        {
-            const HDC dc = GetDC(nullptr);
-            xdpi = GetDeviceCaps(dc, LOGPIXELSX);
-            ydpi = GetDeviceCaps(dc, LOGPIXELSY);
-            ReleaseDC(nullptr, dc);
-        }
-
-        if (xScale)
-        {
-            *xScale = xdpi / (float)USER_DEFAULT_SCREEN_DPI;
-        }
-        if (yScale)
-        {
-            *yScale = ydpi / (float)USER_DEFAULT_SCREEN_DPI;
-        }
+        WindowsMonitor::GetContentScale(m_Handle, xScale, yScale);
     }
 
     void WindowsMonitor::PlatformGetVideoModes(std::vector<VideoMode*>& videoModes)
     {
-        std::cout << "[WindowsMonitor] PlatformGetVideoModes" << std::endl;
+        DAIS_TRACE("[WindowsMonitor] PlatformGetVideoModes");
 
         int32_t videoModeIndex = 0;
 
@@ -212,7 +191,7 @@ namespace dais
 
     void WindowsMonitor::PlatformGetVideoMode(VideoMode* videoMode)
     {
-        std::cout << "[WindowsMonitor] PlatformGetVideoMode" << std::endl;
+        DAIS_TRACE("[WindowsMonitor] PlatformGetVideoMode");
 
         DEVMODEW dm = {};
         dm.dmSize = sizeof(dm);
@@ -254,7 +233,7 @@ namespace dais
 
         if (ramp->Size != 256)
         {
-            std::cout << "Gamma ramp size must be 256!" << std::endl;
+            DAIS_ERROR("Gamma ramp size must be 256!");
             return;
         }
 
@@ -287,5 +266,31 @@ namespace dais
         }
 
         return TRUE;
+    }
+
+    void WindowsMonitor::GetContentScale(HMONITOR handle, float* xScale, float* yScale)
+    {
+        UINT xdpi, ydpi;
+
+        if (WindowsBase::IsWindows8Point1OrGreater())
+        {
+            WindowsBase::Libs.Shcore.GetDpiForMonitor(handle, MDT_EFFECTIVE_DPI, &xdpi, &ydpi);
+        }
+        else
+        {
+            const HDC dc = GetDC(nullptr);
+            xdpi = GetDeviceCaps(dc, LOGPIXELSX);
+            ydpi = GetDeviceCaps(dc, LOGPIXELSY);
+            ReleaseDC(nullptr, dc);
+        }
+
+        if (xScale)
+        {
+            *xScale = xdpi / (float)USER_DEFAULT_SCREEN_DPI;
+        }
+        if (yScale)
+        {
+            *yScale = ydpi / (float)USER_DEFAULT_SCREEN_DPI;
+        }
     }
 }

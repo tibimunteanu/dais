@@ -12,6 +12,28 @@
 #include <algorithm>
 #include <malloc.h>
 
+//HACK: __VA_ARGS__ expansion to get past MSVC "BUG"
+#define DAIS_EXPAND_VARGS(x) x
+
+//////////////////////////////////////// LOG ///////////////////////////////////////////
+#ifdef DAIS_DEBUG
+	#define DAIS_ENABLE_LOG
+#endif
+
+#ifdef DAIS_ENABLE_LOG
+    #define DAIS_TRACE(...)	printf("TRACE: "); printf(__VA_ARGS__); printf("\n")
+    #define DAIS_INFO(...) printf("INFO: "); printf(__VA_ARGS__); printf("\n")
+    #define DAIS_WARN(...) printf("WARN: "); printf(__VA_ARGS__); printf("\n")
+    #define DAIS_ERROR(...) printf("ERROR: "); printf(__VA_ARGS__); printf("\n")
+    #define DAIS_FATAL(...) printf("FATAL: "); printf(__VA_ARGS__); printf("\n")
+#else
+    #define DAIS_TRACE(...)
+    #define DAIS_INFO(...)
+    #define DAIS_WARN(...)
+    #define DAIS_ERROR(...)
+    #define DAIS_FATAL(...)
+#endif
+
 
 /////////////////////////////////////// ASSERT /////////////////////////////////////////
 #ifdef DAIS_DEBUG

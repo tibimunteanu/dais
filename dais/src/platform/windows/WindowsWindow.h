@@ -12,7 +12,8 @@ namespace dais
         HWND m_Handle = nullptr;
 
     public:
-        WindowsWindow(const std::string& title, uint32_t width, uint32_t height);
+        WindowsWindow(WindowConfig config, Monitor* monitor);
+
         virtual ~WindowsWindow();
 
         virtual void* GetHandle() const override; // Get native window handle
@@ -30,7 +31,7 @@ namespace dais
         virtual bool IsFullscreen() const override;
         virtual void SetFullscreen(bool fullscreen) override;
 
-        virtual void GetSize(uint32_t* width, uint32_t& height) const override;
+        virtual void GetSize(uint32_t* width, uint32_t* height) const override;
         virtual void SetSize(uint32_t width, uint32_t height) override;
 
         virtual void GetPosition(uint32_t* x, uint32_t* y) const override;
@@ -49,6 +50,17 @@ namespace dais
         LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     public:
+        void PlatformShow() override;
+        void PlatformHide() override;
+        void PlatformFocus() override;
+        void PlatformGetContentScale(float* xScale, float* yScale) override;
+
+    public:
+        static void GetFullSize(DWORD style, DWORD styleEx,
+            int contentWidth, int contentHeight,
+            int* fullWidth, int* fullHeight,
+            UINT dpi);
+
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     };
 }

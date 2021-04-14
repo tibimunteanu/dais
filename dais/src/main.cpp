@@ -20,10 +20,26 @@ int main(int argc, char** argv)
     platform->Init();
 
     //test window api
-    dais::Window* window = platform->OpenWindow("Test", 960, 540);
+    dais::WindowConfig windowConfig = {};
+    windowConfig.title = "Test";
+    windowConfig.width = 960;
+    windowConfig.height = 540;
+    windowConfig.focused = true;
+    windowConfig.focusOnShow = true;
+    windowConfig.visible = true;
+    windowConfig.decorated = true;
+    windowConfig.resizable = true;
+    windowConfig.floating = true;
+    
+    dais::Window* window = platform->OpenWindow(windowConfig, nullptr);
     if (!window)
     {
         throw std::runtime_error("Could not open window!");
+    }
+
+    while (true)
+    {
+        platform->PollEvents();
     }
 
     //test monitor api

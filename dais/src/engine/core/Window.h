@@ -5,16 +5,46 @@
 
 namespace dais
 {
+    struct WindowConfig
+    {
+        std::string title;
+        int32_t width;
+        int32_t height;
+        bool decorated;
+        bool visible;
+        bool focused;
+        bool focusOnShow;
+        bool autoIconify;
+        bool floating;
+        bool maximized;
+        bool resizable;
+        bool centerCursor;
+        bool mousePassthrough;
+        bool scaleToMonitor;
+    };
+
     class Window
     {
     protected:
         std::string m_Title = {};
         uint32_t m_Width = 0;
         uint32_t m_Height = 0;
+        bool m_Decorated = false;
+        bool m_Visible = false;
+        bool m_Focused = false;
+        bool m_FocusOnShow = false;
+        bool m_AutoIconify = false;
+        bool m_Floating = false;
+        bool m_Maximized = false;
+        bool m_Resizable = false;
+        bool m_CenterCursor = false;
+        bool m_MousePassthrough = false;
+        bool m_ScaleToMonitor = false;
         Monitor* m_Monitor = nullptr;
 
+
     protected:
-        Window(const std::string& title, uint32_t width, uint32_t height);
+        Window(WindowConfig config, Monitor* monitor);
 
     public:
         virtual ~Window();
@@ -31,7 +61,7 @@ namespace dais
         virtual const std::string& GetTitle() const = 0;
         virtual void SetTitle(const std::string& title) = 0;
 
-        virtual void GetSize(uint32_t* width, uint32_t& height) const = 0;
+        virtual void GetSize(uint32_t* width, uint32_t* height) const = 0;
         virtual void SetSize(uint32_t width, uint32_t height) = 0;
 
         virtual void GetPosition(uint32_t* x, uint32_t* y) const = 0;
@@ -51,6 +81,12 @@ namespace dais
         virtual void Close() = 0;
 
     public:
-        static Window* Create(const std::string& title, uint32_t width, uint32_t height);
+        virtual void PlatformShow() = 0;
+        virtual void PlatformHide() = 0;
+        virtual void PlatformFocus() = 0;
+        virtual void PlatformGetContentScale(float* xScale, float* yScale) = 0;
+
+    public:
+        static Window* Create(WindowConfig config, Monitor* monitor);
     };
 }

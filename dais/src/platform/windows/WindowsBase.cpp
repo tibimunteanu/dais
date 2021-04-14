@@ -7,7 +7,7 @@ namespace dais
 
     bool WindowsBase::LoadLibraries()
     {
-        std::cout << "[WindowsBase] Loading libraries" << std::endl;
+        DAIS_TRACE("[WindowsBase] Loading libraries");
 
         //XInput
         {
@@ -43,7 +43,7 @@ namespace dais
         Libs.Winmm.Instance = LoadLibraryA("winmm.dll");
         if (!Libs.Winmm.Instance)
         {
-            std::cout << "[WindowsBase] LoadLibraries(): Failed to load winmm.dll!" << std::endl;
+            DAIS_ERROR("[WindowsBase] LoadLibraries(): Failed to load winmm.dll!");
             return false;
         }
 
@@ -52,7 +52,7 @@ namespace dais
         Libs.User32.Instance = LoadLibraryA("user32.dll");
         if (!Libs.User32.Instance)
         {
-            std::cout << "[WindowsBase] LoadLibraries(): Failed to load user32.dll!" << std::endl;
+            DAIS_ERROR("[WindowsBase] LoadLibraries(): Failed to load user32.dll!");
             return false;
         }
 
@@ -90,7 +90,7 @@ namespace dais
 
     void WindowsBase::FreeLibraries()
     {
-        std::cout << "[WindowsBase] Free libraries" << std::endl;
+        DAIS_TRACE("[WindowsBase] Free libraries");
 
         if (Libs.XInput.Instance) FreeLibrary(Libs.XInput.Instance);
         if (Libs.DInput8.Instance) FreeLibrary(Libs.DInput8.Instance);

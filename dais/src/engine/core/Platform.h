@@ -29,7 +29,8 @@ namespace dais
 
         virtual void Init() = 0;
 
-        Window* OpenWindow(const std::string& title, uint32_t width, uint32_t height);
+        Window* OpenWindow(WindowConfig config, Monitor* monitor);
+
         const std::vector<Window*>& GetWindows() const;
         Window* GetPrimaryWindow() const;
 
@@ -38,6 +39,10 @@ namespace dais
 
         void SetMonitorConnectedCallback(MonitorConnectedCallback callback);
         void SetMonitorDisconnectedCallback(MonitorConnectedCallback callback);
+
+        virtual void PollEvents() = 0;
+        virtual void WaitEvents() = 0;
+        virtual void WaitEventsTimeout(double timeout) = 0;
 
     public:
         static Platform* Create();

@@ -173,6 +173,11 @@ typedef enum
 #define DIDFT_OPTIONAL 0x80000000
 #endif
 
+#define DAIS_WINDOW_CLASS L"DAIS_WINDOW_CLASS"
+#define DAIS_HELPER_WINDOW_TITLE L"DAIS_HELPER_WINDOW"
+#define DAIS_WINDOW_PROP L"DAIS_WINDOW"
+#define DAIS_ICON L"DAIS_ICON"
+
 // xinput.dll function pointer typedefs
 typedef DWORD(WINAPI* PFN_XInputGetCapabilities)(DWORD, DWORD, XINPUT_CAPABILITIES*);
 typedef DWORD(WINAPI* PFN_XInputGetState)(DWORD, XINPUT_STATE*);

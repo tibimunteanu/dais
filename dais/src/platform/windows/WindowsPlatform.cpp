@@ -9,12 +9,12 @@ namespace dais
 
     WindowsPlatform::WindowsPlatform()
     {
-        std::cout << "[WindowsPlatform] Constructor" << std::endl;
+        DAIS_TRACE("[WindowsPlatform] Constructor");
     }
 
     WindowsPlatform::~WindowsPlatform()
     {
-        std::cout << "[WindowsPlatform] Destructor" << std::endl;
+        DAIS_TRACE("[WindowsPlatform] Destructor");
 
         if (m_DeviceNotificationHandle)
         {
@@ -44,6 +44,48 @@ namespace dais
         PollMonitors();
     }
 
+    void WindowsPlatform::PollEvents()
+    {
+        MSG msg;
+        HWND handle;
+        Window* window;
+
+        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            if (msg.message == WM_QUIT)
+            {
+                //this message can only be posted from outside so treat it like a full close
+                //TODO: Platform::Terminate
+                DAIS_INFO("WM_QUIT");
+            }
+            else
+            {
+                TranslateMessage(&msg);
+                DispatchMessageW(&msg);
+            }
+        }
+    }
+
+    void WindowsPlatform::WaitEvents()
+    {
+        WaitMessage();
+        PollEvents();
+    }
+
+    void WindowsPlatform::WaitEventsTimeout(double timeout)
+    {
+        if (timeout != timeout
+            || timeout < 0.0
+            || timeout > DBL_MAX)
+        {
+            DAIS_ERROR("Invalid time %f", timeout);
+            return;
+        }
+
+        MsgWaitForMultipleObjects(0, NULL, FALSE, (DWORD)(timeout * 1000.0), QS_ALLEVENTS);
+        PollEvents();
+    }
+
 
     void WindowsPlatform::SetForegroundLockTimeout()
     {
@@ -58,7 +100,7 @@ namespace dais
 
     void WindowsPlatform::PollMonitors()
     {
-        std::cout << "[WindowsPlatform] PollMonitors" << std::endl;
+        DAIS_TRACE("[WindowsPlatform] PollMonitors");
 
         //copy the array of pointers to the monitors
         std::vector<Monitor*> disconnected = m_Monitors;
@@ -218,10 +260,10 @@ namespace dais
         wc.lpfnWndProc = WindowsWindow::WindowProc;
         wc.hInstance = GetModuleHandleW(nullptr);
         wc.hCursor = LoadCursorW(nullptr, IDC_ARROW);
-        wc.lpszClassName = L"DAIS_WINDOW_CLASS";
+        wc.lpszClassName = DAIS_WINDOW_CLASS;
 
         //load user provided icon if available
-        wc.hIcon = (HICON)LoadImageW(GetModuleHandleW(nullptr), L"DAIS_ICON", IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
+        wc.hIcon = (HICON)LoadImageW(GetModuleHandleW(nullptr), DAIS_ICON, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE | LR_SHARED);
         if (!wc.hIcon)
         {
             //no user provided icon found, load default icon
@@ -230,7 +272,7 @@ namespace dais
 
         if (!RegisterClassExW(&wc))
         {
-            std::cout << "Failed to register window class!" << std::endl;
+            DAIS_ERROR("Failed to register window class!");
             return false;
         }
 
@@ -239,14 +281,14 @@ namespace dais
 
     void WindowsPlatform::UnregisterWindowClass()
     {
-        UnregisterClassW(L"DAIS_WINDOW_CLASS", GetModuleHandleW(nullptr));
+        UnregisterClassW(DAIS_WINDOW_CLASS, GetModuleHandleW(nullptr));
     }
 
     bool WindowsPlatform::CreateHelperWindow()
     {
         m_HelperWindowHandle = CreateWindowExW(WS_EX_OVERLAPPEDWINDOW,
-            L"DAIS_WINDOW_CLASS",
-            L"DAIS_HELPER_WINDOW",
+            DAIS_WINDOW_CLASS,
+            DAIS_HELPER_WINDOW_TITLE,
             WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
             0, 0, 1, 1,
             nullptr, nullptr,
@@ -255,7 +297,7 @@ namespace dais
 
         if (!m_HelperWindowHandle)
         {
-            std::cout << "Failed to create helper window!" << std::endl;
+            DAIS_TRACE("Failed to create helper window!");
             return false;
         }
 

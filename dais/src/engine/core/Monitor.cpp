@@ -4,12 +4,12 @@ namespace dais
 {
     Monitor::Monitor()
     {
-        std::cout << "[Monitor] Constructor" << std::endl;
+        DAIS_TRACE("[Monitor] Constructor");
     }
 
     Monitor::~Monitor()
     {
-        std::cout << "[Monitor] Destructor" << std::endl;
+        DAIS_TRACE("[Monitor] Destructor");
 
         if (m_VideoModes.size())
         {
@@ -24,35 +24,35 @@ namespace dais
 
     const std::string& Monitor::GetName() const
     {
-        std::cout << "[Monitor] GetName: ";
+        DAIS_TRACE("[Monitor] GetName");
 
         return m_Name;
     }
 
     void Monitor::GetPosition(int32_t* x, int32_t* y) const
     {
-        std::cout << "[Monitor] GetPosition" << std::endl;
+        DAIS_TRACE("[Monitor] GetPosition");
 
         return PlatformGetPosition(x, y);
     }
 
     void Monitor::GetWorkarea(int32_t* x, int32_t* y, int32_t* width, int32_t* height) const
     {
-        std::cout << "[Monitor] GetWorkarea" << std::endl;
+        DAIS_TRACE("[Monitor] GetWorkarea");
 
         return PlatformGetWorkarea(x, y, width, height);
     }
 
     void Monitor::GetContentScale(float* xScale, float* yScale) const
     {
-        std::cout << "[Monitor] GetContentScale" << std::endl;
+        DAIS_TRACE("[Monitor] GetContentScale");
 
         return PlatformGetContentScale(xScale, yScale);
     }
 
     void Monitor::GetPhysicalSize(int32_t* widthInMillimeters, int32_t* heightInMillimeters) const
     {
-        std::cout << "[Monitor] GetPhysicalSize" << std::endl;
+        DAIS_TRACE("[Monitor] GetPhysicalSize");
 
         *widthInMillimeters = m_WidthInMillimeters;
         *heightInMillimeters = m_HeightInMillimeters;
@@ -60,7 +60,7 @@ namespace dais
 
     void Monitor::RefreshVideoModes()
     {
-        std::cout << "[Monitor] RefreshVideoModes" << std::endl;
+        DAIS_TRACE("[Monitor] RefreshVideoModes");
 
         if (m_VideoModes.size())
         {
@@ -88,7 +88,7 @@ namespace dais
 
     const std::vector<VideoMode*>& Monitor::GetVideoModes()
     {
-        std::cout << "[Monitor] GetVideoModes" << std::endl;
+        DAIS_TRACE("[Monitor] GetVideoModes");
 
         RefreshVideoModes();
 
@@ -97,7 +97,7 @@ namespace dais
 
     VideoMode* Monitor::GetVideoMode()
     {
-        std::cout << "[Monitor] GetVideoMode" << std::endl;
+        DAIS_TRACE("[Monitor] GetVideoMode");
 
         PlatformGetVideoMode(&m_CurrentVideoMode);
 
@@ -110,7 +110,7 @@ namespace dais
             || gamma <= 0.0f
             || gamma > FLT_MAX)
         {
-            std::cout << "Invalid gamma value!" << std::endl;
+            DAIS_ERROR("Invalid gamma value %f!", gamma);
             return;
         }
 
@@ -158,7 +158,7 @@ namespace dais
         if (!ramp
             || !ramp->IsValid())
         {
-            std::cout << "Invalid gamma ramp!" << std::endl;
+            DAIS_ERROR("Invalid gamma ramp!");
             return;
         }
 

@@ -2,21 +2,21 @@
 
 namespace dais
 {
-    Window* Platform::OpenWindow(const std::string& title, uint32_t width, uint32_t height)
+    Window* Platform::OpenWindow(WindowConfig config, Monitor* monitor)
     {
-        Window* window = Window::Create(title, width, height);
+        Window* window = Window::Create(config, monitor);
         m_Windows.push_back(window);
         return window;
     }
 
     Platform::Platform()
     {
-        std::cout << "[Platform] Constructor" << std::endl;
+        DAIS_TRACE("[Platform] Constructor");
     }
 
     Platform::~Platform()
     {
-        std::cout << "[Platform] Destructor" << std::endl;
+        DAIS_TRACE("[Platform] Destructor");
 
         if (m_Monitors.size() > 0)
         {
@@ -38,14 +38,14 @@ namespace dais
 
     const std::vector<Window*>& Platform::GetWindows() const
     {
-        std::cout << "[Platform] GetWindows" << std::endl;
+        DAIS_TRACE("[Platform] GetWindows");
 
         return m_Windows;
     }
 
     Window* Platform::GetPrimaryWindow() const
     {
-        std::cout << "[Platform] GetPrimaryWindow" << std::endl;
+        DAIS_TRACE("[Platform] GetPrimaryWindow");
 
         return m_Windows.size() > 0
             ? m_Windows[0]
@@ -54,14 +54,14 @@ namespace dais
 
     const std::vector<Monitor*>& Platform::GetMonitors() const
     {
-        std::cout << "[Platform] GetMonitors" << std::endl;
+        DAIS_TRACE("[Platform] GetMonitors");
 
         return m_Monitors;
     }
 
     Monitor* Platform::GetPrimaryMonitor() const
     {
-        std::cout << "[Platform] GetPrimaryMonitor" << std::endl;
+        DAIS_TRACE("[Platform] GetPrimaryMonitor");
 
         return m_Monitors.size() > 0
             ? m_Monitors[0]
