@@ -1,7 +1,34 @@
 #include "engine/core/Monitor.h"
+#include "engine/core/Window.h"
 
 namespace dais
 {
+//////////////////////////////////////// STATIC ///////////////////////////////////////////
+
+    void Monitor::SplitBPP(int32_t bpp, int32_t* red, int32_t* green, int32_t* blue)
+    {
+        int32_t delta;
+
+        //we assume that by 32 the user really meant 24
+        if (bpp == 32) bpp = 24;
+
+        //convert "bits per pixel" to red, gree and blue sizes
+        *red = *green = *blue = bpp / 3;
+        delta = bpp - (*red * 3);
+        if (delta >= 1)
+        {
+            *green = *green + 1;
+        }
+        if (delta == 2)
+        {
+            *red = *red + 1;
+        }
+    }
+
+
+
+////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
+
     Monitor::Monitor()
     {
         DAIS_TRACE("[Monitor] Constructor");
@@ -21,6 +48,9 @@ namespace dais
         }
     }
 
+
+
+/////////////////////////////////////// PUBLIC API ////////////////////////////////////////
 
     const std::string& Monitor::GetName() const
     {
@@ -58,14 +88,14 @@ namespace dais
         *heightInMillimeters = m_HeightInMillimeters;
     }
 
-    void Monitor::RefreshVideoModes()
+    bool Monitor::RefreshVideoModes()
     {
         DAIS_TRACE("[Monitor] RefreshVideoModes");
 
         if (m_VideoModes.size())
         {
             //since video modes will not change at runtime, this method's purpose is only for lazy loading
-            return;
+            return true;
         }
 
         //clear existing video modes
@@ -80,10 +110,65 @@ namespace dais
 
         PlatformGetVideoModes(m_VideoModes);
 
-        if (m_VideoModes.size())
+        if (!m_VideoModes.size())
         {
-            std::sort(m_VideoModes.begin(), m_VideoModes.end(), [](VideoMode* a, VideoMode* b) { return *a < *b; });
+            return false;
         }
+
+        std::sort(m_VideoModes.begin(), m_VideoModes.end(), [](VideoMode* a, VideoMode* b) { return *a < *b; });
+        return true;
+    }
+
+    const VideoMode* Monitor::GetClosestVideoMode(const VideoMode* videoMode)
+    {
+        if (!RefreshVideoModes())
+        {
+            return nullptr;
+        }
+
+        uint32_t leastColorDiff = UINT_MAX;
+        uint32_t leastSizeDiff = UINT_MAX;
+        uint32_t leastRefreshRateDiff = UINT_MAX;
+        VideoMode* closestVideoMode = nullptr;
+
+        for (int i = 0; i < m_VideoModes.size(); i++)
+        {
+            VideoMode* currentVideoMode = m_VideoModes[i];
+
+            uint32_t colorDiff = 0;
+            if (videoMode->redBits != -1)
+            {
+                colorDiff += abs(currentVideoMode->redBits - videoMode->redBits);
+            }
+            if (videoMode->greenBits != -1)
+            {
+                colorDiff += abs(currentVideoMode->greenBits - videoMode->greenBits);
+            }
+            if (videoMode->blueBits != -1)
+            {
+                colorDiff += abs(currentVideoMode->blueBits - videoMode->blueBits);
+            }
+
+            int32_t widthDiff = currentVideoMode->width - videoMode->width;
+            int32_t heightDiff = currentVideoMode->height - videoMode->height;
+            uint32_t sizeDiff = abs(widthDiff * widthDiff + heightDiff * heightDiff);
+
+            uint32_t refreshRateDiff = videoMode->refreshRate != -1
+                ? abs(currentVideoMode->refreshRate - videoMode->refreshRate)
+                : UINT_MAX - currentVideoMode->refreshRate;
+
+            if ((colorDiff < leastColorDiff)
+                || (colorDiff == leastColorDiff && sizeDiff < leastSizeDiff)
+                || (colorDiff == leastColorDiff && sizeDiff == leastSizeDiff && refreshRateDiff < leastRefreshRateDiff))
+            {
+                closestVideoMode = currentVideoMode;
+                leastColorDiff = colorDiff;
+                leastSizeDiff = sizeDiff;
+                leastRefreshRateDiff = refreshRateDiff;
+            }
+        }
+
+        return closestVideoMode;
     }
 
     const std::vector<VideoMode*>& Monitor::GetVideoModes()
@@ -104,9 +189,19 @@ namespace dais
         return &m_CurrentVideoMode;
     }
 
+    void Monitor::SetVideoMode(const VideoMode* videoMode)
+    {
+        PlatformSetVideoMode(videoMode);
+    }
+
+    void Monitor::RestoreVideoMode()
+    {
+        PlatformRestoreVideoMode();
+    }
+
     void Monitor::SetGamma(float gamma)
     {
-        if (gamma != gamma 
+        if (gamma != gamma
             || gamma <= 0.0f
             || gamma > FLT_MAX)
         {
@@ -121,12 +216,12 @@ namespace dais
             return;
         }
 
-        GammaRamp* ramp = new GammaRamp(currentRamp->Size);
+        GammaRamp* ramp = new GammaRamp(currentRamp->size);
 
-        for (int i = 0; i < currentRamp->Size; i++)
+        for (int i = 0; i < currentRamp->size; i++)
         {
             //calculate intensity
-            float value = i / (float)(currentRamp->Size - 1);
+            float value = i / (float)(currentRamp->size - 1);
 
             //apply gamma curve
             value = powf(value, 1.0f / gamma) * 65535.0f + 0.5f;
@@ -134,9 +229,9 @@ namespace dais
             //clamp to value range
             value = Utils::fminf(value, 65535.0f);
 
-            ramp->Red.push_back((uint16_t)value);
-            ramp->Green.push_back((uint16_t)value);
-            ramp->Blue.push_back((uint16_t)value);
+            ramp->red.push_back((uint16_t)value);
+            ramp->green.push_back((uint16_t)value);
+            ramp->blue.push_back((uint16_t)value);
         }
 
         SetGammaRamp(ramp);
@@ -163,7 +258,7 @@ namespace dais
         }
 
         //make sure we have the original ramp
-        if (!m_OriginalGammaRamp.Size
+        if (!m_OriginalGammaRamp.size
             && !PlatformGetGammaRamp(&m_OriginalGammaRamp))
         {
             return;
@@ -172,24 +267,13 @@ namespace dais
         PlatformSetGammaRamp(ramp);
     }
 
-
-    void Monitor::SplitBPP(int32_t bpp, int32_t* red, int32_t* green, int32_t* blue)
+    Window* Monitor::GetWindow() const
     {
-        int32_t delta;
+        return m_Window;
+    }
 
-        //we assume that by 32 the user really meant 24
-        if (bpp == 32) bpp = 24;
-
-        //convert "bits per pixel" to red, gree and blue sizes
-        *red = *green = *blue = bpp / 3;
-        delta = bpp - (*red * 3);
-        if (delta >= 1)
-        {
-            *green = *green + 1;
-        }
-        if (delta == 2)
-        {
-            *red = *red + 1;
-        }
+    void Monitor::SetWindow(Window* window)
+    {
+        m_Window = window;
     }
 }

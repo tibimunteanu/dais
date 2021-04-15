@@ -2,6 +2,56 @@
 
 namespace dais
 {
+//////////////////////////////////////// STATIC ///////////////////////////////////////////
+
+    BOOL CALLBACK WindowsMonitor::SetHandle(HMONITOR handle, HDC dc, RECT* rect, LPARAM data)
+    {
+        MONITORINFOEXW mi = {};
+        mi.cbSize = sizeof(mi);
+
+        if (GetMonitorInfoW(handle, (MONITORINFO*)&mi))
+        {
+            WindowsMonitor* monitor = (WindowsMonitor*)data;
+
+            if (wcscmp(mi.szDevice, monitor->m_AdapterName) == 0)
+            {
+                monitor->m_Handle = handle;
+            }
+        }
+
+        return TRUE;
+    }
+
+    void WindowsMonitor::GetContentScale(HMONITOR handle, float* xScale, float* yScale)
+    {
+        UINT xdpi, ydpi;
+
+        if (WindowsBase::IsWindows8Point1OrGreater())
+        {
+            WindowsBase::Libs.Shcore.GetDpiForMonitor(handle, MDT_EFFECTIVE_DPI, &xdpi, &ydpi);
+        }
+        else
+        {
+            const HDC dc = GetDC(nullptr);
+            xdpi = GetDeviceCaps(dc, LOGPIXELSX);
+            ydpi = GetDeviceCaps(dc, LOGPIXELSY);
+            ReleaseDC(nullptr, dc);
+        }
+
+        if (xScale)
+        {
+            *xScale = xdpi / (float)USER_DEFAULT_SCREEN_DPI;
+        }
+        if (yScale)
+        {
+            *yScale = ydpi / (float)USER_DEFAULT_SCREEN_DPI;
+        }
+    }
+
+
+
+////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
+
     WindowsMonitor::WindowsMonitor(DISPLAY_DEVICEW* adapter, DISPLAY_DEVICEW* display)
     {
         DAIS_TRACE("[WindowsMonitor] Constructor");
@@ -59,6 +109,9 @@ namespace dais
         DAIS_TRACE("[WindowsMonitor] Destructor");
     }
 
+
+
+///////////////////////////////////// PLATFORM API ////////////////////////////////////////
 
     void WindowsMonitor::PlatformGetPosition(int32_t* x, int32_t* y) const
     {
@@ -146,12 +199,12 @@ namespace dais
             {
                 VideoMode existingVideoMode = *m_VideoModes[i];
 
-                if (existingVideoMode.Width == dm.dmPelsWidth
-                    && existingVideoMode.Height == dm.dmPelsHeight
-                    && existingVideoMode.RefreshRate == dm.dmDisplayFrequency
-                    && existingVideoMode.RedBits == redBits
-                    && existingVideoMode.GreenBits == greenBits
-                    && existingVideoMode.BlueBits == blueBits)
+                if (existingVideoMode.width == dm.dmPelsWidth
+                    && existingVideoMode.height == dm.dmPelsHeight
+                    && existingVideoMode.refreshRate == dm.dmDisplayFrequency
+                    && existingVideoMode.redBits == redBits
+                    && existingVideoMode.greenBits == greenBits
+                    && existingVideoMode.blueBits == blueBits)
                 {
                     break;
                 }
@@ -170,12 +223,12 @@ namespace dais
 
             //add a new video mode
             VideoMode* videoMode = new VideoMode();
-            videoMode->Width = dm.dmPelsWidth;
-            videoMode->Height = dm.dmPelsHeight;
-            videoMode->RefreshRate = dm.dmDisplayFrequency;
-            videoMode->RedBits = redBits;
-            videoMode->GreenBits = greenBits;
-            videoMode->BlueBits = blueBits;
+            videoMode->width = dm.dmPelsWidth;
+            videoMode->height = dm.dmPelsHeight;
+            videoMode->refreshRate = dm.dmDisplayFrequency;
+            videoMode->redBits = redBits;
+            videoMode->greenBits = greenBits;
+            videoMode->blueBits = blueBits;
 
             m_VideoModes.push_back(videoMode);
         }
@@ -198,11 +251,63 @@ namespace dais
 
         EnumDisplaySettingsW(m_AdapterName, ENUM_CURRENT_SETTINGS, &dm);
 
-        videoMode->Width = dm.dmPelsWidth;
-        videoMode->Height = dm.dmPelsHeight;
-        videoMode->RefreshRate = dm.dmDisplayFrequency;
+        videoMode->width = dm.dmPelsWidth;
+        videoMode->height = dm.dmPelsHeight;
+        videoMode->refreshRate = dm.dmDisplayFrequency;
 
-        Monitor::SplitBPP(dm.dmBitsPerPel, &videoMode->RedBits, &videoMode->GreenBits, &videoMode->BlueBits);
+        Monitor::SplitBPP(dm.dmBitsPerPel, &videoMode->redBits, &videoMode->greenBits, &videoMode->blueBits);
+    }
+
+    void WindowsMonitor::PlatformSetVideoMode(const VideoMode* videoMode)
+    {
+        const VideoMode* closestVideoMode = GetClosestVideoMode(videoMode);
+        VideoMode* currentVideoMode = GetVideoMode();
+
+        if (*currentVideoMode == *closestVideoMode)
+        {
+            return;
+        }
+
+        DEVMODEW dm = {};
+        dm.dmSize = sizeof(dm);
+        dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL | DM_DISPLAYFREQUENCY;
+        dm.dmPelsWidth = closestVideoMode->width;
+        dm.dmPelsHeight = closestVideoMode->height;
+        dm.dmBitsPerPel = closestVideoMode->redBits + closestVideoMode->greenBits + closestVideoMode->blueBits;
+        dm.dmDisplayFrequency = closestVideoMode->refreshRate;
+
+        if (dm.dmBitsPerPel < 15 || dm.dmBitsPerPel >= 24)
+        {
+            dm.dmBitsPerPel = 32;
+        }
+
+        LONG result = ChangeDisplaySettingsExW(m_AdapterName, &dm, NULL, CDS_FULLSCREEN, NULL);
+        if (result == DISP_CHANGE_SUCCESSFUL)
+        {
+            m_ModeChanged = true;
+        }
+        else
+        {
+            std::string error = "Unknown error";
+            if (result == DISP_CHANGE_BADDUALVIEW) error = "The system uses DualView";
+            else if (result == DISP_CHANGE_BADFLAGS) error = "Invalid flags";
+            else if (result == DISP_CHANGE_BADMODE) error = "Video mode not supported";
+            else if (result == DISP_CHANGE_BADPARAM) error = "Invalid parameter";
+            else if (result == DISP_CHANGE_FAILED) error = "Video mode failed";
+            else if (result == DISP_CHANGE_NOTUPDATED) error = "Failed to write to registry";
+            else if (result == DISP_CHANGE_RESTART) error = "Computer restart required";
+
+            DAIS_ERROR("Failed to set video mode: %s", error);
+        }
+    }
+
+    void WindowsMonitor::PlatformRestoreVideoMode()
+    {
+        if (m_ModeChanged)
+        {
+            ChangeDisplaySettingsExW(m_AdapterName, NULL, NULL, CDS_FULLSCREEN, NULL);
+            m_ModeChanged = false;
+        }
     }
 
     bool WindowsMonitor::PlatformGetGammaRamp(GammaRamp* ramp)
@@ -215,13 +320,13 @@ namespace dais
         DeleteDC(dc);
 
         ramp->Clear();
-        ramp->Size = 256;
+        ramp->size = 256;
 
         for (int i = 0; i < 256; i++)
         {
-            ramp->Red.push_back(values[0][i]);
-            ramp->Green.push_back(values[1][i]);
-            ramp->Blue.push_back(values[2][i]);
+            ramp->red.push_back(values[0][i]);
+            ramp->green.push_back(values[1][i]);
+            ramp->blue.push_back(values[2][i]);
         }
 
         return true;
@@ -231,7 +336,7 @@ namespace dais
     {
         WORD values[3][256];
 
-        if (ramp->Size != 256)
+        if (ramp->size != 256)
         {
             DAIS_ERROR("Gamma ramp size must be 256!");
             return;
@@ -239,58 +344,13 @@ namespace dais
 
         for (int i = 0; i < 256; i++)
         {
-            values[0][i] = ramp->Red[i];
-            values[1][i] = ramp->Green[i];
-            values[2][i] = ramp->Blue[i];
+            values[0][i] = ramp->red[i];
+            values[1][i] = ramp->green[i];
+            values[2][i] = ramp->blue[i];
         }
 
         HDC dc = CreateDCW(L"DISPLAY", m_AdapterName, nullptr, nullptr);
         SetDeviceGammaRamp(dc, values);
         DeleteDC(dc);
-    }
-
-
-    BOOL CALLBACK WindowsMonitor::SetHandle(HMONITOR handle, HDC dc, RECT* rect, LPARAM data)
-    {
-        MONITORINFOEXW mi = {};
-        mi.cbSize = sizeof(mi);
-
-        if (GetMonitorInfoW(handle, (MONITORINFO*)&mi))
-        {
-            WindowsMonitor* monitor = (WindowsMonitor*)data;
-
-            if (wcscmp(mi.szDevice, monitor->m_AdapterName) == 0)
-            {
-                monitor->m_Handle = handle;
-            }
-        }
-
-        return TRUE;
-    }
-
-    void WindowsMonitor::GetContentScale(HMONITOR handle, float* xScale, float* yScale)
-    {
-        UINT xdpi, ydpi;
-
-        if (WindowsBase::IsWindows8Point1OrGreater())
-        {
-            WindowsBase::Libs.Shcore.GetDpiForMonitor(handle, MDT_EFFECTIVE_DPI, &xdpi, &ydpi);
-        }
-        else
-        {
-            const HDC dc = GetDC(nullptr);
-            xdpi = GetDeviceCaps(dc, LOGPIXELSX);
-            ydpi = GetDeviceCaps(dc, LOGPIXELSY);
-            ReleaseDC(nullptr, dc);
-        }
-
-        if (xScale)
-        {
-            *xScale = xdpi / (float)USER_DEFAULT_SCREEN_DPI;
-        }
-        if (yScale)
-        {
-            *yScale = ydpi / (float)USER_DEFAULT_SCREEN_DPI;
-        }
     }
 }

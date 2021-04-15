@@ -29,15 +29,27 @@ int main(int argc, char** argv)
     windowConfig.visible = true;
     windowConfig.decorated = true;
     windowConfig.resizable = true;
+
     windowConfig.floating = true;
+    windowConfig.scaleToMonitor = true;
+    windowConfig.refreshRate = -1;
+
+    dais::FramebufferConfig fbConfig = {};
+    fbConfig.redBits = 8;
+    fbConfig.greenBits = 8;
+    fbConfig.blueBits = 8;
+    fbConfig.alphaBits = 8;
+    fbConfig.depthBits = 24;
+    fbConfig.stencilBits = 8;
+    fbConfig.sRGB = true;
     
-    dais::Window* window = platform->OpenWindow(windowConfig, nullptr);
+    dais::Window* window = platform->OpenWindow(windowConfig, fbConfig, nullptr);
     if (!window)
     {
         throw std::runtime_error("Could not open window!");
     }
 
-    while (true)
+    while (!window->ShouldClose())
     {
         platform->PollEvents();
     }
@@ -83,8 +95,6 @@ int main(int argc, char** argv)
         currentMonitor->GetContentScale(&xScale, &yScale);
         std::cout << "\txScale: " << xScale << ", yScale: " << yScale << std::endl;
     }
-
-    window->Close();
 
     delete platform;
 

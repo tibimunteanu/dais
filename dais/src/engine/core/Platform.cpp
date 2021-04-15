@@ -2,9 +2,8 @@
 
 namespace dais
 {
-    Window* Platform::OpenWindow(WindowConfig config, Monitor* monitor)
-    {
-        Window* window = Window::Create(config, monitor);
+    Window* Platform::OpenWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor) {
+        Window* window = Window::Create(config, fbConfig, monitor);
         m_Windows.push_back(window);
         return window;
     }

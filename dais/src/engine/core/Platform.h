@@ -29,7 +29,7 @@ namespace dais
 
         virtual void Init() = 0;
 
-        Window* OpenWindow(WindowConfig config, Monitor* monitor);
+        Window* OpenWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor);
 
         const std::vector<Window*>& GetWindows() const;
         Window* GetPrimaryWindow() const;
