@@ -79,7 +79,7 @@ namespace dais
             red.reserve(size);
             green.reserve(size);
             blue.reserve(size);
-            size = size;
+            this->size = size;
         }
 
         void Clear()

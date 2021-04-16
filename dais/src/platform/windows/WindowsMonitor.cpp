@@ -1,4 +1,4 @@
-#include "platform/windows/WindowsMonitor.h"
+#include "platform/windows/WindowsPlatform.h"
 
 namespace dais
 {
@@ -26,9 +26,9 @@ namespace dais
     {
         UINT xdpi, ydpi;
 
-        if (WindowsBase::IsWindows8Point1OrGreater())
+        if (WindowsPlatform::IsWindows8Point1OrGreater())
         {
-            WindowsBase::Libs.Shcore.GetDpiForMonitor(handle, MDT_EFFECTIVE_DPI, &xdpi, &ydpi);
+            WindowsPlatform::s_Libs.Shcore.GetDpiForMonitor(handle, MDT_EFFECTIVE_DPI, &xdpi, &ydpi);
         }
         else
         {
@@ -56,15 +56,15 @@ namespace dais
     {
         DAIS_TRACE("[WindowsMonitor] Constructor");
 
-        WindowsBase::WideStringToUTF8(display ? display->DeviceString : adapter->DeviceString, m_Name);
+        WindowsPlatform::WideStringToUTF8(display ? display->DeviceString : adapter->DeviceString, m_Name);
 
         wcscpy(m_AdapterName, adapter->DeviceName);
-        WindowsBase::WideStringToUTF8(adapter->DeviceName, m_PublicAdapterName);
+        WindowsPlatform::WideStringToUTF8(adapter->DeviceName, m_PublicAdapterName);
 
         if (display)
         {
             wcscpy(m_DisplayName, display->DeviceName);
-            WindowsBase::WideStringToUTF8(display->DeviceName, m_PublicDisplayName);
+            WindowsPlatform::WideStringToUTF8(display->DeviceName, m_PublicDisplayName);
         }
 
         m_ModesPruned = (adapter->StateFlags & DISPLAY_DEVICE_MODESPRUNED);
@@ -78,7 +78,7 @@ namespace dais
         //get dimensions in millimeters
         HDC dc = CreateDCW(L"DISPLAY", adapter->DeviceName, nullptr, nullptr);
 
-        if (WindowsBase::IsWindows8Point1OrGreater())
+        if (WindowsPlatform::IsWindows8Point1OrGreater())
         {
             m_WidthInMillimeters = GetDeviceCaps(dc, HORZSIZE);
             m_HeightInMillimeters = GetDeviceCaps(dc, VERTSIZE);

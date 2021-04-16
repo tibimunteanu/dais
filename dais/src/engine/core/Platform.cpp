@@ -2,78 +2,62 @@
 
 namespace dais
 {
-    Window* Platform::OpenWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor) {
+    ////////////////////////////////////// STATIC MEMBERS /////////////////////////////////////////
+
+    std::vector<Window*> Platform::s_Windows = {};
+    std::vector<Monitor*> Platform::s_Monitors = {};
+    Platform::Callbacks Platform::s_Callbacks = {};
+
+
+
+    //////////////////////////////////////// STATIC API ///////////////////////////////////////////
+
+    Window* Platform::OpenWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor)
+    {
         Window* window = Window::Create(config, fbConfig, monitor);
-        m_Windows.push_back(window);
+        s_Windows.push_back(window);
         return window;
     }
 
-    Platform::Platform()
-    {
-        DAIS_TRACE("[Platform] Constructor");
-    }
-
-    Platform::~Platform()
-    {
-        DAIS_TRACE("[Platform] Destructor");
-
-        if (m_Monitors.size() > 0)
-        {
-            for (size_t i = 0; i < m_Monitors.size(); i++)
-            {
-                //TODO: m_Monitors[i]->RestoreOriginalGammaRamp();
-                delete m_Monitors[i];
-            }
-        }
-
-        if (m_Windows.size() > 0)
-        {
-            for (size_t i = 0; i < m_Windows.size(); i++)
-            {
-                delete m_Windows[i];
-            }
-        }
-    }
-
-    const std::vector<Window*>& Platform::GetWindows() const
+    const std::vector<Window*>& Platform::GetWindows()
     {
         DAIS_TRACE("[Platform] GetWindows");
 
-        return m_Windows;
+        return s_Windows;
     }
 
-    Window* Platform::GetPrimaryWindow() const
+    Window* Platform::GetPrimaryWindow()
     {
         DAIS_TRACE("[Platform] GetPrimaryWindow");
 
-        return m_Windows.size() > 0
-            ? m_Windows[0]
+        return s_Windows.size() > 0
+            ? s_Windows[0]
             : nullptr;
     }
 
-    const std::vector<Monitor*>& Platform::GetMonitors() const
+    const std::vector<Monitor*>& Platform::GetMonitors()
     {
         DAIS_TRACE("[Platform] GetMonitors");
 
-        return m_Monitors;
+        return s_Monitors;
     }
 
-    Monitor* Platform::GetPrimaryMonitor() const
+    Monitor* Platform::GetPrimaryMonitor()
     {
         DAIS_TRACE("[Platform] GetPrimaryMonitor");
 
-        return m_Monitors.size() > 0
-            ? m_Monitors[0]
+        return s_Monitors.size() > 0
+            ? s_Monitors[0]
             : nullptr;
     }
 
     void Platform::SetMonitorConnectedCallback(MonitorConnectedCallback callback)
     {
-        m_Callbacks.MonitorConnected = callback;
+        s_Callbacks.MonitorConnected = callback;
     }
 
     void Platform::SetMonitorDisconnectedCallback(MonitorConnectedCallback callback)
     {
-        m_Callbacks.MonitorDisconnected = callback;
+        s_Callbacks.MonitorDisconnected = callback;
     }
 }

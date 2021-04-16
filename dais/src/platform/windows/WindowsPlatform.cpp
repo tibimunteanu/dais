@@ -2,49 +2,63 @@
 
 namespace dais
 {
-    Platform* Platform::Create()
+////////////////////////////////////// STATIC MEMBERS /////////////////////////////////////////
+
+    HWND WindowsPlatform::s_HelperWindowHandle = nullptr;
+    HDEVNOTIFY WindowsPlatform::s_DeviceNotificationHandle = nullptr;
+    DWORD WindowsPlatform::s_ForegroundLockTimeout = 0;
+    WindowsPlatform::WindowsLibs WindowsPlatform::s_Libs = {};
+
+
+
+//////////////////////////////////////// STATIC API ///////////////////////////////////////////
+
+    void Platform::Init()
     {
-        return new WindowsPlatform();
+        WindowsPlatform::SetForegroundLockTimeout();
+        WindowsPlatform::LoadLibraries();
+        WindowsPlatform::SetProcessDpiAware();
+        WindowsPlatform::RegisterWindowClass();
+        WindowsPlatform::CreateHelperWindow();
+        WindowsPlatform::PollMonitors();
     }
 
-    WindowsPlatform::WindowsPlatform()
+    void Platform::Terminate()
     {
-        DAIS_TRACE("[WindowsPlatform] Constructor");
-    }
-
-    WindowsPlatform::~WindowsPlatform()
-    {
-        DAIS_TRACE("[WindowsPlatform] Destructor");
-
-        if (m_DeviceNotificationHandle)
+        if (s_Monitors.size() > 0)
         {
-            UnregisterDeviceNotification(m_DeviceNotificationHandle);
+            for (size_t i = 0; i < s_Monitors.size(); i++)
+            {
+                //TODO: m_Monitors[i]->RestoreOriginalGammaRamp();
+                delete s_Monitors[i];
+            }
         }
 
-        if (m_HelperWindowHandle)
+        if (s_Windows.size() > 0)
         {
-            DestroyWindow(m_HelperWindowHandle);
+            for (size_t i = 0; i < s_Windows.size(); i++)
+            {
+                delete s_Windows[i];
+            }
         }
 
-        UnregisterWindowClass();
-        RestoreForegroundLockTimeout();
+        if (WindowsPlatform::s_DeviceNotificationHandle)
+        {
+            UnregisterDeviceNotification(WindowsPlatform::s_DeviceNotificationHandle);
+        }
 
-        WindowsBase::FreeLibraries();
+        if (WindowsPlatform::s_HelperWindowHandle)
+        {
+            DestroyWindow(WindowsPlatform::s_HelperWindowHandle);
+        }
+
+        WindowsPlatform::UnregisterWindowClass();
+        WindowsPlatform::RestoreForegroundLockTimeout();
+
+        WindowsPlatform::FreeLibraries();
     }
 
-    void WindowsPlatform::Init()
-    {
-        SetForegroundLockTimeout();
-
-        WindowsBase::LoadLibraries();
-        WindowsBase::SetProcessDpiAware();
-
-        RegisterWindowClass();
-        CreateHelperWindow();
-        PollMonitors();
-    }
-
-    void WindowsPlatform::PollEvents()
+    void Platform::PollEvents()
     {
         MSG msg;
         HWND handle;
@@ -66,13 +80,13 @@ namespace dais
         }
     }
 
-    void WindowsPlatform::WaitEvents()
+    void Platform::WaitEvents()
     {
         WaitMessage();
         PollEvents();
     }
 
-    void WindowsPlatform::WaitEventsTimeout(double timeout)
+    void Platform::WaitEventsTimeout(double timeout)
     {
         if (timeout != timeout
             || timeout < 0.0
@@ -87,15 +101,127 @@ namespace dais
     }
 
 
+    bool WindowsPlatform::LoadLibraries()
+    {
+        DAIS_TRACE("[WindowsPlatform] Loading libraries");
+
+        //XInput
+        {
+            int i;
+            const char* names[] =
+            {
+                "xinput1_4.dll",
+                "xinput1_3.dll",
+                "xinput9_1_0.dll",
+                "xinput1_2.dll",
+                "xinput1_1.dll",
+                nullptr
+            };
+
+            for (i = 0; names[i]; i++)
+            {
+                s_Libs.XInput.Instance = LoadLibraryA(names[i]);
+                if (s_Libs.XInput.Instance)
+                {
+                    s_Libs.XInput.GetCapabilities = (PFN_XInputGetCapabilities)GetProcAddress(s_Libs.XInput.Instance, "XInputGetCapabilities");
+                    s_Libs.XInput.GetState = (PFN_XInputGetState)GetProcAddress(s_Libs.XInput.Instance, "XInputGetState");
+                    break;
+                }
+            }
+        }
+
+        s_Libs.DInput8.Instance = LoadLibraryA("dinput8.dll");
+        if (s_Libs.DInput8.Instance)
+        {
+            s_Libs.DInput8.Create = (PFN_DirectInput8Create)GetProcAddress(s_Libs.DInput8.Instance, "DirectInput8Create");
+        }
+
+        s_Libs.Winmm.Instance = LoadLibraryA("winmm.dll");
+        if (!s_Libs.Winmm.Instance)
+        {
+            DAIS_ERROR("[WindowsPlatform] LoadLibraries(): Failed to load winmm.dll!");
+            return false;
+        }
+
+        s_Libs.Winmm.GetTime = (PFN_timeGetTime)GetProcAddress(s_Libs.Winmm.Instance, "timeGetTime");
+
+        s_Libs.User32.Instance = LoadLibraryA("user32.dll");
+        if (!s_Libs.User32.Instance)
+        {
+            DAIS_ERROR("[WindowsPlatform] LoadLibraries(): Failed to load user32.dll!");
+            return false;
+        }
+
+        s_Libs.User32.SetProcessDPIAware = (PFN_SetProcessDPIAware)GetProcAddress(s_Libs.User32.Instance, "SetProcessDPIAware");
+        s_Libs.User32.ChangeWindowMessageFilterEx = (PFN_ChangeWindowMessageFilterEx)GetProcAddress(s_Libs.User32.Instance, "ChangeWindowMessageFilterEx");
+        s_Libs.User32.EnableNonClientDpiScaling = (PFN_EnableNonClientDpiScaling)GetProcAddress(s_Libs.User32.Instance, "EnableNonClientDpiScaling");
+        s_Libs.User32.SetProcessDpiAwarenessContext = (PFN_SetProcessDpiAwarenessContext)GetProcAddress(s_Libs.User32.Instance, "SetProcessDpiAwarenessContext");
+        s_Libs.User32.GetDpiForWindow = (PFN_GetDpiForWindow)GetProcAddress(s_Libs.User32.Instance, "GetDpiForWindow");
+        s_Libs.User32.AdjustWindowRectExForDpi = (PFN_AdjustWindowRectExForDpi)GetProcAddress(s_Libs.User32.Instance, "AdjustWindowRectExForDpi");
+
+        s_Libs.Dwmapi.Instance = LoadLibraryA("dwmapi.dll");
+        if (s_Libs.Dwmapi.Instance)
+        {
+            s_Libs.Dwmapi.IsCompositionEnabled = (PFN_DwmIsCompositionEnabled)GetProcAddress(s_Libs.Dwmapi.Instance, "DwmIsCompositionEnabled");
+            s_Libs.Dwmapi.Flush = (PFN_DwmFlush)GetProcAddress(s_Libs.Dwmapi.Instance, "DwmFlush");
+            s_Libs.Dwmapi.EnableBlurBehindWindow = (PFN_DwmEnableBlurBehindWindow)GetProcAddress(s_Libs.Dwmapi.Instance, "DwmEnableBlurBehindWindow");
+            s_Libs.Dwmapi.GetColorizationColor = (PFN_DwmGetColorizationColor)GetProcAddress(s_Libs.Dwmapi.Instance, "DwmGetColorizationColor");
+        }
+
+        s_Libs.Shcore.Instance = LoadLibraryA("shcore.dll");
+        if (s_Libs.Shcore.Instance)
+        {
+            s_Libs.Shcore.SetProcessDpiAwareness = (PFN_SetProcessDpiAwareness)GetProcAddress(s_Libs.Shcore.Instance, "SetProcessDpiAwareness");
+            s_Libs.Shcore.GetDpiForMonitor = (PFN_GetDpiForMonitor)GetProcAddress(s_Libs.Shcore.Instance, "GetDpiForMonitor");
+        }
+
+        s_Libs.Ntdll.Instance = LoadLibraryA("ntdll.dll");
+        if (s_Libs.Ntdll.Instance)
+        {
+            s_Libs.Ntdll.RtlVerifyVersionInfo = (PFN_RtlVerifyVersionInfo)GetProcAddress(s_Libs.Ntdll.Instance, "RtlVerifyVersionInfo");
+        }
+
+        return true;
+    }
+
+    void WindowsPlatform::FreeLibraries()
+    {
+        DAIS_TRACE("[WindowsPlatform] Free libraries");
+
+        if (s_Libs.XInput.Instance) FreeLibrary(s_Libs.XInput.Instance);
+        if (s_Libs.DInput8.Instance) FreeLibrary(s_Libs.DInput8.Instance);
+        if (s_Libs.Winmm.Instance) FreeLibrary(s_Libs.Winmm.Instance);
+        if (s_Libs.User32.Instance) FreeLibrary(s_Libs.User32.Instance);
+        if (s_Libs.Dwmapi.Instance) FreeLibrary(s_Libs.Dwmapi.Instance);
+        if (s_Libs.Shcore.Instance) FreeLibrary(s_Libs.Shcore.Instance);
+        if (s_Libs.Ntdll.Instance) FreeLibrary(s_Libs.Ntdll.Instance);
+    }
+
+    void WindowsPlatform::SetProcessDpiAware()
+    {
+        if (IsWindows10CreatorsUpdateOrGreater())
+        {
+            s_Libs.User32.SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        }
+        else if (IsWindows8Point1OrGreater())
+        {
+            s_Libs.Shcore.SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+        }
+        else if (IsWindowsVistaOrGreater())
+        {
+            s_Libs.User32.SetProcessDPIAware();
+        }
+    }
+
     void WindowsPlatform::SetForegroundLockTimeout()
     {
-        SystemParametersInfoW(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &m_ForegroundLockTimeout, 0);
+        SystemParametersInfoW(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &s_ForegroundLockTimeout, 0);
         SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UIntToPtr(0), SPIF_SENDCHANGE);
     }
 
     void WindowsPlatform::RestoreForegroundLockTimeout()
     {
-        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UIntToPtr(m_ForegroundLockTimeout), SPIF_SENDCHANGE);
+        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UIntToPtr(s_ForegroundLockTimeout), SPIF_SENDCHANGE);
     }
 
     void WindowsPlatform::PollMonitors()
@@ -103,7 +229,7 @@ namespace dais
         DAIS_TRACE("[WindowsPlatform] PollMonitors");
 
         //copy the array of pointers to the monitors
-        std::vector<Monitor*> disconnected = m_Monitors;
+        std::vector<Monitor*> disconnected = s_Monitors;
 
         //loop display adapters
         uint32_t adapterIndex;
@@ -155,7 +281,7 @@ namespace dais
                     {
                         disconnected[d] = nullptr;
 
-                        EnumDisplayMonitors(nullptr, nullptr, WindowsMonitor::SetHandle, (LPARAM)m_Monitors[d]);
+                        EnumDisplayMonitors(nullptr, nullptr, WindowsMonitor::SetHandle, (LPARAM)s_Monitors[d]);
                         break;
                     }
                 }
@@ -175,18 +301,18 @@ namespace dais
                 //insert it in the m_Monitors array
                 if (insertFirst)
                 {
-                    m_Monitors.insert(m_Monitors.begin(), monitor);
+                    s_Monitors.insert(s_Monitors.begin(), monitor);
                 }
                 else
                 {
-                    m_Monitors.push_back(monitor);
+                    s_Monitors.push_back(monitor);
                 }
                 insertFirst = false;
 
                 //call the MonitorConnected callback
-                if (m_Callbacks.MonitorConnected)
+                if (s_Callbacks.MonitorConnected)
                 {
-                    m_Callbacks.MonitorConnected((Monitor*)monitor);
+                    s_Callbacks.MonitorConnected((Monitor*)monitor);
                 }
             }
 
@@ -218,12 +344,12 @@ namespace dais
                 }
 
                 //insert it in the m_Monitors array
-                m_Monitors.push_back(monitor);
+                s_Monitors.push_back(monitor);
 
                 //call the MonitorConnected callback
-                if (m_Callbacks.MonitorConnected)
+                if (s_Callbacks.MonitorConnected)
                 {
-                    m_Callbacks.MonitorConnected((Monitor*)monitor);
+                    s_Callbacks.MonitorConnected((Monitor*)monitor);
                 }
             }
         }
@@ -233,18 +359,18 @@ namespace dais
         {
             if (disconnected[d])
             {
-                Monitor* monitor = m_Monitors[d];
+                Monitor* monitor = s_Monitors[d];
 
                 //remove this monitor from the m_Monitors array
-                m_Monitors.erase(m_Monitors.begin() + d);
+                s_Monitors.erase(s_Monitors.begin() + d);
 
                 //also remove this monitor from the disconnected array to keep indices in sync with m_Monitors array
                 disconnected.erase(disconnected.begin() + d);
 
                 //call the MonitorDisconnected callback
-                if (m_Callbacks.MonitorDisconnected)
+                if (s_Callbacks.MonitorDisconnected)
                 {
-                    m_Callbacks.MonitorDisconnected((Monitor*)monitor);
+                    s_Callbacks.MonitorDisconnected((Monitor*)monitor);
                 }
 
                 delete monitor;
@@ -286,7 +412,7 @@ namespace dais
 
     bool WindowsPlatform::CreateHelperWindow()
     {
-        m_HelperWindowHandle = CreateWindowExW(WS_EX_OVERLAPPEDWINDOW,
+        s_HelperWindowHandle = CreateWindowExW(WS_EX_OVERLAPPEDWINDOW,
             DAIS_WINDOW_CLASS,
             DAIS_HELPER_WINDOW_TITLE,
             WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
@@ -295,13 +421,13 @@ namespace dais
             GetModuleHandleW(nullptr),
             nullptr);
 
-        if (!m_HelperWindowHandle)
+        if (!s_HelperWindowHandle)
         {
             DAIS_TRACE("Failed to create helper window!");
             return false;
         }
 
-        ShowWindow(m_HelperWindowHandle, SW_HIDE);
+        ShowWindow(s_HelperWindowHandle, SW_HIDE);
 
         //register for HID device notifications
         DEV_BROADCAST_DEVICEINTERFACE_W dbi = {};
@@ -309,18 +435,138 @@ namespace dais
         dbi.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
         dbi.dbcc_classguid = GUID_DEVINTERFACE_HID;
 
-        m_DeviceNotificationHandle = RegisterDeviceNotificationW(m_HelperWindowHandle,
+        s_DeviceNotificationHandle = RegisterDeviceNotificationW(s_HelperWindowHandle,
             (DEV_BROADCAST_HDR*)&dbi,
             DEVICE_NOTIFY_WINDOW_HANDLE);
 
         //process messages
         MSG msg;
-        while (PeekMessageW(&msg, m_HelperWindowHandle, 0, 0, PM_REMOVE))
+        while (PeekMessageW(&msg, s_HelperWindowHandle, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
         }
 
         return true;
+    }
+
+
+    bool WindowsPlatform::IsWindowsVersionOrGreater(WORD major, WORD minor, WORD sp)
+    {
+        OSVERSIONINFOEXW osvi = { sizeof(osvi), major, minor, 0, 0, {0}, sp };
+        DWORD mask = VER_MAJORVERSION | VER_MINORVERSION | VER_SERVICEPACKMAJOR;
+        ULONGLONG cond = VerSetConditionMask(0, VER_MAJORVERSION, VER_GREATER_EQUAL);
+        cond = VerSetConditionMask(cond, VER_MINORVERSION, VER_GREATER_EQUAL);
+        cond = VerSetConditionMask(cond, VER_SERVICEPACKMAJOR, VER_GREATER_EQUAL);
+        // HACK: Use RtlVerifyVersionInfo instead of VerifyVersionInfoW as the
+        //       latter lies unless the user knew to embed a non-default manifest
+        //       announcing support for Windows 10 via supportedOS GUID
+        return s_Libs.Ntdll.RtlVerifyVersionInfo(&osvi, mask, cond) == 0;
+    }
+
+    bool WindowsPlatform::IsWindowsVistaOrGreater()
+    {
+        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_VISTA), LOBYTE(_WIN32_WINNT_VISTA), 0);
+    }
+
+    bool WindowsPlatform::IsWindows7OrGreater()
+    {
+        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WIN7), LOBYTE(_WIN32_WINNT_WIN7), 0);
+    }
+
+    bool WindowsPlatform::IsWindows8OrGreater()
+    {
+        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WIN8), LOBYTE(_WIN32_WINNT_WIN8), 0);
+    }
+
+    bool WindowsPlatform::IsWindows8Point1OrGreater()
+    {
+        return IsWindowsVersionOrGreater(HIBYTE(_WIN32_WINNT_WINBLUE), LOBYTE(_WIN32_WINNT_WINBLUE), 0);
+    }
+
+    bool WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater()
+    {
+        return IsWindows10BuildOrGreater(14393);
+    }
+
+    bool WindowsPlatform::IsWindows10CreatorsUpdateOrGreater()
+    {
+        return IsWindows10BuildOrGreater(15063);
+    }
+
+    bool WindowsPlatform::IsWindows10BuildOrGreater(WORD build)
+    {
+        // Checks whether we are on at least the specified build of Windows 10
+        OSVERSIONINFOEXW osvi = { sizeof(osvi), 10, 0, build };
+        DWORD mask = VER_MAJORVERSION | VER_MINORVERSION | VER_BUILDNUMBER;
+        ULONGLONG cond = VerSetConditionMask(0, VER_MAJORVERSION, VER_GREATER_EQUAL);
+        cond = VerSetConditionMask(cond, VER_MINORVERSION, VER_GREATER_EQUAL);
+        cond = VerSetConditionMask(cond, VER_BUILDNUMBER, VER_GREATER_EQUAL);
+        // HACK: Use RtlVerifyVersionInfo instead of VerifyVersionInfoW as the
+        //       latter lies unless the user knew to embed a non-default manifest
+        //       announcing support for Windows 10 via supportedOS GUID
+        return s_Libs.Ntdll.RtlVerifyVersionInfo(&osvi, mask, cond) == 0;
+    }
+
+
+    char* WindowsPlatform::WideStringToUTF8(const WCHAR* source)
+    {
+        char* target;
+        int size;
+
+        size = WideCharToMultiByte(CP_UTF8, 0, source, -1, nullptr, 0, nullptr, nullptr);
+        if (!size)
+        {
+            return nullptr;
+        }
+
+        target = (char*)calloc(size, 1);
+
+        if (!WideCharToMultiByte(CP_UTF8, 0, source, -1, target, size, nullptr, nullptr))
+        {
+            free(target);
+            return nullptr;
+        }
+
+        return target;
+    }
+
+    bool WindowsPlatform::WideStringToUTF8(const WCHAR* source, std::string& target)
+    {
+        char* name = WideStringToUTF8(source);
+        if (name)
+        {
+            target = std::string(name);
+            free(name);
+            return true;
+        }
+        return false;
+    }
+
+    bool WindowsPlatform::WideStringToUTF8(const WCHAR source[], char target[])
+    {
+        return WideCharToMultiByte(CP_UTF8, 0, source, -1, target, sizeof(target), nullptr, nullptr);
+    }
+
+    WCHAR* WindowsPlatform::UTF8ToWideString(const char* source)
+    {
+        WCHAR* target;
+        int count;
+
+        count = MultiByteToWideChar(CP_UTF8, 0, source, -1, NULL, 0);
+        if (!count)
+        {
+            return nullptr;
+        }
+
+        target = (WCHAR*)calloc(count, sizeof(WCHAR));
+
+        if (!MultiByteToWideChar(CP_UTF8, 0, source, -1, target, count))
+        {
+            free(target);
+            return nullptr;
+        }
+
+        return target;
     }
 }

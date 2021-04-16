@@ -12,12 +12,10 @@ static void OnMonitorDisconnected(dais::Monitor* monitor)
 
 int main(int argc, char** argv)
 {
-    dais::Platform* platform = dais::Platform::Create();
+    dais::Platform::SetMonitorConnectedCallback(OnMonitorConnected);
+    dais::Platform::SetMonitorDisconnectedCallback(OnMonitorDisconnected);
 
-    platform->SetMonitorConnectedCallback(OnMonitorConnected);
-    platform->SetMonitorDisconnectedCallback(OnMonitorDisconnected);
-
-    platform->Init();
+    dais::Platform::Init();
 
     //test window api
     dais::WindowConfig windowConfig = {};
@@ -43,7 +41,7 @@ int main(int argc, char** argv)
     fbConfig.stencilBits = 8;
     fbConfig.sRGB = true;
     
-    dais::Window* window = platform->OpenWindow(windowConfig, fbConfig, nullptr);
+    dais::Window* window = dais::Platform::OpenWindow(windowConfig, fbConfig, nullptr);
     if (!window)
     {
         throw std::runtime_error("Could not open window!");
@@ -51,17 +49,17 @@ int main(int argc, char** argv)
 
     while (!window->ShouldClose())
     {
-        platform->PollEvents();
+        dais::Platform::PollEvents();
     }
 
     //test monitor api
-    const std::vector<dais::Monitor*>& monitors = platform->GetMonitors();
+    const std::vector<dais::Monitor*>& monitors = dais::Platform::GetMonitors();
     for (int32_t m = 0; m < monitors.size(); m++)
     {
         std::cout << "\t" << monitors[m]->GetName() << std::endl;
     }
 
-    dais::Monitor* currentMonitor = platform->GetPrimaryMonitor();
+    dais::Monitor* currentMonitor = dais::Platform::GetPrimaryMonitor();
     if (currentMonitor)
     {
         std::cout << "\t" << currentMonitor->GetName() << std::endl;
@@ -96,7 +94,7 @@ int main(int argc, char** argv)
         std::cout << "\txScale: " << xScale << ", yScale: " << yScale << std::endl;
     }
 
-    delete platform;
+    dais::Platform::Terminate();
 
     return 0;
 }

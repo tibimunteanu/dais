@@ -99,35 +99,3 @@
 
 #include "engine/core/Utils.h"
 
-namespace dais
-{
-    struct WindowConfig
-    {
-        std::string title;
-        int32_t width;
-        int32_t height;
-        bool decorated;
-        bool visible;
-        bool focused;
-        bool focusOnShow;
-        bool autoIconify;
-        bool floating;
-        bool maximized;
-        bool resizable;
-        bool centerCursor;
-        bool mousePassthrough;
-        bool scaleToMonitor;
-        int32_t refreshRate;
-    };
-
-    struct FramebufferConfig
-    {
-        int32_t redBits;
-        int32_t greenBits;
-        int32_t blueBits;
-        int32_t alphaBits;
-        int32_t depthBits;
-        int32_t stencilBits;
-        bool sRGB;
-    };
-}

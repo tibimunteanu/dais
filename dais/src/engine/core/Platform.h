@@ -11,40 +11,33 @@ namespace dais
     class Platform
     {
     protected:
-        std::vector<Window*> m_Windows = {};
-        std::vector<Monitor*> m_Monitors = {};
+        static std::vector<Window*> s_Windows;
+        static std::vector<Monitor*> s_Monitors;
 
     protected:
-        struct Callbacks
+        static struct Callbacks
         {
             MonitorConnectedCallback MonitorConnected;
             MonitorConnectedCallback MonitorDisconnected;
-        } m_Callbacks = {};
-
-    protected:
-        Platform();
+        } s_Callbacks;
 
     public:
-        virtual ~Platform();
+        static void Init();
+        static void Terminate();
 
-        virtual void Init() = 0;
+        static Window* OpenWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor);
 
-        Window* OpenWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor);
+        static const std::vector<Window*>& GetWindows();
+        static Window* GetPrimaryWindow();
 
-        const std::vector<Window*>& GetWindows() const;
-        Window* GetPrimaryWindow() const;
+        static const std::vector<Monitor*>& GetMonitors();
+        static Monitor* GetPrimaryMonitor();
 
-        const std::vector<Monitor*>& GetMonitors() const;
-        Monitor* GetPrimaryMonitor() const;
+        static void SetMonitorConnectedCallback(MonitorConnectedCallback callback);
+        static void SetMonitorDisconnectedCallback(MonitorConnectedCallback callback);
 
-        void SetMonitorConnectedCallback(MonitorConnectedCallback callback);
-        void SetMonitorDisconnectedCallback(MonitorConnectedCallback callback);
-
-        virtual void PollEvents() = 0;
-        virtual void WaitEvents() = 0;
-        virtual void WaitEventsTimeout(double timeout) = 0;
-
-    public:
-        static Platform* Create();
+        static void PollEvents();
+        static void WaitEvents();
+        static void WaitEventsTimeout(double timeout);
     };
 }

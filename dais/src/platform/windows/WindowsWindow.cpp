@@ -1,4 +1,4 @@
-#include "platform/windows/WindowsWindow.h"
+#include "platform/windows/WindowsPlatform.h"
 
 
 namespace dais
@@ -13,9 +13,9 @@ namespace dais
     {
         RECT rect = { 0, 0, contentWidth, contentHeight };
 
-        if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+        if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
         {
-            WindowsBase::Libs.User32.AdjustWindowRectExForDpi(&rect, style, FALSE, styleEx, dpi);
+            WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, style, FALSE, styleEx, dpi);
         }
         else
         {
@@ -42,7 +42,7 @@ namespace dais
 
                 SetPropW(hwnd, DAIS_WINDOW_PROP, pThis);
 
-                if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+                if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
                 {
                     // on per-monitor DPI aware V1 systems, only enable
                     // non-client scaling for windows that scale the client area.
@@ -50,7 +50,7 @@ namespace dais
                     // area static when the non-client area is scaled.
                     if (pThis->m_ScaleToMonitor)
                     {
-                        WindowsBase::Libs.User32.EnableNonClientDpiScaling(hwnd);
+                        WindowsPlatform::s_Libs.User32.EnableNonClientDpiScaling(hwnd);
                     }
                 }
             }
@@ -165,7 +165,7 @@ namespace dais
                 USER_DEFAULT_SCREEN_DPI);
         }
 
-        WCHAR* wideTitle = WindowsBase::UTF8ToWideString(config.title.c_str());
+        WCHAR* wideTitle = WindowsPlatform::UTF8ToWideString(config.title.c_str());
         if (!wideTitle)
         {
             DAIS_ERROR("Failed to create window with invalid title '%s'!", config.title.c_str());
@@ -213,10 +213,10 @@ namespace dais
             ClientToScreen(windowHandle, (POINT*)&rect.left);
             ClientToScreen(windowHandle, (POINT*)&rect.right);
 
-            if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+            if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
             {
-                UINT dpi = WindowsBase::Libs.User32.GetDpiForWindow(windowHandle);
-                WindowsBase::Libs.User32.AdjustWindowRectExForDpi(&rect, style, FALSE, styleEx, dpi);
+                UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(windowHandle);
+                WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, style, FALSE, styleEx, dpi);
             }
             else
             {
@@ -364,10 +364,10 @@ namespace dais
         PlatformGetSize(&width, &height);
         SetRect(&rect, 0, 0, width, height);
 
-        if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+        if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
         {
-            UINT dpi = WindowsBase::Libs.User32.GetDpiForWindow(m_Handle);
-            WindowsBase::Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
+            UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
+            WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
         }
         else
         {
@@ -412,7 +412,7 @@ namespace dais
     {
         DAIS_TRACE("[WindowsWindow] PlatformSetTitle");
 
-        WCHAR* wideTitle = WindowsBase::UTF8ToWideString(title.c_str());
+        WCHAR* wideTitle = WindowsPlatform::UTF8ToWideString(title.c_str());
         if (!wideTitle)
         {
             return;
@@ -427,10 +427,10 @@ namespace dais
 
         RECT rect = { x, y, x, y };
 
-        if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+        if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
         {
-            UINT dpi = WindowsBase::Libs.User32.GetDpiForWindow(m_Handle);
-            WindowsBase::Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
+            UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
+            WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
         }
         else
         {
@@ -458,10 +458,10 @@ namespace dais
         {
             RECT rect = { 0, 0, width, height };
 
-            if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+            if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
             {
-                UINT dpi = WindowsBase::Libs.User32.GetDpiForWindow(m_Handle);
-                WindowsBase::Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
+                UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
+                WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
             }
             else
             {
@@ -559,10 +559,10 @@ namespace dais
             {
                 RECT rect = { x, y, x + width, y + height };
 
-                if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+                if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
                 {
-                    UINT dpi = WindowsBase::Libs.User32.GetDpiForWindow(m_Handle);
-                    WindowsBase::Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
+                    UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
+                    WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
                 }
                 else
                 {
@@ -628,10 +628,10 @@ namespace dais
                 ? HWND_TOPMOST
                 : HWND_NOTOPMOST;
 
-            if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+            if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
             {
-                UINT dpi = WindowsBase::Libs.User32.GetDpiForWindow(m_Handle);
-                WindowsBase::Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
+                UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
+                WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
             }
             else
             {
@@ -807,10 +807,10 @@ namespace dais
         RECT rect;
         GetClientRect(m_Handle, &rect);
 
-        if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+        if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
         {
-            UINT dpi = WindowsBase::Libs.User32.GetDpiForWindow(m_Handle);
-            WindowsBase::Libs.User32.AdjustWindowRectExForDpi(&rect, style, FALSE, styleEx, dpi);
+            UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
+            WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, style, FALSE, styleEx, dpi);
         }
         else
         {

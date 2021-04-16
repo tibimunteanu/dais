@@ -1,5 +1,4 @@
-#include "engine/core/Monitor.h"
-#include "engine/core/Window.h"
+#include "engine/core/Platform.h"
 
 namespace dais
 {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "platform/windows/WindowsBase.h"
-#include "engine/core/Monitor.h"
 
 namespace dais
 {
