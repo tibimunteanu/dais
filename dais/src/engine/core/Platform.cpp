@@ -51,12 +51,12 @@ namespace dais
             : nullptr;
     }
 
-    void Platform::SetMonitorConnectedCallback(MonitorConnectedCallback callback)
+    void Platform::SetMonitorConnectedCallback(MonitorCallback callback)
     {
         s_Callbacks.MonitorConnected = callback;
     }
 
-    void Platform::SetMonitorDisconnectedCallback(MonitorConnectedCallback callback)
+    void Platform::SetMonitorDisconnectedCallback(MonitorCallback callback)
     {
         s_Callbacks.MonitorDisconnected = callback;
     }

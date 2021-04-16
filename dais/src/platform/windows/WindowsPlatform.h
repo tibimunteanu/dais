@@ -70,11 +70,16 @@ namespace dais
         } s_Libs;
 
     public:
+        static void PlatformInit();
+        static void PlatformTerminate();
+
         static bool LoadLibraries();
         static void FreeLibraries();
         static void SetProcessDpiAware();
         static void SetForegroundLockTimeout();
         static void RestoreForegroundLockTimeout();
+        static void AdjustRect(RECT* rect, HWND windowHandle, DWORD style, DWORD styleEx);
+        static void AdjustRect(RECT* rect, DWORD style, DWORD styleEx, UINT dpi);
         static void PollMonitors();
         static bool RegisterWindowClass();
         static void UnregisterWindowClass();

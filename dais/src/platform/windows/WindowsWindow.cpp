@@ -13,14 +13,7 @@ namespace dais
     {
         RECT rect = { 0, 0, contentWidth, contentHeight };
 
-        if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
-        {
-            WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, style, FALSE, styleEx, dpi);
-        }
-        else
-        {
-            AdjustWindowRectEx(&rect, style, FALSE, styleEx);
-        }
+        WindowsPlatform::AdjustRect(&rect, style, styleEx, dpi);
 
         *fullWidth = rect.right - rect.left;
         *fullHeight = rect.bottom - rect.top;
@@ -213,15 +206,7 @@ namespace dais
             ClientToScreen(windowHandle, (POINT*)&rect.left);
             ClientToScreen(windowHandle, (POINT*)&rect.right);
 
-            if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
-            {
-                UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(windowHandle);
-                WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, style, FALSE, styleEx, dpi);
-            }
-            else
-            {
-                AdjustWindowRectEx(&rect, style, FALSE, styleEx);
-            }
+            WindowsPlatform::AdjustRect(&rect, windowHandle, style, styleEx);
 
             //only update the restored window rect as the window may be maximizesd
             WINDOWPLACEMENT wp = {};
@@ -364,15 +349,7 @@ namespace dais
         PlatformGetSize(&width, &height);
         SetRect(&rect, 0, 0, width, height);
 
-        if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
-        {
-            UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
-            WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
-        }
-        else
-        {
-            AdjustWindowRectEx(&rect, GetStyle(), FALSE, GetStyleEx());
-        }
+        AdjustRect(&rect);
 
         if (left)
         {
@@ -427,15 +404,7 @@ namespace dais
 
         RECT rect = { x, y, x, y };
 
-        if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
-        {
-            UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
-            WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
-        }
-        else
-        {
-            AdjustWindowRectEx(&rect, GetStyle(), FALSE, GetStyleEx());
-        }
+        AdjustRect(&rect);
 
         SetWindowPos(m_Handle, NULL,
             rect.left, rect.top, 0, 0,
@@ -458,15 +427,7 @@ namespace dais
         {
             RECT rect = { 0, 0, width, height };
 
-            if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
-            {
-                UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
-                WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
-            }
-            else
-            {
-                AdjustWindowRectEx(&rect, GetStyle(), FALSE, GetStyleEx());
-            }
+            AdjustRect(&rect);
 
             SetWindowPos(m_Handle, HWND_TOP,
                 0, 0, rect.right - rect.left, rect.bottom - rect.top,
@@ -559,15 +520,7 @@ namespace dais
             {
                 RECT rect = { x, y, x + width, y + height };
 
-                if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
-                {
-                    UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
-                    WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
-                }
-                else
-                {
-                    AdjustWindowRectEx(&rect, GetStyle(), FALSE, GetStyleEx());
-                }
+                AdjustRect(&rect);
 
                 SetWindowPos(m_Handle, HWND_TOP,
                     rect.left, rect.top,
@@ -628,20 +581,12 @@ namespace dais
                 ? HWND_TOPMOST
                 : HWND_NOTOPMOST;
 
-            if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
-            {
-                UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
-                WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
-            }
-            else
-            {
-                AdjustWindowRectEx(&rect, GetStyle(), FALSE, GetStyleEx());
-            }
+            AdjustRect(&rect);
 
             SetWindowPos(m_Handle, after,
-                rect.left, 
+                rect.left,
                 rect.top,
-                rect.right - rect.left, 
+                rect.right - rect.left,
                 rect.bottom - rect.top,
                 flags);
         }
@@ -807,15 +752,7 @@ namespace dais
         RECT rect;
         GetClientRect(m_Handle, &rect);
 
-        if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
-        {
-            UINT dpi = WindowsPlatform::s_Libs.User32.GetDpiForWindow(m_Handle);
-            WindowsPlatform::s_Libs.User32.AdjustWindowRectExForDpi(&rect, style, FALSE, styleEx, dpi);
-        }
-        else
-        {
-            AdjustWindowRectEx(&rect, style, FALSE, styleEx);
-        }
+        WindowsPlatform::AdjustRect(&rect, m_Handle, style, styleEx);
 
         ClientToScreen(m_Handle, (POINT*)&rect.left);
         ClientToScreen(m_Handle, (POINT*)&rect.right);
@@ -825,6 +762,11 @@ namespace dais
             rect.left, rect.top,
             rect.right - rect.left, rect.bottom - rect.top,
             SWP_FRAMECHANGED | SWP_NOACTIVATE | SWP_NOZORDER);
+    }
+
+    void WindowsWindow::AdjustRect(RECT* rect) const
+    {
+        WindowsPlatform::AdjustRect(rect, m_Handle, GetStyle(), GetStyleEx());
     }
 
     bool WindowsWindow::IsCursorInContentArea() const

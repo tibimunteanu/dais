@@ -65,6 +65,7 @@ namespace dais
         DWORD GetStyle() const;
         DWORD GetStyleEx() const;
         void UpdateStyles();
+        void AdjustRect(RECT* rect) const;
         bool IsCursorInContentArea() const;
     };
 }

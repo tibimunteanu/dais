@@ -2,7 +2,7 @@
 
 namespace dais
 {
-////////////////////////////////////// STATIC MEMBERS /////////////////////////////////////////
+    ////////////////////////////////////// STATIC MEMBERS /////////////////////////////////////////
 
     HWND WindowsPlatform::s_HelperWindowHandle = nullptr;
     HDEVNOTIFY WindowsPlatform::s_DeviceNotificationHandle = nullptr;
@@ -11,16 +11,21 @@ namespace dais
 
 
 
-//////////////////////////////////////// STATIC API ///////////////////////////////////////////
+    //////////////////////////////////////// STATIC API ///////////////////////////////////////////
 
     void Platform::Init()
     {
-        WindowsPlatform::SetForegroundLockTimeout();
-        WindowsPlatform::LoadLibraries();
-        WindowsPlatform::SetProcessDpiAware();
-        WindowsPlatform::RegisterWindowClass();
-        WindowsPlatform::CreateHelperWindow();
-        WindowsPlatform::PollMonitors();
+        WindowsPlatform::PlatformInit();
+    }
+
+    void WindowsPlatform::PlatformInit()
+    {
+        SetForegroundLockTimeout();
+        LoadLibraries();
+        SetProcessDpiAware();
+        RegisterWindowClass();
+        CreateHelperWindow();
+        PollMonitors();
     }
 
     void Platform::Terminate()
@@ -42,35 +47,39 @@ namespace dais
             }
         }
 
-        if (WindowsPlatform::s_DeviceNotificationHandle)
-        {
-            UnregisterDeviceNotification(WindowsPlatform::s_DeviceNotificationHandle);
-        }
-
-        if (WindowsPlatform::s_HelperWindowHandle)
-        {
-            DestroyWindow(WindowsPlatform::s_HelperWindowHandle);
-        }
-
-        WindowsPlatform::UnregisterWindowClass();
-        WindowsPlatform::RestoreForegroundLockTimeout();
-
-        WindowsPlatform::FreeLibraries();
+        WindowsPlatform::PlatformTerminate();
     }
+
+    void WindowsPlatform::PlatformTerminate()
+    {
+        if (s_DeviceNotificationHandle)
+        {
+            UnregisterDeviceNotification(s_DeviceNotificationHandle);
+        }
+
+        if (s_HelperWindowHandle)
+        {
+            DestroyWindow(s_HelperWindowHandle);
+        }
+
+        UnregisterWindowClass();
+        RestoreForegroundLockTimeout();
+
+        FreeLibraries();
+    }
+
 
     void Platform::PollEvents()
     {
-        MSG msg;
-        HWND handle;
-        Window* window;
+        MSG msg = {};
 
         while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
         {
             if (msg.message == WM_QUIT)
             {
                 //this message can only be posted from outside so treat it like a full close
-                //TODO: Platform::Terminate
                 DAIS_INFO("WM_QUIT");
+                Platform::Terminate();
             }
             else
             {
@@ -222,6 +231,31 @@ namespace dais
     void WindowsPlatform::RestoreForegroundLockTimeout()
     {
         SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UIntToPtr(s_ForegroundLockTimeout), SPIF_SENDCHANGE);
+    }
+
+    void WindowsPlatform::AdjustRect(RECT* rect, HWND windowHandle, DWORD style, DWORD styleEx)
+    {
+        if (IsWindows10AnniversaryUpdateOrGreater())
+        {
+            UINT dpi = s_Libs.User32.GetDpiForWindow(windowHandle);
+            s_Libs.User32.AdjustWindowRectExForDpi(rect, style, FALSE, styleEx, dpi);
+        }
+        else
+        {
+            AdjustWindowRectEx(rect, style, FALSE, styleEx);
+        }
+    }
+
+    void WindowsPlatform::AdjustRect(RECT* rect, DWORD style, DWORD styleEx, UINT dpi)
+    {
+        if (IsWindows10AnniversaryUpdateOrGreater())
+        {
+            s_Libs.User32.AdjustWindowRectExForDpi(rect, style, FALSE, styleEx, dpi);
+        }
+        else
+        {
+            AdjustWindowRectEx(rect, style, FALSE, styleEx);
+        }
     }
 
     void WindowsPlatform::PollMonitors()

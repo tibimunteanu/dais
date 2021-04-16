@@ -4,10 +4,10 @@
 #include "engine/core/Monitor.h"
 #include "engine/core/Window.h"
 
-typedef void(*MonitorConnectedCallback)(dais::Monitor*);
-
 namespace dais
 {
+    typedef void(*MonitorCallback)(Monitor*);
+
     class Platform
     {
     protected:
@@ -17,8 +17,8 @@ namespace dais
     protected:
         static struct Callbacks
         {
-            MonitorConnectedCallback MonitorConnected;
-            MonitorConnectedCallback MonitorDisconnected;
+            MonitorCallback MonitorConnected;
+            MonitorCallback MonitorDisconnected;
         } s_Callbacks;
 
     public:
@@ -33,8 +33,8 @@ namespace dais
         static const std::vector<Monitor*>& GetMonitors();
         static Monitor* GetPrimaryMonitor();
 
-        static void SetMonitorConnectedCallback(MonitorConnectedCallback callback);
-        static void SetMonitorDisconnectedCallback(MonitorConnectedCallback callback);
+        static void SetMonitorConnectedCallback(MonitorCallback callback);
+        static void SetMonitorDisconnectedCallback(MonitorCallback callback);
 
         static void PollEvents();
         static void WaitEvents();
