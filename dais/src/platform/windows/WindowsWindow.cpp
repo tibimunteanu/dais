@@ -1,5 +1,6 @@
 #include "platform/windows/WindowsWindow.h"
 
+
 namespace dais
 {
     //////////////////////////////////////// STATIC ///////////////////////////////////////////
@@ -544,7 +545,106 @@ namespace dais
     {
         DAIS_TRACE("[WindowsWindow] PlatformSetMonitor");
 
+        if (m_Monitor == monitor)
+        {
+            if (m_Monitor)
+            {
+                if (m_Monitor->GetWindow() == this)
+                {
+                    AcquireMonitor();
+                    FitToMonitor();
+                }
+            }
+            else
+            {
+                RECT rect = { x, y, x + width, y + height };
 
+                if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+                {
+                    UINT dpi = WindowsBase::Libs.User32.GetDpiForWindow(m_Handle);
+                    WindowsBase::Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
+                }
+                else
+                {
+                    AdjustWindowRectEx(&rect, GetStyle(), FALSE, GetStyleEx());
+                }
+
+                SetWindowPos(m_Handle, HWND_TOP,
+                    rect.left, rect.top,
+                    rect.right - rect.left, rect.bottom - rect.top,
+                    SWP_NOCOPYBITS | SWP_NOACTIVATE | SWP_NOZORDER);
+            }
+            return;
+        }
+        if (m_Monitor)
+        {
+            ReleaseMonitor();
+        }
+
+        m_Monitor = monitor;
+
+        if (m_Monitor)
+        {
+            MONITORINFO mi = {};
+            mi.cbSize = sizeof(mi);
+
+            UINT flags = SWP_SHOWWINDOW | SWP_NOACTIVATE | SWP_NOCOPYBITS;
+
+            if (m_Decorated)
+            {
+                DWORD style = GetWindowLongW(m_Handle, GWL_STYLE);
+                style &= ~WS_OVERLAPPEDWINDOW;
+                style |= GetStyle();
+                SetWindowLongW(m_Handle, GWL_STYLE, style);
+                flags |= SWP_FRAMECHANGED;
+            }
+
+            AcquireMonitor();
+
+            GetMonitorInfo(((WindowsMonitor*)m_Monitor)->m_Handle, &mi);
+
+            SetWindowPos(m_Handle, HWND_TOPMOST,
+                mi.rcMonitor.left,
+                mi.rcMonitor.top,
+                mi.rcMonitor.right - mi.rcMonitor.left,
+                mi.rcMonitor.bottom - mi.rcMonitor.top,
+                flags);
+        }
+        else
+        {
+            RECT rect = { x, y, x + width, y + height };
+            DWORD style = GetWindowLongW(m_Handle, GWL_STYLE);
+            UINT flags = SWP_NOACTIVATE | SWP_NOCOPYBITS;
+
+            if (m_Decorated)
+            {
+                style &= ~WS_POPUP;
+                style |= GetStyle();
+                SetWindowLongW(m_Handle, GWL_STYLE, style);
+                flags |= SWP_FRAMECHANGED;
+            }
+
+            HWND after = m_Floating
+                ? HWND_TOPMOST
+                : HWND_NOTOPMOST;
+
+            if (WindowsBase::IsWindows10AnniversaryUpdateOrGreater())
+            {
+                UINT dpi = WindowsBase::Libs.User32.GetDpiForWindow(m_Handle);
+                WindowsBase::Libs.User32.AdjustWindowRectExForDpi(&rect, GetStyle(), FALSE, GetStyleEx(), dpi);
+            }
+            else
+            {
+                AdjustWindowRectEx(&rect, GetStyle(), FALSE, GetStyleEx());
+            }
+
+            SetWindowPos(m_Handle, after,
+                rect.left, 
+                rect.top,
+                rect.right - rect.left, 
+                rect.bottom - rect.top,
+                flags);
+        }
     }
 
 

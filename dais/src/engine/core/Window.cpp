@@ -32,8 +32,6 @@ namespace dais
     Window::~Window()
     {
         DAIS_TRACE("[Window] Destructor");
-
-        //TODO: Platform::remove from window array
     }
 
 
