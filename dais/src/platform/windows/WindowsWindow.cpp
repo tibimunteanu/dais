@@ -5,125 +5,9 @@ namespace dais
 {
     //////////////////////////////////////// STATIC ///////////////////////////////////////////
 
-        /// <summary> Translate content area size to full window size according to styles and DPI </summary>
-    void WindowsWindow::GetFullSize(DWORD style, DWORD styleEx,
-        int contentWidth, int contentHeight,
-        int* fullWidth, int* fullHeight,
-        UINT dpi)
+    Window* Window::PlatformCreate(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor)
     {
-        RECT rect = { 0, 0, contentWidth, contentHeight };
-
-        WindowsPlatform::AdjustRect(&rect, style, styleEx, dpi);
-
-        *fullWidth = rect.right - rect.left;
-        *fullHeight = rect.bottom - rect.top;
-    }
-
-    /// <summary> static WindowProc which dispatches messages to window instance </summary>
-    LRESULT CALLBACK WindowsWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-    {
-        WindowsWindow* pThis = nullptr;
-
-        if (uMsg == WM_NCCREATE)
-        {
-            CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
-
-            if (pCreate->lpCreateParams)
-            {
-                pThis = (WindowsWindow*)pCreate->lpCreateParams;
-                pThis->m_Handle = hwnd;
-
-                SetPropW(hwnd, DAIS_WINDOW_PROP, pThis);
-
-                if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
-                {
-                    // on per-monitor DPI aware V1 systems, only enable
-                    // non-client scaling for windows that scale the client area.
-                    // we need WM_GETDPISCALEDSIZE from V2 to keep the client
-                    // area static when the non-client area is scaled.
-                    if (pThis->m_ScaleToMonitor)
-                    {
-                        WindowsPlatform::s_Libs.User32.EnableNonClientDpiScaling(hwnd);
-                    }
-                }
-            }
-        }
-        else
-        {
-            pThis = (WindowsWindow*)GetPropW(hwnd, DAIS_WINDOW_PROP);
-        }
-
-        if (pThis)
-        {
-            return pThis->HandleMessage(uMsg, wParam, lParam);
-        }
-        else
-        {
-            //helper window message handling
-            switch (uMsg)
-            {
-                case WM_DISPLAYCHANGE:
-                {
-                    //PollMonitors();
-                    break;
-                }
-
-                case WM_DEVICECHANGE:
-                {
-                    //if (!joysticksInitialized)
-                    //{
-                    //    break;
-                    //}
-
-                    if (wParam == DBT_DEVICEARRIVAL)
-                    {
-                        DEV_BROADCAST_HDR* dbh = (DEV_BROADCAST_HDR*)lParam;
-                        if (dbh && dbh->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
-                        {
-                            DAIS_TRACE("DetectJoystickConnection");
-                            //DetectJoystickConnection();
-                        }
-                    }
-                    else if (wParam == DBT_DEVICEREMOVECOMPLETE)
-                    {
-                        DEV_BROADCAST_HDR* dbh = (DEV_BROADCAST_HDR*)lParam;
-                        if (dbh && dbh->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
-                        {
-                            DAIS_TRACE("DetectJoystickDisconnection");
-                            //DetectJoystickDisconnection();
-                        }
-                    }
-                    break;
-                }
-
-                default:
-                {
-                    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
-                }
-            }
-        }
-    }
-
-
-
-    ////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
-
-    Window* Window::Create(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor)
-    {
-        DAIS_TRACE("[WindowsWindow] Create");
-
-        if (config.title.empty())
-        {
-            DAIS_ERROR("Window title cannot be empty!");
-            return nullptr;
-        }
-
-        if (config.width <= 0
-            || config.height <= 0)
-        {
-            DAIS_ERROR("Invalid window size %i x %i", config.width, config.height);
-            return nullptr;
-        }
+        DAIS_TRACE("[WindowsWindow] PlatformCreate");
 
         WindowsWindow* window = new WindowsWindow(config, fbConfig, monitor);
 
@@ -188,6 +72,8 @@ namespace dais
             return nullptr;
         }
 
+        window->ChangeMessageFilter();
+
         // adjust window rect to account for DPI scaling of the window frame 
         // and (if enabled) DPI scaling of the content area
         // this cannot be done until we know what monitor the window was placed on
@@ -217,6 +103,14 @@ namespace dais
             SetWindowPlacement(windowHandle, &wp);
         }
 
+        DragAcceptFiles(windowHandle, TRUE);
+
+        if (fbConfig.transparent)
+        {
+            window->UpdateFramebufferTransparency();
+            window->m_Transparent = true;
+        }
+
         window->PlatformGetSize(&window->m_Width, &window->m_Height);
 
         if (window->m_Monitor)
@@ -226,18 +120,109 @@ namespace dais
             window->AcquireMonitor();
             window->FitToMonitor();
         }
-        else if (config.visible)
-        {
-            window->PlatformShow();
-            if (config.focused)
-            {
-                window->PlatformFocus();
-            }
-        }
 
         return window;
     }
 
+    /// <summary> Translate content area size to full window size according to styles and DPI </summary>
+    void WindowsWindow::GetFullSize(DWORD style, DWORD styleEx, int contentWidth, int contentHeight, int* fullWidth, int* fullHeight, UINT dpi)
+    {
+        RECT rect = { 0, 0, contentWidth, contentHeight };
+
+        WindowsPlatform::AdjustRect(&rect, style, styleEx, dpi);
+
+        *fullWidth = rect.right - rect.left;
+        *fullHeight = rect.bottom - rect.top;
+    }
+
+    /// <summary> static WindowProc which dispatches messages to window instance </summary>
+    LRESULT CALLBACK WindowsWindow::WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+    {
+        WindowsWindow* pThis = nullptr;
+
+        if (uMsg == WM_NCCREATE)
+        {
+            CREATESTRUCT* pCreate = (CREATESTRUCT*)lParam;
+
+            if (pCreate->lpCreateParams)
+            {
+                pThis = (WindowsWindow*)pCreate->lpCreateParams;
+                pThis->m_Handle = hwnd;
+
+                SetPropW(hwnd, DAIS_WINDOW_PROP, pThis);
+
+                if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
+                {
+                    // on per-monitor DPI aware V1 systems, only enable
+                    // non-client scaling for windows that scale the client area.
+                    // we need WM_GETDPISCALEDSIZE from V2 to keep the client
+                    // area static when the non-client area is scaled.
+                    if (pThis->m_ScaleToMonitor)
+                    {
+                        WindowsPlatform::s_Libs.user32.EnableNonClientDpiScaling(hwnd);
+                    }
+                }
+            }
+        }
+        else
+        {
+            pThis = (WindowsWindow*)GetPropW(hwnd, DAIS_WINDOW_PROP);
+        }
+
+        if (pThis)
+        {
+            return pThis->HandleMessage(uMsg, wParam, lParam);
+        }
+        else
+        {
+            //helper window message handling
+            switch (uMsg)
+            {
+                case WM_DISPLAYCHANGE:
+                {
+                    WindowsPlatform::PollMonitors();
+                    break;
+                }
+
+                case WM_DEVICECHANGE:
+                {
+                    //if (!joysticksInitialized)
+                    //{
+                    //    break;
+                    //}
+
+                    if (wParam == DBT_DEVICEARRIVAL)
+                    {
+                        DEV_BROADCAST_HDR* dbh = (DEV_BROADCAST_HDR*)lParam;
+                        if (dbh && dbh->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
+                        {
+                            DAIS_TRACE("DetectJoystickConnection");
+                            //DetectJoystickConnection();
+                        }
+                    }
+                    else if (wParam == DBT_DEVICEREMOVECOMPLETE)
+                    {
+                        DEV_BROADCAST_HDR* dbh = (DEV_BROADCAST_HDR*)lParam;
+                        if (dbh && dbh->dbch_devicetype == DBT_DEVTYP_DEVICEINTERFACE)
+                        {
+                            DAIS_TRACE("DetectJoystickDisconnection");
+                            //DetectJoystickDisconnection();
+                        }
+                    }
+                    break;
+                }
+
+                default:
+                {
+                    return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+                }
+            }
+        }
+    }
+
+
+
+    ////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
 
     WindowsWindow::WindowsWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor)
         : Window(config, fbConfig, monitor)
@@ -255,6 +240,11 @@ namespace dais
         if (m_Monitor)
         {
             ReleaseMonitor();
+        }
+
+        if (WindowsPlatform::s_DisabledCursorWindow == this)
+        {
+            WindowsPlatform::s_DisabledCursorWindow = nullptr;
         }
 
         if (m_Handle)
@@ -304,6 +294,41 @@ namespace dais
         return GetActiveWindow() == m_Handle;
     }
 
+    bool WindowsWindow::PlatformIsFramebufferTransparent() const
+    {
+        if (!m_Transparent)
+        {
+            return false;
+        }
+
+        if (!WindowsPlatform::IsWindowsVistaOrGreater())
+        {
+            return false;
+        }
+
+        BOOL composition;
+        if (FAILED(WindowsPlatform::s_Libs.dwmapi.IsCompositionEnabled(&composition)) || !composition)
+        {
+            return false;
+        }
+
+        if (!WindowsPlatform::IsWindows8OrGreater())
+        {
+            // HACK: disable framebuffer transparency on Windows 7 when the
+            // colorization color is opaque, because otherwise the window
+            // contents is blended additively with the previous frame instead
+            // of replacing it
+            BOOL opaque;
+            DWORD color;
+            if (FAILED(WindowsPlatform::s_Libs.dwmapi.GetColorizationColor(&color, &opaque)) || opaque)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
 
     void WindowsWindow::PlatformGetPosition(int32_t* x, int32_t* y) const
     {
@@ -337,6 +362,11 @@ namespace dais
         {
             *height = rect.bottom;
         }
+    }
+
+    void WindowsWindow::PlatformGetFramebufferSize(int32_t* width, int32_t* height) const
+    {
+        PlatformGetSize(width, height);
     }
 
     void WindowsWindow::PlatformGetFrameSize(int32_t* left, int32_t* top, int32_t* right, int32_t* bottom) const
@@ -375,6 +405,69 @@ namespace dais
 
         HMONITOR monitorHandle = MonitorFromWindow(m_Handle, MONITOR_DEFAULTTONEAREST);
         WindowsMonitor::GetContentScale(monitorHandle, xScale, yScale);
+    }
+
+    void WindowsWindow::PlatformGetCursorPosition(double* x, double* y)
+    {
+        POINT pos;
+
+        if (GetCursorPos(&pos))
+        {
+            ScreenToClient(m_Handle, &pos);
+        }
+
+        if (x) *x = pos.x;
+        if (y) *y = pos.y;
+    }
+
+    float WindowsWindow::PlatformGetOpacity()
+    {
+        BYTE alpha;
+        DWORD flags;
+
+        if ((GetWindowLongW(m_Handle, GWL_EXSTYLE) & WS_EX_LAYERED)
+            && GetLayeredWindowAttributes(m_Handle, NULL, &alpha, &flags))
+        {
+            if (flags & LWA_ALPHA)
+            {
+                return alpha / 255.0f;
+            }
+        }
+
+        return 1.0f;
+    }
+
+    const char* WindowsWindow::PlatformGetClipboardString()
+    {
+        if (!OpenClipboard(WindowsPlatform::s_HelperWindowHandle))
+        {
+            DAIS_ERROR("Failed to open clipboard!");
+            return nullptr;
+        }
+
+        HANDLE object = GetClipboardData(CF_UNICODETEXT);
+        if (!object)
+        {
+            DAIS_ERROR("Failed to convert clipboard to string!");
+            CloseClipboard();
+            return nullptr;
+        }
+
+        WCHAR* buffer = (WCHAR*)GlobalLock(object);
+        if (!buffer)
+        {
+            DAIS_ERROR("Failed to lock global handle!");
+            CloseClipboard();
+            return nullptr;
+        }
+
+        free(WindowsPlatform::s_ClipboardString);
+        WindowsPlatform::s_ClipboardString = WindowsPlatform::WideStringToUTF8(buffer);
+
+        GlobalUnlock(object);
+        CloseClipboard();
+
+        return WindowsPlatform::s_ClipboardString;
     }
 
     void* WindowsWindow::PlatformGetHandle() const
@@ -432,6 +525,64 @@ namespace dais
             SetWindowPos(m_Handle, HWND_TOP,
                 0, 0, rect.right - rect.left, rect.bottom - rect.top,
                 SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOMOVE | SWP_NOZORDER);
+        }
+    }
+
+    void WindowsWindow::PlatformSetSizeLimits(int32_t minWidth, int32_t minHeight, int32_t maxWidth, int32_t maxHeight)
+    {
+        if (minWidth == -1
+            || minHeight == -1
+            || maxWidth == -1
+            || maxHeight == -1)
+        {
+            return;
+        }
+
+        RECT rect;
+        GetWindowRect(m_Handle, &rect);
+        MoveWindow(m_Handle,
+            rect.left, rect.top,
+            rect.right - rect.left,
+            rect.bottom - rect.top,
+            TRUE);
+    }
+
+    void WindowsWindow::PlatformSetAspectRatio(int32_t numerator, int32_t denominator)
+    {
+        if (numerator == -1 || denominator == -1)
+        {
+            return;
+        }
+
+        RECT rect;
+        GetWindowRect(m_Handle, &rect);
+        ApplyAspectRatio(WMSZ_BOTTOMRIGHT, &rect);
+        MoveWindow(m_Handle,
+            rect.left, rect.top,
+            rect.right - rect.left,
+            rect.bottom - rect.top,
+            TRUE);
+    }
+
+    void WindowsWindow::PlatformSetOpacity(float opacity)
+    {
+        LONG styleEx = GetWindowLongW(m_Handle, GWL_EXSTYLE);
+        if (opacity < 1.0f
+            || (styleEx & WS_EX_TRANSPARENT))
+        {
+            const BYTE alpha = (BYTE)(255 * opacity);
+            styleEx |= WS_EX_LAYERED;
+            SetWindowLongW(m_Handle, GWL_EXSTYLE, styleEx);
+            SetLayeredWindowAttributes(m_Handle, 0, alpha, LWA_ALPHA);
+        }
+        else if (styleEx & WS_EX_TRANSPARENT)
+        {
+            SetLayeredWindowAttributes(m_Handle, 0, 0, 0);
+        }
+        else
+        {
+            styleEx &= ~WS_EX_LAYERED;
+            SetWindowLongW(m_Handle, GWL_EXSTYLE, styleEx);
         }
     }
 
@@ -500,6 +651,44 @@ namespace dais
         {
             SetLayeredWindowAttributes(m_Handle, key, alpha, flags);
         }
+    }
+
+    void WindowsWindow::PlatformSetClipboardString(const char* string)
+    {
+        int characterCount = MultiByteToWideChar(CP_UTF8, 0, string, -1, NULL, 0);
+        if (!characterCount)
+        {
+            return;
+        }
+
+        HANDLE object = GlobalAlloc(GMEM_MOVEABLE, characterCount * sizeof(WCHAR));
+        if (!object)
+        {
+            DAIS_ERROR("Failed to allocate global handle for clipboard!");
+            return;
+        }
+
+        WCHAR* buffer = (WCHAR*)GlobalLock(object);
+        if (!buffer)
+        {
+            DAIS_ERROR("Failed to lock global handle!");
+            GlobalFree(object);
+            return;
+        }
+
+        MultiByteToWideChar(CP_UTF8, 0, string, -1, buffer, characterCount);
+        GlobalUnlock(object);
+
+        if (!OpenClipboard(WindowsPlatform::s_HelperWindowHandle))
+        {
+            DAIS_ERROR("Failed to open clipboard!");
+            GlobalFree(object);
+            return;
+        }
+
+        EmptyClipboard();
+        SetClipboardData(CF_UNICODETEXT, object);
+        CloseClipboard();
     }
 
     void WindowsWindow::PlatformSetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate)
@@ -592,6 +781,73 @@ namespace dais
         }
     }
 
+    void WindowsWindow::PlatformSetCursor(Cursor* cursor)
+    {
+        if (IsCursorInContentArea())
+        {
+            UpdateCursorImage();
+        }
+    }
+
+    void WindowsWindow::PlatformSetCursorPosition(double x, double y)
+    {
+        POINT pos = { (int)x, (int)y };
+
+        //store the new position so it can be recognized later
+        m_LastCursorPositionX = pos.x;
+        m_LastCursorPositionY = pos.y;
+
+        ClientToScreen(m_Handle, &pos);
+        SetCursorPos(pos.x, pos.y);
+    }
+
+    void WindowsWindow::PlatformSetCursorMode(int32_t mode)
+    {
+        if (mode == DAIS_CURSOR_DISABLED)
+        {
+            if (PlatformIsFocused())
+            {
+                SetCursorEnabled(false);
+            }
+        }
+        else if (WindowsPlatform::s_DisabledCursorWindow == this)
+        {
+            SetCursorEnabled(true);
+        }
+        else if (IsCursorInContentArea())
+        {
+            UpdateCursorImage();
+        }
+    }
+
+    /// <summary> enables / disables WM_INPUT messages for the mouse for this window </summary>
+    void WindowsWindow::PlatformSetRawMouseMotion(bool enabled)
+    {
+        if (WindowsPlatform::s_DisabledCursorWindow != this)
+        {
+            return;
+        }
+
+        if (enabled)
+        {
+            const RAWINPUTDEVICE rid = { 0x01, 0x02, 0, m_Handle };
+
+            if (!RegisterRawInputDevices(&rid, 1, sizeof(rid)))
+            {
+                DAIS_ERROR("Failed to register raw input device!");
+            }
+        }
+        else
+        {
+            const RAWINPUTDEVICE rid = { 0x01, 0x02, RIDEV_REMOVE, NULL };
+
+            if (!RegisterRawInputDevices(&rid, 1, sizeof(rid)))
+            {
+                DAIS_ERROR("Failed to remove raw input device!");
+            }
+        }
+    }
+
 
     void WindowsWindow::PlatformMaximize()
     {
@@ -652,11 +908,561 @@ namespace dais
     {
         switch (uMsg)
         {
-            case WM_CLOSE:
+            case WM_MOUSEACTIVATE:
             {
-                SetShouldClose(true);
+                // HACK: postpone cursor disabling when the window was activated
+                // by clicking a caption button
+                if (HIWORD(lParam) == WM_LBUTTONDOWN)
+                {
+                    if (LOWORD(lParam) != HTCLIENT)
+                    {
+                        m_FrameAction = true;
+                    }
+                }
+
+                break;
+            }
+
+            case WM_CAPTURECHANGED:
+            {
+                // HACK: disable the cursor once the caption button action
+                // has been completed or cancelled
+                if (lParam == 0
+                    && m_FrameAction)
+                {
+                    if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                    {
+                        SetCursorEnabled(false);
+                    }
+
+                    m_FrameAction = false;
+                }
+
+                break;
+            }
+
+            case WM_SETFOCUS:
+            {
+                OnFocus(true);
+
+                // HACK: do not disable cursor while the user is interacting
+                // with a caption button
+                if (m_FrameAction)
+                {
+                    break;
+                }
+
+                if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                {
+                    SetCursorEnabled(false);
+                }
+
                 return 0;
             }
+
+            case WM_KILLFOCUS:
+            {
+                if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                {
+                    SetCursorEnabled(false);
+                }
+
+                if (m_Monitor
+                    && m_AutoIconify)
+                {
+                    PlatformMinimize();
+                }
+
+                OnFocus(false);
+
+                return 0;
+            }
+
+            case WM_SYSCOMMAND:
+            {
+                switch (wParam & 0xfff0)
+                {
+                    case SC_SCREENSAVE:
+                    case SC_MONITORPOWER:
+                    {
+                        if (m_Monitor)
+                        {
+                            //we are running in full screen mode,
+                            //so disallow screen saver and blanking
+                            return 0;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    //TODO: user trying to access application menu using ALT?
+                    //case SC_KEYMENU:
+                    //{
+                    //    if (m_KeyMenu)
+                    //    {
+                    //        return 0;
+                    //    }
+                    //    break;
+                    //}
+                }
+
+                break;
+            }
+
+            case WM_CLOSE:
+            {
+                OnClosed();
+
+                return 0;
+            }
+
+            //TODO:
+            //case WM_INPUTLANGCHANGE:
+            //{
+            //    UpdateKeyNames();
+            //    break;
+            //}
+
+            case WM_CHAR:
+            case WM_SYSCHAR:
+            {
+                if (wParam >= 0xd800
+                    && wParam <= 0xdbff)
+                {
+                    m_HighSurrogate = (WCHAR)wParam;
+                }
+                else
+                {
+                    uint32_t codepoint = 0;
+
+                    if (wParam >= 0xdc00
+                        && wParam <= 0xdfff)
+                    {
+                        if (m_HighSurrogate)
+                        {
+                            codepoint += (m_HighSurrogate - 0xd800) << 10;
+                            codepoint += (WCHAR)wParam - 0xdc00;
+                            codepoint += 0x10000;
+                        }
+                    }
+                    else
+                    {
+                        codepoint = (WCHAR)wParam;
+                    }
+
+                    m_HighSurrogate = 0;
+                    OnChar(codepoint, GetKeyMods(), uMsg != WM_SYSCHAR);
+                }
+
+                //TODO:
+                //if (uMsg == WM_SYSCHAR
+                //    && m_KeyMenu)
+                //{
+                //    break;
+                //}
+
+                return 0;
+            }
+
+            case WM_UNICHAR:
+            {
+                if (wParam == UNICODE_NOCHAR)
+                {
+                    //WM_UNICHAR is not sent by Windows, but is sent by some third-party input method engines.
+                    //returning TRUE here announces support for this message
+                    return TRUE;
+                }
+
+                OnChar((uint32_t)wParam, GetKeyMods(), true);
+
+                return 0;
+            }
+
+            //TODO:
+            //case WM_KEYDOWN:
+            //case WM_SYSKEYDOWN:
+            //case WM_KEYUP:
+            //case WM_SYSKEYUP:
+            //case WM_LBUTTONDOWN:
+            //case WM_RBUTTONDOWN:
+            //case WM_MBUTTONDOWN:
+            //case WM_XBUTTONDOWN:
+            //case WM_LBUTTONUP:
+            //case WM_RBUTTONUP:
+            //case WM_MBUTTONUP:
+            //case WM_XBUTTONUP:
+
+            case WM_MOUSEMOVE:
+            {
+                const int x = GET_X_LPARAM(lParam);
+                const int y = GET_Y_LPARAM(lParam);
+
+                if (m_CursorTracked)
+                {
+                    TRACKMOUSEEVENT tme = {};
+                    tme.cbSize = sizeof(tme);
+                    tme.dwFlags = TME_LEAVE;
+                    tme.hwndTrack = m_Handle;
+                    TrackMouseEvent(&tme);
+
+                    m_CursorTracked = true;
+
+                    OnCursorEnter(true);
+                }
+
+                if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                {
+                    const int dx = x - m_LastCursorPositionX;
+                    const int dy = y - m_LastCursorPositionY;
+
+                    if (WindowsPlatform::s_DisabledCursorWindow != this)
+                    {
+                        break;
+                    }
+
+                    if (m_RawMouseMotion)
+                    {
+                        break;
+                    }
+
+                    OnCursorPositionChanged(m_VirtualCursorPositionX + dx, m_VirtualCursorPositionY + dy);
+                }
+                else
+                {
+                    OnCursorPositionChanged(x, y);
+                }
+
+                m_LastCursorPositionX = x;
+                m_LastCursorPositionY = y;
+
+                return 0;
+            }
+
+            //TODO:
+            //case WM_INPUT:
+
+            case WM_MOUSELEAVE:
+            {
+                m_CursorTracked = false;
+                OnCursorEnter(false);
+
+                return 0;
+            }
+
+            case WM_MOUSEWHEEL:
+            {
+                OnScroll(0.0, (SHORT)HIWORD(wParam) / (double)WHEEL_DELTA);
+
+                return 0;
+            }
+
+            case WM_MOUSEHWHEEL:
+            {
+                //this message is only sent on Windows Vista and later
+                //NOTE: the x-axis is inverted for consistency with macOS and X11
+                OnScroll(-((SHORT)HIWORD(wParam) / (double)WHEEL_DELTA), 0.0);
+
+                return 0;
+            }
+
+            case WM_ENTERSIZEMOVE:
+            case WM_ENTERMENULOOP:
+            {
+                if (m_FrameAction)
+                {
+                    break;
+                }
+
+                // HACK: enable the cursor while the user is moving
+                // or resizing the window or using the window menu
+                if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                {
+                    SetCursorEnabled(true);
+                }
+
+                break;
+            }
+
+            case WM_EXITSIZEMOVE:
+            case WM_EXITMENULOOP:
+            {
+                if (m_FrameAction)
+                {
+                    break;
+                }
+
+                // HACK: disable the cursor once the user is done moving
+                // or resizing the window or using the window menu
+                if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                {
+                    SetCursorEnabled(false);
+                }
+
+                break;
+            }
+
+            case WM_SIZE:
+            {
+                const int width = LOWORD(lParam);
+                const int height = HIWORD(lParam);
+                const bool minimized = wParam == SIZE_MINIMIZED;
+                const bool maximized = wParam == SIZE_MAXIMIZED
+                    || (m_Maximized && wParam != SIZE_RESTORED);
+
+                if (WindowsPlatform::s_DisabledCursorWindow == this)
+                {
+                    UpdateClipRect(true);
+                }
+
+                if (m_Minimized != minimized)
+                {
+                    OnMinimize(minimized);
+                }
+
+                if (m_Maximized != maximized)
+                {
+                    OnMaximize(maximized);
+                }
+
+                if (width != m_Width
+                    || height != m_Height)
+                {
+                    m_Width = width;
+                    m_Height = height;
+
+                    OnFramebufferSizeChanged(width, height);
+                    OnSizeChanged(width, height);
+                }
+
+                if (m_Monitor
+                    && m_Minimized != minimized)
+                {
+                    if (m_Minimized)
+                    {
+                        ReleaseMonitor();
+                    }
+                    else
+                    {
+                        AcquireMonitor();
+                        FitToMonitor();
+                    }
+                }
+
+                m_Minimized = minimized;
+                m_Maximized = maximized;
+
+                return 0;
+            }
+
+            case WM_MOVE:
+            {
+                if (WindowsPlatform::s_DisabledCursorWindow == this)
+                {
+                    UpdateClipRect(true);
+                }
+
+                // NOTE: this cannot use LOWORD/HIWORD recommended by MSDN, as
+                // those macros do not handle negative window positions correctly
+                OnPositionChanged(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+
+                return 0;
+            }
+
+            case WM_SIZING:
+            {
+                if (m_Numerator == -1
+                    || m_Denominator == -1)
+                {
+                    break;
+                }
+
+                ApplyAspectRatio((int32_t)wParam, (RECT*)lParam);
+
+                return TRUE;
+            }
+
+            case WM_GETMINMAXINFO:
+            {
+                if (m_Monitor)
+                {
+                    break;
+                }
+
+                UINT dpi = USER_DEFAULT_SCREEN_DPI;
+                if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
+                {
+                    dpi = WindowsPlatform::s_Libs.user32.GetDpiForWindow(m_Handle);
+                }
+
+                int xOffset, yOffset;
+                GetFullSize(GetStyle(), GetStyleEx(), 0, 0, &xOffset, &yOffset, dpi);
+
+                MINMAXINFO* mmi = (MINMAXINFO*)lParam;
+
+                if (m_MinWidth != -1
+                    && m_MinHeight != -1)
+                {
+                    mmi->ptMinTrackSize.x = m_MinWidth + xOffset;
+                    mmi->ptMinTrackSize.y = m_MinHeight + yOffset;
+                }
+
+                if (m_MaxWidth != -1
+                    && m_MaxHeight != -1)
+                {
+                    mmi->ptMaxTrackSize.x = m_MaxWidth + xOffset;
+                    mmi->ptMaxTrackSize.y = m_MaxHeight + yOffset;
+                }
+
+                if (!m_Decorated)
+                {
+                    const HMONITOR mh = MonitorFromWindow(m_Handle, MONITOR_DEFAULTTONEAREST);
+
+                    MONITORINFO mi = {};
+                    mi.cbSize = sizeof(mi);
+                    GetMonitorInfoW(mh, &mi);
+
+                    mmi->ptMaxPosition.x = mi.rcWork.left - mi.rcMonitor.left;
+                    mmi->ptMaxPosition.y = mi.rcWork.top - mi.rcMonitor.top;
+                    mmi->ptMaxSize.x = mi.rcWork.right - mi.rcWork.left;
+                    mmi->ptMaxSize.y = mi.rcWork.bottom - mi.rcWork.top;
+                }
+
+                return 0;
+            }
+
+            case WM_PAINT:
+            {
+                OnNeedUpdate();
+                break;
+            }
+
+            case WM_ERASEBKGND:
+            {
+                return TRUE;
+            }
+
+            case WM_NCACTIVATE:
+            case WM_NCPAINT:
+            {
+                // Prevent title bar from being drawn after restoring a minimized undecorated window
+                if (!m_Decorated)
+                    return TRUE;
+
+                break;
+            }
+
+            case WM_DWMCOMPOSITIONCHANGED:
+            case WM_DWMCOLORIZATIONCOLORCHANGED:
+            {
+                if (m_Transparent)
+                    UpdateFramebufferTransparency();
+
+                return 0;
+            }
+
+            case WM_GETDPISCALEDSIZE:
+            {
+                if (m_ScaleToMonitor)
+                {
+                    break;
+                }
+
+                // Adjust the window size to keep the content area size constant
+                if (WindowsPlatform::IsWindows10CreatorsUpdateOrGreater())
+                {
+                    RECT source = { 0 }, target = { 0 };
+                    SIZE* size = (SIZE*)lParam;
+
+                    WindowsPlatform::s_Libs.user32.AdjustWindowRectExForDpi(&source, 
+                        GetStyle(), FALSE, GetStyleEx(),
+                        WindowsPlatform::s_Libs.user32.GetDpiForWindow(m_Handle));
+
+                    WindowsPlatform::s_Libs.user32.AdjustWindowRectExForDpi(&target, 
+                        GetStyle(), FALSE, GetStyleEx(),
+                        LOWORD(wParam));
+
+                    size->cx += (target.right - target.left) - (source.right - source.left);
+                    size->cy += (target.bottom - target.top) - (source.bottom - source.top);
+
+                    return TRUE;
+                }
+
+                break;
+            }
+
+            case WM_DPICHANGED:
+            {
+                const float xScale = HIWORD(wParam) / (float)USER_DEFAULT_SCREEN_DPI;
+                const float yScale = LOWORD(wParam) / (float)USER_DEFAULT_SCREEN_DPI;
+
+                // Resize windowed mode windows that either permit rescaling or that
+                // need it to compensate for non-client area scaling
+                if (!m_Monitor 
+                    && (m_ScaleToMonitor || WindowsPlatform::IsWindows10CreatorsUpdateOrGreater()))
+                {
+                    RECT* suggested = (RECT*)lParam;
+
+                    SetWindowPos(m_Handle, HWND_TOP,
+                        suggested->left,
+                        suggested->top,
+                        suggested->right - suggested->left,
+                        suggested->bottom - suggested->top,
+                        SWP_NOACTIVATE | SWP_NOZORDER);
+                }
+
+                OnContentScaleChanged(xScale, yScale);
+                break;
+            }
+
+            case WM_SETCURSOR:
+            {
+                if (LOWORD(lParam) == HTCLIENT)
+                {
+                    UpdateCursorImage();
+                    return TRUE;
+                }
+
+                break;
+            }
+
+            case WM_DROPFILES:
+            {
+                HDROP drop = (HDROP)wParam;
+                POINT pt;
+
+                const int count = DragQueryFileW(drop, 0xffffffff, NULL, 0);
+                char** paths = (char**)calloc(count, sizeof(char*));
+
+                // Move the mouse to the position of the drop
+                DragQueryPoint(drop, &pt);
+
+                OnCursorPositionChanged(pt.x, pt.y);
+
+                for (int32_t i = 0; i < count; i++)
+                {
+                    const UINT length = DragQueryFileW(drop, i, NULL, 0);
+                    WCHAR* buffer = (WCHAR*)calloc((size_t)length + 1, sizeof(WCHAR));
+
+                    DragQueryFileW(drop, i, buffer, length + 1);
+                    paths[i] = WindowsPlatform::WideStringToUTF8(buffer);
+
+                    free(buffer);
+                }
+
+                OnDrop(count, (const char**)paths);
+
+                for (int32_t i = 0; i < count; i++)
+                {
+                    free(paths[i]);
+                }
+                free(paths);
+
+                DragFinish(drop);
+                return 0;
+            }
+
             default:
             {
                 return DefWindowProcW(m_Handle, uMsg, wParam, lParam);
@@ -664,9 +1470,25 @@ namespace dais
         }
     }
 
+
     /// <summary> Make this window and its video mode active on its monitor </summary>
     void WindowsWindow::AcquireMonitor()
     {
+        if (!WindowsPlatform::s_AcquiredMonitorCount)
+        {
+            SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED);
+
+            //HACK: when mouse trails are enabled, the cursor becomes invisible when
+            // the OpenGL ICD switches to page flipping
+            SystemParametersInfoW(SPI_GETMOUSETRAILS, 0, &WindowsPlatform::s_MouseTrailSize, 0);
+            SystemParametersInfoW(SPI_SETMOUSETRAILS, 0, 0, 0);
+        }
+
+        if (!m_Monitor->GetWindow())
+        {
+            WindowsPlatform::s_AcquiredMonitorCount++;
+        }
+
         m_Monitor->SetVideoMode(&m_VideoMode);
         m_Monitor->SetWindow(this);
     }
@@ -677,6 +1499,15 @@ namespace dais
         if (m_Monitor->GetWindow() != this)
         {
             return;
+        }
+
+        WindowsPlatform::s_AcquiredMonitorCount--;
+        if (WindowsPlatform::s_AcquiredMonitorCount)
+        {
+            SetThreadExecutionState(ES_CONTINUOUS);
+
+            //HACK: restore mouse trail length saved in AcquireMonitor
+            SystemParametersInfoW(SPI_SETMOUSETRAILS, WindowsPlatform::s_MouseTrailSize, 0, 0);
         }
 
         m_Monitor->SetWindow(nullptr);
@@ -696,6 +1527,165 @@ namespace dais
             mi.rcMonitor.right - mi.rcMonitor.left,
             mi.rcMonitor.bottom - mi.rcMonitor.top,
             SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOCOPYBITS);
+    }
+
+    void WindowsWindow::ChangeMessageFilter()
+    {
+        if (WindowsPlatform::IsWindows7OrGreater())
+        {
+            WindowsPlatform::s_Libs.user32.ChangeWindowMessageFilterEx(m_Handle, WM_DROPFILES, MSGFLT_ALLOW, NULL);
+            WindowsPlatform::s_Libs.user32.ChangeWindowMessageFilterEx(m_Handle, WM_COPYDATA, MSGFLT_ALLOW, NULL);
+            WindowsPlatform::s_Libs.user32.ChangeWindowMessageFilterEx(m_Handle, WM_COPYGLOBALDATA, MSGFLT_ALLOW, NULL);
+        }
+    }
+
+    void WindowsWindow::UpdateFramebufferTransparency()
+    {
+        if (!WindowsPlatform::IsWindowsVistaOrGreater())
+        {
+            return;
+        }
+
+        BOOL composition;
+        if (FAILED(WindowsPlatform::s_Libs.dwmapi.IsCompositionEnabled(&composition)) || !composition)
+        {
+            return;
+        }
+
+        BOOL opaque;
+        DWORD color;
+        if (WindowsPlatform::IsWindows8OrGreater()
+            || (SUCCEEDED(WindowsPlatform::s_Libs.dwmapi.GetColorizationColor(&color, &opaque)) && !opaque))
+        {
+            HRGN region = CreateRectRgn(0, 0, -1, -1);
+            DWM_BLURBEHIND bb = { 0 };
+            bb.dwFlags = DWM_BB_ENABLE | DWM_BB_BLURREGION;
+            bb.hRgnBlur = region;
+            bb.fEnable = TRUE;
+
+            WindowsPlatform::s_Libs.dwmapi.EnableBlurBehindWindow(m_Handle, &bb);
+            DeleteObject(region);
+        }
+        else
+        {
+            // HACK: disable framebuffer transparency on Windows 7 when the
+            // colorization color is opaque, because otherwise the window
+            // contents is blended additively with the previous frame instead
+            // of replacing it
+            DWM_BLURBEHIND bb = { 0 };
+            bb.dwFlags = DWM_BB_ENABLE;
+
+            WindowsPlatform::s_Libs.dwmapi.EnableBlurBehindWindow(m_Handle, &bb);
+        }
+    }
+
+    /// <summary> Enforce the content area aspect ratio based on which edge is being dragged </summary>
+    void WindowsWindow::ApplyAspectRatio(int32_t edge, RECT* rect)
+    {
+        UINT dpi = USER_DEFAULT_SCREEN_DPI;
+        const float ratio = (float)m_Numerator / (float)m_Denominator;
+
+        if (WindowsPlatform::IsWindows10AnniversaryUpdateOrGreater())
+        {
+            dpi = WindowsPlatform::s_Libs.user32.GetDpiForWindow(m_Handle);
+        }
+
+        int32_t xOffset, yOffset;
+        GetFullSize(GetStyle(), GetStyleEx(), 0, 0, &xOffset, &yOffset, dpi);
+
+        if (edge == WMSZ_LEFT
+            || edge == WMSZ_BOTTOMLEFT
+            || edge == WMSZ_RIGHT
+            || edge == WMSZ_BOTTOMRIGHT)
+        {
+            rect->bottom = rect->top + yOffset + (int32_t)((rect->right - rect->left - xOffset) / ratio);
+        }
+        else if (edge == WMSZ_TOPLEFT
+            || edge == WMSZ_TOPRIGHT)
+        {
+            rect->top = rect->bottom - yOffset - (int32_t)((rect->right - rect->left - xOffset) / ratio);
+
+        }
+        else if (edge == WMSZ_TOP
+            || edge == WMSZ_BOTTOM)
+        {
+            rect->right = rect->left + xOffset + (int32_t)((rect->bottom - rect->top - yOffset) * ratio);
+        }
+    }
+
+    void WindowsWindow::SetCursorEnabled(bool enabled)
+    {
+        if (enabled)
+        {
+            if (m_RawMouseMotion)
+            {
+                PlatformSetRawMouseMotion(false);
+            }
+
+            WindowsPlatform::s_DisabledCursorWindow = nullptr;
+            UpdateClipRect(false);
+            PlatformSetCursorPosition(WindowsPlatform::s_RestoreCursorPositionX,
+                WindowsPlatform::s_RestoreCursorPositionY);
+
+            UpdateCursorImage();
+        }
+        else
+        {
+            WindowsPlatform::s_DisabledCursorWindow = this;
+            PlatformGetCursorPosition(&WindowsPlatform::s_RestoreCursorPositionX,
+                &WindowsPlatform::s_RestoreCursorPositionY);
+
+            UpdateCursorImage();
+            CenterCursorInContentArea();
+            UpdateClipRect(true);
+
+            if (m_RawMouseMotion)
+            {
+                PlatformSetRawMouseMotion(true);
+            }
+        }
+    }
+
+    void WindowsWindow::UpdateCursorImage()
+    {
+        if (m_CursorMode == DAIS_CURSOR_NORMAL)
+        {
+            if (m_Cursors.size())
+            {
+                SetCursor(((WindowsCursor*)m_Cursors[0])->m_Handle);
+            }
+            else
+            {
+                SetCursor(LoadCursorW(NULL, IDC_ARROW));
+            }
+        }
+        else
+        {
+            SetCursor(NULL);
+        }
+    }
+
+    void WindowsWindow::UpdateClipRect(bool clipToWindow)
+    {
+        if (clipToWindow)
+        {
+            RECT clipRect;
+            GetClientRect(m_Handle, &clipRect);
+            ClientToScreen(m_Handle, (POINT*)&clipRect.left);
+            ClientToScreen(m_Handle, (POINT*)&clipRect.right);
+            ClipCursor(&clipRect);
+        }
+        else
+        {
+            ClipCursor(NULL);
+        }
+    }
+
+    void WindowsWindow::CenterCursorInContentArea()
+    {
+        int32_t width, height;
+        PlatformGetSize(&width, &height);
+        PlatformSetCursorPosition(width * 0.5f, height * 0.5f);
     }
 
     DWORD WindowsWindow::GetStyle() const
@@ -788,6 +1778,43 @@ namespace dais
         ClientToScreen(m_Handle, (POINT*)&rect.right);
 
         return PtInRect(&rect, position);
+    }
+
+    int32_t WindowsWindow::GetKeyMods() const
+    {
+        int32_t mods = 0;
+
+        if (GetKeyState(VK_SHIFT) & 0x8000)
+        {
+            mods |= DAIS_MOD_SHIFT;
+        }
+
+        if (GetKeyState(VK_CONTROL) & 0x8000)
+        {
+            mods |= DAIS_MOD_CONTROL;
+        }
+
+        if (GetKeyState(VK_MENU) & 0x8000)
+        {
+            mods |= DAIS_MOD_ALT;
+        }
+
+        if ((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000)
+        {
+            mods |= DAIS_MOD_SUPER;
+        }
+
+        if (GetKeyState(VK_CAPITAL) & 1)
+        {
+            mods |= DAIS_MOD_CAPS_LOCK;
+        }
+
+        if (GetKeyState(VK_NUMLOCK) & 1)
+        {
+            mods |= DAIS_MOD_NUM_LOCK;
+        }
+
+        return mods;
     }
 }
 

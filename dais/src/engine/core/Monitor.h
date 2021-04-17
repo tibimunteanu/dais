@@ -137,7 +137,7 @@ namespace dais
         void SetGamma(float gamma);
         const GammaRamp* GetGammaRamp();
         void SetGammaRamp(GammaRamp* ramp);
-
+        void RestoreOriginalGammaRamp();
         Window* GetWindow() const;
         void SetWindow(Window* window);
 

@@ -2,6 +2,7 @@
 
 #include "engine/core/Platform.h"
 #include "platform/windows/WindowsBase.h"
+#include "platform/windows/WindowsCursor.h"
 #include "platform/windows/WindowsMonitor.h"
 #include "platform/windows/WindowsWindow.h"
 
@@ -13,66 +14,72 @@ namespace dais
         static HWND s_HelperWindowHandle;
         static HDEVNOTIFY s_DeviceNotificationHandle;
         static DWORD s_ForegroundLockTimeout;
+        static int32_t s_AcquiredMonitorCount;
+        static char* s_ClipboardString;
+        static double s_RestoreCursorPositionX; //where to place the cursor when re-enabled
+        static double s_RestoreCursorPositionY;
+        static Window* s_DisabledCursorWindow; //the window whose disabled cursor mode is active
+        static RAWINPUT* s_RawInput;
+        static int32_t s_RawInputSize;
+        static UINT s_MouseTrailSize;
+
         static struct WindowsLibs
         {
             struct XInputLib
             {
-                HINSTANCE Instance;
+                HINSTANCE instance;
                 PFN_XInputGetCapabilities GetCapabilities;
                 PFN_XInputGetState GetState;
-            } XInput;
+            } xInput;
 
             struct DInput8Lib
             {
-                HINSTANCE Instance;
+                HINSTANCE instance;
                 PFN_DirectInput8Create Create;
                 IDirectInput8W* API;
-            } DInput8;
+            } dInput8;
 
             struct WinmmLib
             {
-                HINSTANCE Instance;
+                HINSTANCE instance;
                 PFN_timeGetTime GetTime;
-            } Winmm;
+            } winmm;
 
             struct User32Lib
             {
-                HINSTANCE Instance;
+                HINSTANCE instance;
                 PFN_SetProcessDPIAware SetProcessDPIAware;
                 PFN_ChangeWindowMessageFilterEx ChangeWindowMessageFilterEx;
                 PFN_EnableNonClientDpiScaling EnableNonClientDpiScaling;
                 PFN_SetProcessDpiAwarenessContext SetProcessDpiAwarenessContext;
                 PFN_GetDpiForWindow GetDpiForWindow;
                 PFN_AdjustWindowRectExForDpi AdjustWindowRectExForDpi;
-            } User32;
+            } user32;
 
             struct DwmapiLib
             {
-                HINSTANCE Instance;
+                HINSTANCE instance;
                 PFN_DwmIsCompositionEnabled IsCompositionEnabled;
                 PFN_DwmFlush Flush;
                 PFN_DwmEnableBlurBehindWindow EnableBlurBehindWindow;
                 PFN_DwmGetColorizationColor GetColorizationColor;
-            } Dwmapi;
+            } dwmapi;
 
             struct ShcoreLib
             {
-                HINSTANCE Instance;
+                HINSTANCE instance;
                 PFN_SetProcessDpiAwareness SetProcessDpiAwareness;
                 PFN_GetDpiForMonitor GetDpiForMonitor;
-            } Shcore;
+            } shcore;
 
             struct NtdllLib
             {
-                HINSTANCE Instance;
+                HINSTANCE instance;
                 PFN_RtlVerifyVersionInfo RtlVerifyVersionInfo;
-            } Ntdll;
+            } ntdll;
         } s_Libs;
 
     public:
-        static void PlatformInit();
-        static void PlatformTerminate();
-
         static bool LoadLibraries();
         static void FreeLibraries();
         static void SetProcessDpiAware();

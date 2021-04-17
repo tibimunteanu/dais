@@ -7,69 +7,66 @@ namespace dais
     HWND WindowsPlatform::s_HelperWindowHandle = nullptr;
     HDEVNOTIFY WindowsPlatform::s_DeviceNotificationHandle = nullptr;
     DWORD WindowsPlatform::s_ForegroundLockTimeout = 0;
+    int32_t WindowsPlatform::s_AcquiredMonitorCount = 0;
+    char* WindowsPlatform::s_ClipboardString = nullptr;
+    double WindowsPlatform::s_RestoreCursorPositionX = 0.0;
+    double WindowsPlatform::s_RestoreCursorPositionY = 0.0;
+    Window* WindowsPlatform::s_DisabledCursorWindow = nullptr;
+    RAWINPUT* WindowsPlatform::s_RawInput = nullptr;
+    int32_t WindowsPlatform::s_RawInputSize = 0;
+    UINT WindowsPlatform::s_MouseTrailSize = 0;
     WindowsPlatform::WindowsLibs WindowsPlatform::s_Libs = {};
 
 
 
     //////////////////////////////////////// STATIC API ///////////////////////////////////////////
 
-    void Platform::Init()
+    bool Platform::PlatformInit()
     {
-        WindowsPlatform::PlatformInit();
+        WindowsPlatform::SetForegroundLockTimeout();
+
+        if (!WindowsPlatform::LoadLibraries())
+        {
+            return false;
+        }
+
+        WindowsPlatform::SetProcessDpiAware();
+
+        if (!WindowsPlatform::RegisterWindowClass())
+        {
+            return false;
+        }
+
+        if (!WindowsPlatform::CreateHelperWindow())
+        {
+            return false;
+        }
+
+        WindowsPlatform::PollMonitors();
+
+        return true;
     }
 
-    void WindowsPlatform::PlatformInit()
+    void Platform::PlatformTerminate()
     {
-        SetForegroundLockTimeout();
-        LoadLibraries();
-        SetProcessDpiAware();
-        RegisterWindowClass();
-        CreateHelperWindow();
-        PollMonitors();
-    }
-
-    void Platform::Terminate()
-    {
-        if (s_Monitors.size() > 0)
+        if (WindowsPlatform::s_DeviceNotificationHandle)
         {
-            for (size_t i = 0; i < s_Monitors.size(); i++)
-            {
-                //TODO: m_Monitors[i]->RestoreOriginalGammaRamp();
-                delete s_Monitors[i];
-            }
+            UnregisterDeviceNotification(WindowsPlatform::s_DeviceNotificationHandle);
         }
 
-        if (s_Windows.size() > 0)
+        if (WindowsPlatform::s_HelperWindowHandle)
         {
-            for (size_t i = 0; i < s_Windows.size(); i++)
-            {
-                delete s_Windows[i];
-            }
+            DestroyWindow(WindowsPlatform::s_HelperWindowHandle);
         }
 
-        WindowsPlatform::PlatformTerminate();
-    }
+        WindowsPlatform::UnregisterWindowClass();
+        WindowsPlatform::RestoreForegroundLockTimeout();
 
-    void WindowsPlatform::PlatformTerminate()
-    {
-        if (s_DeviceNotificationHandle)
-        {
-            UnregisterDeviceNotification(s_DeviceNotificationHandle);
-        }
-
-        if (s_HelperWindowHandle)
-        {
-            DestroyWindow(s_HelperWindowHandle);
-        }
-
-        UnregisterWindowClass();
-        RestoreForegroundLockTimeout();
-
-        FreeLibraries();
+        WindowsPlatform::FreeLibraries();
     }
 
 
-    void Platform::PollEvents()
+    void Platform::PlatformPollEvents()
     {
         MSG msg = {};
 
@@ -89,13 +86,13 @@ namespace dais
         }
     }
 
-    void Platform::WaitEvents()
+    void Platform::PlatformWaitEvents()
     {
         WaitMessage();
         PollEvents();
     }
 
-    void Platform::WaitEventsTimeout(double timeout)
+    void Platform::PlatformWaitEventsTimeout(double timeout)
     {
         if (timeout != timeout
             || timeout < 0.0
@@ -107,6 +104,11 @@ namespace dais
 
         MsgWaitForMultipleObjects(0, NULL, FALSE, (DWORD)(timeout * 1000.0), QS_ALLEVENTS);
         PollEvents();
+    }
+
+    bool Platform::IsRawMouseMotionSupported()
+    {
+        return true;
     }
 
 
@@ -129,65 +131,65 @@ namespace dais
 
             for (i = 0; names[i]; i++)
             {
-                s_Libs.XInput.Instance = LoadLibraryA(names[i]);
-                if (s_Libs.XInput.Instance)
+                s_Libs.xInput.instance = LoadLibraryA(names[i]);
+                if (s_Libs.xInput.instance)
                 {
-                    s_Libs.XInput.GetCapabilities = (PFN_XInputGetCapabilities)GetProcAddress(s_Libs.XInput.Instance, "XInputGetCapabilities");
-                    s_Libs.XInput.GetState = (PFN_XInputGetState)GetProcAddress(s_Libs.XInput.Instance, "XInputGetState");
+                    s_Libs.xInput.GetCapabilities = (PFN_XInputGetCapabilities)GetProcAddress(s_Libs.xInput.instance, "XInputGetCapabilities");
+                    s_Libs.xInput.GetState = (PFN_XInputGetState)GetProcAddress(s_Libs.xInput.instance, "XInputGetState");
                     break;
                 }
             }
         }
 
-        s_Libs.DInput8.Instance = LoadLibraryA("dinput8.dll");
-        if (s_Libs.DInput8.Instance)
+        s_Libs.dInput8.instance = LoadLibraryA("dinput8.dll");
+        if (s_Libs.dInput8.instance)
         {
-            s_Libs.DInput8.Create = (PFN_DirectInput8Create)GetProcAddress(s_Libs.DInput8.Instance, "DirectInput8Create");
+            s_Libs.dInput8.Create = (PFN_DirectInput8Create)GetProcAddress(s_Libs.dInput8.instance, "DirectInput8Create");
         }
 
-        s_Libs.Winmm.Instance = LoadLibraryA("winmm.dll");
-        if (!s_Libs.Winmm.Instance)
+        s_Libs.winmm.instance = LoadLibraryA("winmm.dll");
+        if (!s_Libs.winmm.instance)
         {
             DAIS_ERROR("[WindowsPlatform] LoadLibraries(): Failed to load winmm.dll!");
             return false;
         }
 
-        s_Libs.Winmm.GetTime = (PFN_timeGetTime)GetProcAddress(s_Libs.Winmm.Instance, "timeGetTime");
+        s_Libs.winmm.GetTime = (PFN_timeGetTime)GetProcAddress(s_Libs.winmm.instance, "timeGetTime");
 
-        s_Libs.User32.Instance = LoadLibraryA("user32.dll");
-        if (!s_Libs.User32.Instance)
+        s_Libs.user32.instance = LoadLibraryA("user32.dll");
+        if (!s_Libs.user32.instance)
         {
             DAIS_ERROR("[WindowsPlatform] LoadLibraries(): Failed to load user32.dll!");
             return false;
         }
 
-        s_Libs.User32.SetProcessDPIAware = (PFN_SetProcessDPIAware)GetProcAddress(s_Libs.User32.Instance, "SetProcessDPIAware");
-        s_Libs.User32.ChangeWindowMessageFilterEx = (PFN_ChangeWindowMessageFilterEx)GetProcAddress(s_Libs.User32.Instance, "ChangeWindowMessageFilterEx");
-        s_Libs.User32.EnableNonClientDpiScaling = (PFN_EnableNonClientDpiScaling)GetProcAddress(s_Libs.User32.Instance, "EnableNonClientDpiScaling");
-        s_Libs.User32.SetProcessDpiAwarenessContext = (PFN_SetProcessDpiAwarenessContext)GetProcAddress(s_Libs.User32.Instance, "SetProcessDpiAwarenessContext");
-        s_Libs.User32.GetDpiForWindow = (PFN_GetDpiForWindow)GetProcAddress(s_Libs.User32.Instance, "GetDpiForWindow");
-        s_Libs.User32.AdjustWindowRectExForDpi = (PFN_AdjustWindowRectExForDpi)GetProcAddress(s_Libs.User32.Instance, "AdjustWindowRectExForDpi");
+        s_Libs.user32.SetProcessDPIAware = (PFN_SetProcessDPIAware)GetProcAddress(s_Libs.user32.instance, "SetProcessDPIAware");
+        s_Libs.user32.ChangeWindowMessageFilterEx = (PFN_ChangeWindowMessageFilterEx)GetProcAddress(s_Libs.user32.instance, "ChangeWindowMessageFilterEx");
+        s_Libs.user32.EnableNonClientDpiScaling = (PFN_EnableNonClientDpiScaling)GetProcAddress(s_Libs.user32.instance, "EnableNonClientDpiScaling");
+        s_Libs.user32.SetProcessDpiAwarenessContext = (PFN_SetProcessDpiAwarenessContext)GetProcAddress(s_Libs.user32.instance, "SetProcessDpiAwarenessContext");
+        s_Libs.user32.GetDpiForWindow = (PFN_GetDpiForWindow)GetProcAddress(s_Libs.user32.instance, "GetDpiForWindow");
+        s_Libs.user32.AdjustWindowRectExForDpi = (PFN_AdjustWindowRectExForDpi)GetProcAddress(s_Libs.user32.instance, "AdjustWindowRectExForDpi");
 
-        s_Libs.Dwmapi.Instance = LoadLibraryA("dwmapi.dll");
-        if (s_Libs.Dwmapi.Instance)
+        s_Libs.dwmapi.instance = LoadLibraryA("dwmapi.dll");
+        if (s_Libs.dwmapi.instance)
         {
-            s_Libs.Dwmapi.IsCompositionEnabled = (PFN_DwmIsCompositionEnabled)GetProcAddress(s_Libs.Dwmapi.Instance, "DwmIsCompositionEnabled");
-            s_Libs.Dwmapi.Flush = (PFN_DwmFlush)GetProcAddress(s_Libs.Dwmapi.Instance, "DwmFlush");
-            s_Libs.Dwmapi.EnableBlurBehindWindow = (PFN_DwmEnableBlurBehindWindow)GetProcAddress(s_Libs.Dwmapi.Instance, "DwmEnableBlurBehindWindow");
-            s_Libs.Dwmapi.GetColorizationColor = (PFN_DwmGetColorizationColor)GetProcAddress(s_Libs.Dwmapi.Instance, "DwmGetColorizationColor");
+            s_Libs.dwmapi.IsCompositionEnabled = (PFN_DwmIsCompositionEnabled)GetProcAddress(s_Libs.dwmapi.instance, "DwmIsCompositionEnabled");
+            s_Libs.dwmapi.Flush = (PFN_DwmFlush)GetProcAddress(s_Libs.dwmapi.instance, "DwmFlush");
+            s_Libs.dwmapi.EnableBlurBehindWindow = (PFN_DwmEnableBlurBehindWindow)GetProcAddress(s_Libs.dwmapi.instance, "DwmEnableBlurBehindWindow");
+            s_Libs.dwmapi.GetColorizationColor = (PFN_DwmGetColorizationColor)GetProcAddress(s_Libs.dwmapi.instance, "DwmGetColorizationColor");
         }
 
-        s_Libs.Shcore.Instance = LoadLibraryA("shcore.dll");
-        if (s_Libs.Shcore.Instance)
+        s_Libs.shcore.instance = LoadLibraryA("shcore.dll");
+        if (s_Libs.shcore.instance)
         {
-            s_Libs.Shcore.SetProcessDpiAwareness = (PFN_SetProcessDpiAwareness)GetProcAddress(s_Libs.Shcore.Instance, "SetProcessDpiAwareness");
-            s_Libs.Shcore.GetDpiForMonitor = (PFN_GetDpiForMonitor)GetProcAddress(s_Libs.Shcore.Instance, "GetDpiForMonitor");
+            s_Libs.shcore.SetProcessDpiAwareness = (PFN_SetProcessDpiAwareness)GetProcAddress(s_Libs.shcore.instance, "SetProcessDpiAwareness");
+            s_Libs.shcore.GetDpiForMonitor = (PFN_GetDpiForMonitor)GetProcAddress(s_Libs.shcore.instance, "GetDpiForMonitor");
         }
 
-        s_Libs.Ntdll.Instance = LoadLibraryA("ntdll.dll");
-        if (s_Libs.Ntdll.Instance)
+        s_Libs.ntdll.instance = LoadLibraryA("ntdll.dll");
+        if (s_Libs.ntdll.instance)
         {
-            s_Libs.Ntdll.RtlVerifyVersionInfo = (PFN_RtlVerifyVersionInfo)GetProcAddress(s_Libs.Ntdll.Instance, "RtlVerifyVersionInfo");
+            s_Libs.ntdll.RtlVerifyVersionInfo = (PFN_RtlVerifyVersionInfo)GetProcAddress(s_Libs.ntdll.instance, "RtlVerifyVersionInfo");
         }
 
         return true;
@@ -197,28 +199,28 @@ namespace dais
     {
         DAIS_TRACE("[WindowsPlatform] Free libraries");
 
-        if (s_Libs.XInput.Instance) FreeLibrary(s_Libs.XInput.Instance);
-        if (s_Libs.DInput8.Instance) FreeLibrary(s_Libs.DInput8.Instance);
-        if (s_Libs.Winmm.Instance) FreeLibrary(s_Libs.Winmm.Instance);
-        if (s_Libs.User32.Instance) FreeLibrary(s_Libs.User32.Instance);
-        if (s_Libs.Dwmapi.Instance) FreeLibrary(s_Libs.Dwmapi.Instance);
-        if (s_Libs.Shcore.Instance) FreeLibrary(s_Libs.Shcore.Instance);
-        if (s_Libs.Ntdll.Instance) FreeLibrary(s_Libs.Ntdll.Instance);
+        if (s_Libs.xInput.instance) FreeLibrary(s_Libs.xInput.instance);
+        if (s_Libs.dInput8.instance) FreeLibrary(s_Libs.dInput8.instance);
+        if (s_Libs.winmm.instance) FreeLibrary(s_Libs.winmm.instance);
+        if (s_Libs.user32.instance) FreeLibrary(s_Libs.user32.instance);
+        if (s_Libs.dwmapi.instance) FreeLibrary(s_Libs.dwmapi.instance);
+        if (s_Libs.shcore.instance) FreeLibrary(s_Libs.shcore.instance);
+        if (s_Libs.ntdll.instance) FreeLibrary(s_Libs.ntdll.instance);
     }
 
     void WindowsPlatform::SetProcessDpiAware()
     {
         if (IsWindows10CreatorsUpdateOrGreater())
         {
-            s_Libs.User32.SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+            s_Libs.user32.SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
         }
         else if (IsWindows8Point1OrGreater())
         {
-            s_Libs.Shcore.SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+            s_Libs.shcore.SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
         }
         else if (IsWindowsVistaOrGreater())
         {
-            s_Libs.User32.SetProcessDPIAware();
+            s_Libs.user32.SetProcessDPIAware();
         }
     }
 
@@ -237,8 +239,8 @@ namespace dais
     {
         if (IsWindows10AnniversaryUpdateOrGreater())
         {
-            UINT dpi = s_Libs.User32.GetDpiForWindow(windowHandle);
-            s_Libs.User32.AdjustWindowRectExForDpi(rect, style, FALSE, styleEx, dpi);
+            UINT dpi = s_Libs.user32.GetDpiForWindow(windowHandle);
+            s_Libs.user32.AdjustWindowRectExForDpi(rect, style, FALSE, styleEx, dpi);
         }
         else
         {
@@ -250,7 +252,7 @@ namespace dais
     {
         if (IsWindows10AnniversaryUpdateOrGreater())
         {
-            s_Libs.User32.AdjustWindowRectExForDpi(rect, style, FALSE, styleEx, dpi);
+            s_Libs.user32.AdjustWindowRectExForDpi(rect, style, FALSE, styleEx, dpi);
         }
         else
         {
@@ -274,7 +276,7 @@ namespace dais
             DISPLAY_DEVICEW adapter = {};
             adapter.cb = sizeof(adapter);
 
-            if (!EnumDisplayDevicesW(nullptr, adapterIndex, &adapter, 0))
+            if (!EnumDisplayDevicesW(NULL, adapterIndex, &adapter, 0))
             {
                 break;
             }
@@ -344,9 +346,9 @@ namespace dais
                 insertFirst = false;
 
                 //call the MonitorConnected callback
-                if (s_Callbacks.MonitorConnected)
+                if (s_Callbacks.monitorConnected)
                 {
-                    s_Callbacks.MonitorConnected((Monitor*)monitor);
+                    s_Callbacks.monitorConnected((Monitor*)monitor);
                 }
             }
 
@@ -381,9 +383,9 @@ namespace dais
                 s_Monitors.push_back(monitor);
 
                 //call the MonitorConnected callback
-                if (s_Callbacks.MonitorConnected)
+                if (s_Callbacks.monitorConnected)
                 {
-                    s_Callbacks.MonitorConnected((Monitor*)monitor);
+                    s_Callbacks.monitorConnected((Monitor*)monitor);
                 }
             }
         }
@@ -395,6 +397,20 @@ namespace dais
             {
                 Monitor* monitor = s_Monitors[d];
 
+                for (Window* window : s_Windows)
+                {
+                    if (window->GetMonitor() == monitor)
+                    {
+                        int32_t width, height;
+                        window->GetSize(&width, &height);
+                        window->SetMonitor(nullptr, 0, 0, width, height, 0);
+
+                        int32_t xOffset, yOffset;
+                        window->GetFrameSize(&xOffset, &yOffset, nullptr, nullptr);
+                        window->SetPosition(xOffset, yOffset);
+                    }
+                }
+
                 //remove this monitor from the m_Monitors array
                 s_Monitors.erase(s_Monitors.begin() + d);
 
@@ -402,9 +418,9 @@ namespace dais
                 disconnected.erase(disconnected.begin() + d);
 
                 //call the MonitorDisconnected callback
-                if (s_Callbacks.MonitorDisconnected)
+                if (s_Callbacks.monitorDisconnected)
                 {
-                    s_Callbacks.MonitorDisconnected((Monitor*)monitor);
+                    s_Callbacks.monitorDisconnected((Monitor*)monitor);
                 }
 
                 delete monitor;
@@ -451,9 +467,9 @@ namespace dais
             DAIS_HELPER_WINDOW_TITLE,
             WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
             0, 0, 1, 1,
-            nullptr, nullptr,
-            GetModuleHandleW(nullptr),
-            nullptr);
+            NULL, NULL,
+            GetModuleHandleW(NULL),
+            NULL);
 
         if (!s_HelperWindowHandle)
         {
@@ -461,6 +477,8 @@ namespace dais
             return false;
         }
 
+        // HACK: the command to the first ShowWindow call is ignored if the parent
+        // process passed along a STARTUPINFO, so clear that with a no-op call
         ShowWindow(s_HelperWindowHandle, SW_HIDE);
 
         //register for HID device notifications
@@ -495,7 +513,7 @@ namespace dais
         // HACK: Use RtlVerifyVersionInfo instead of VerifyVersionInfoW as the
         //       latter lies unless the user knew to embed a non-default manifest
         //       announcing support for Windows 10 via supportedOS GUID
-        return s_Libs.Ntdll.RtlVerifyVersionInfo(&osvi, mask, cond) == 0;
+        return s_Libs.ntdll.RtlVerifyVersionInfo(&osvi, mask, cond) == 0;
     }
 
     bool WindowsPlatform::IsWindowsVistaOrGreater()
@@ -539,7 +557,7 @@ namespace dais
         // HACK: Use RtlVerifyVersionInfo instead of VerifyVersionInfoW as the
         //       latter lies unless the user knew to embed a non-default manifest
         //       announcing support for Windows 10 via supportedOS GUID
-        return s_Libs.Ntdll.RtlVerifyVersionInfo(&osvi, mask, cond) == 0;
+        return s_Libs.ntdll.RtlVerifyVersionInfo(&osvi, mask, cond) == 0;
     }
 
 

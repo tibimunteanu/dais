@@ -28,7 +28,7 @@ namespace dais
 
         if (WindowsPlatform::IsWindows8Point1OrGreater())
         {
-            WindowsPlatform::s_Libs.Shcore.GetDpiForMonitor(handle, MDT_EFFECTIVE_DPI, &xdpi, &ydpi);
+            WindowsPlatform::s_Libs.shcore.GetDpiForMonitor(handle, MDT_EFFECTIVE_DPI, &xdpi, &ydpi);
         }
         else
         {
@@ -76,7 +76,7 @@ namespace dais
         EnumDisplaySettingsW(adapter->DeviceName, ENUM_CURRENT_SETTINGS, &dm);
 
         //get dimensions in millimeters
-        HDC dc = CreateDCW(L"DISPLAY", adapter->DeviceName, nullptr, nullptr);
+        HDC dc = CreateDCW(L"DISPLAY", adapter->DeviceName, NULL, NULL);
 
         if (WindowsPlatform::IsWindows8Point1OrGreater())
         {
@@ -216,7 +216,7 @@ namespace dais
 
             //skip modes not supported by the connected displays
             if (m_ModesPruned
-                && (ChangeDisplaySettingsExW(m_AdapterName, &dm, nullptr, CDS_TEST, nullptr) != DISP_CHANGE_SUCCESSFUL))
+                && (ChangeDisplaySettingsExW(m_AdapterName, &dm, NULL, CDS_TEST, NULL) != DISP_CHANGE_SUCCESSFUL))
             {
                 continue;
             }
@@ -312,7 +312,7 @@ namespace dais
 
     bool WindowsMonitor::PlatformGetGammaRamp(GammaRamp* ramp)
     {
-        HDC dc = CreateDCW(L"DISPLAY", m_AdapterName, nullptr, nullptr);
+        HDC dc = CreateDCW(L"DISPLAY", m_AdapterName, NULL, NULL);
 
         WORD values[3][256];
         GetDeviceGammaRamp(dc, values);
@@ -349,7 +349,7 @@ namespace dais
             values[2][i] = ramp->blue[i];
         }
 
-        HDC dc = CreateDCW(L"DISPLAY", m_AdapterName, nullptr, nullptr);
+        HDC dc = CreateDCW(L"DISPLAY", m_AdapterName, NULL, NULL);
         SetDeviceGammaRamp(dc, values);
         DeleteDC(dc);
     }

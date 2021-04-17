@@ -266,6 +266,14 @@ namespace dais
         PlatformSetGammaRamp(ramp);
     }
 
+    void Monitor::RestoreOriginalGammaRamp()
+    {
+        if (m_OriginalGammaRamp.size)
+        {
+            PlatformSetGammaRamp(&m_OriginalGammaRamp);
+        }
+    }
+
     Window* Monitor::GetWindow() const
     {
         return m_Window;
