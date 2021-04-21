@@ -35,7 +35,7 @@ namespace dais
 
         if (window->GetMonitor())
         {
-            //TODO: center cursor
+            window->CenterCursorInContentArea();
         }
         else
         {
@@ -65,7 +65,7 @@ namespace dais
         m_Height = config.height;
         m_Decorated = config.decorated;
         m_FocusOnShow = config.focusOnShow;
-        m_AutoIconify = config.autoIconify;
+        m_AutoMinimize = config.autoIconify;
         m_Floating = config.floating;
         m_Resizable = config.resizable;
         m_MousePassthrough = config.mousePassthrough;
@@ -162,7 +162,7 @@ namespace dais
     {
         DAIS_TRACE("[Window] IsAutoIconify");
 
-        return m_AutoIconify;
+        return m_AutoMinimize;
     }
 
     bool Window::IsMousePassThrough() const
@@ -242,6 +242,77 @@ namespace dais
         return PlatformGetOpacity();
     }
 
+
+    /// <summary> DAIS_CURSOR_NORMAL, etc or true false </summary>
+    int32_t Window::GetInputMode(int32_t mode)
+    {
+        switch (mode)
+        {
+            case DAIS_CURSOR:           return m_CursorMode;
+            case DAIS_STICKY_KEYS:      return m_StickyKeys;
+            case DAIS_LOCK_KEY_MODS:    return m_StickyMouseButtons;
+            case DAIS_RAW_MOUSE_MOTION: return m_RawMouseMotion;
+        }
+
+        DAIS_ERROR("Invalid input mode 0x%08X", mode);
+        return false;
+    }
+
+    int32_t Window::GetKey(int32_t key)
+    {
+        if (key < DAIS_KEY_SPACE
+            || key > DAIS_KEY_LAST)
+        {
+            DAIS_ERROR("Invalid key %i", key);
+            return DAIS_RELEASE;
+        }
+
+        if (m_Keys[key] == DAIS_STICK)
+        {
+            //sticky mode: release key now
+            m_Keys[key] = DAIS_RELEASE;
+            return DAIS_PRESS;
+        }
+
+        return (int32_t)m_Keys[key];
+    }
+
+    int32_t Window::GetGetMouseButton(int32_t button)
+    {
+        if (button < DAIS_MOUSE_BUTTON_1
+            || button > DAIS_MOUSE_BUTTON_LAST)
+        {
+            DAIS_ERROR("Invalid mouse button %i", button);
+            return DAIS_RELEASE;
+        }
+
+        if (m_MouseButtons[button] = DAIS_STICK)
+        {
+            //sticky mode: release mouse button now
+            m_MouseButtons[button] = DAIS_RELEASE;
+            return DAIS_PRESS;
+        }
+
+        return (int32_t)m_MouseButtons[button];
+    }
+
+    void Window::GetCursorPosition(double* x, double* y)
+    {
+        if (x) *x = 0;
+        if (y) *y = 0;
+
+        if (m_CursorMode == DAIS_CURSOR_DISABLED)
+        {
+            if (x) *x = m_VirtualCursorPositionX;
+            if (y) *y = m_VirtualCursorPositionY;
+        }
+        else
+        {
+            PlatformGetCursorPosition(x, y);
+        }
+    }
+
+
     const Monitor* Window::GetMonitor() const
     {
         DAIS_TRACE("[Window] GetMonitor");
@@ -268,6 +339,24 @@ namespace dais
         }
 
         PlatformSetTitle(title);
+    }
+
+    void Window::SetIcon(const std::vector<Image*>& images)
+    {
+        if (!images.size())
+        {
+            DAIS_ERROR("Parameter 'images' cannot be empty!");
+            return;
+        }
+
+        PlatformSetIcon(images);
+    }
+
+    void Window::SetCursorType(Cursor* cursor)
+    {
+        m_Cursor = cursor;
+
+        PlatformSetCursorType(cursor);
     }
 
     void Window::SetPosition(int32_t x, int32_t y)
@@ -421,7 +510,7 @@ namespace dais
     {
         DAIS_TRACE("[Window] SetAutoIconify");
 
-        m_AutoIconify = value;
+        m_AutoMinimize = value;
     }
 
     void Window::SetMousePassThrough(bool value)
@@ -462,6 +551,130 @@ namespace dais
         m_VideoMode.refreshRate = refreshRate;
 
         PlatformSetMonitor(monitor, x, y, width, height, refreshRate);
+    }
+
+    void Window::SetInputMode(int32_t mode, int32_t value)
+    {
+        if (mode == DAIS_CURSOR)
+        {
+            if (value != DAIS_CURSOR_NORMAL
+                && value != DAIS_CURSOR_HIDDEN
+                && value != DAIS_CURSOR_DISABLED)
+            {
+                DAIS_ERROR("Invalid cursor mode 0x%08X", value);
+                return;
+            }
+
+            if (m_CursorMode == value)
+            {
+                return;
+            }
+
+            m_CursorMode = value;
+
+            PlatformGetCursorPosition(&m_VirtualCursorPositionX, &m_VirtualCursorPositionY);
+            PlatformSetCursorMode(value);
+        }
+        else if (mode == DAIS_STICKY_KEYS)
+        {
+            value = value ? true : false;
+            if (m_StickyKeys == value)
+            {
+                return;
+            }
+
+            if (!value)
+            {
+                //release all sticky keys
+                for (int32_t i = 0; i <= DAIS_KEY_LAST; i++)
+                {
+                    if (m_Keys[i] == DAIS_STICK)
+                    {
+                        m_Keys[i] = DAIS_RELEASE;
+                    }
+                }
+            }
+
+            m_StickyKeys = value;
+        }
+        else if (mode == DAIS_STICKY_MOUSE_BUTTONS)
+        {
+            value = value ? true : false;
+            if (m_StickyMouseButtons == value)
+            {
+                return;
+            }
+
+            if (!value)
+            {
+                //release all sticky mouse buttons
+                for (int32_t i = 0; i <= DAIS_MOUSE_BUTTON_LAST; i++)
+                {
+                    if (m_MouseButtons[i] == DAIS_STICK)
+                    {
+                        m_MouseButtons[i] = DAIS_RELEASE;
+                    }
+                }
+            }
+
+            m_StickyMouseButtons = value;
+        }
+        else if (mode == DAIS_LOCK_KEY_MODS)
+        {
+            m_LockKeyMods = value ? true : false;
+        }
+        else if (mode == DAIS_RAW_MOUSE_MOTION)
+        {
+            if (!Platform::IsRawMouseMotionSupported())
+            {
+                DAIS_ERROR("Raw mouse motion is not supported on this system!");
+                return;
+            }
+
+            value = value ? true : false;
+            if (m_RawMouseMotion == value)
+            {
+                return;
+            }
+
+            m_RawMouseMotion = value;
+            PlatformSetRawMouseMotion(value);
+        }
+        else
+        {
+            DAIS_ERROR("Invalid input mode 0x%08X", mode);
+        }
+    }
+
+    void Window::SetCursorPosition(double x, double y)
+    {
+        if (x != x
+            || x < -DBL_MAX
+            || x > DBL_MAX
+            || y != y
+            || y < -DBL_MAX
+            || y > DBL_MAX)
+        {
+            DAIS_ERROR("Invlid cursor position %f %f", x, y);
+            return;
+        }
+
+        if (!PlatformIsFocused())
+        {
+            return;
+        }
+
+        if (m_CursorMode == DAIS_CURSOR_DISABLED)
+        {
+            //onlyy update the accumulated position if the cursor is disabled
+            m_VirtualCursorPositionX = x;
+            m_VirtualCursorPositionY = y;
+        }
+        else
+        {
+            //update system cursor position
+            PlatformSetCursorPosition(x, y);
+        }
     }
 
 
@@ -531,6 +744,13 @@ namespace dais
         DAIS_TRACE("[Window] RequestAttention");
 
         PlatformRequestAttention();
+    }
+
+    void Window::CenterCursorInContentArea()
+    {
+        int32_t width, height;
+        PlatformGetSize(&width, &height);
+        PlatformSetCursorPosition(width * 0.5f, height * 0.5f);
     }
 
 
@@ -620,6 +840,25 @@ namespace dais
     }
 
 
+    const Image* Window::ChooseImage(const std::vector<Image*>& images, int32_t width, int32_t height)
+    {
+        int32_t leastDiff = INT_MAX;
+        const Image* closest = NULL;
+
+        for (Image* image : images)
+        {
+            const int32_t currDiff = abs(image->width * image->height - width * height);
+            if (currDiff < leastDiff)
+            {
+                closest = image;
+                leastDiff = currDiff;
+            }
+        }
+
+        return closest;
+    }
+
+
     void Window::OnPositionChanged(int32_t x, int32_t y)
     {
         if (m_Callbacks.position)
@@ -661,26 +900,25 @@ namespace dais
             m_Callbacks.focus(this, focused);
         }
 
-        //TODO:
-        //if (!focused)
-        //{
-        //    for (int32_t key = 0; key <= DAIS_KEY_LAST; key++)
-        //    {
-        //        if (m_Keys[key] == DAIS_PRESS)
-        //        {
-        //            const int32_t scancode = PlatformGetKeyScancode(key);
-        //            InputKeyCallback(key, scancode, DAIS_RELEASE, 0);
-        //        }
-        //    }
+        if (!focused)
+        {
+            for (int32_t key = 0; key <= DAIS_KEY_LAST; key++)
+            {
+                if (m_Keys[key] == DAIS_PRESS)
+                {
+                    const int32_t scancode = Platform::GetKeyScancode(key);
+                    OnKey(key, scancode, DAIS_RELEASE, 0);
+                }
+            }
 
-        //    for (int32_t button = 0; button <= DAIS_MOUSE_BUTTON_LAST; button++)
-        //    {
-        //        if (m_MouseButtons[button] = DAIS_PRESS)
-        //        {
-        //            InputMouseButtonCallback(button, DAIS_RELEASE, 0);
-        //        }
-        //    }
-        //}
+            for (int32_t button = 0; button <= DAIS_MOUSE_BUTTON_LAST; button++)
+            {
+                if (m_MouseButtons[button] = DAIS_PRESS)
+                {
+                    OnMouseButton(button, DAIS_RELEASE, 0);
+                }
+            }
+        }
     }
 
     void Window::OnMinimize(bool minimized)
@@ -717,27 +955,26 @@ namespace dais
 
     void Window::OnMouseButton(int32_t button, int32_t action, int32_t mods)
     {
-        //TODO:
-        //if (button < 0
-        //    || button > DAIS_MOUSE_BUTTON_LAST)
-        //{
-        //    return;
-        //}
+        if (button < 0
+            || button > DAIS_MOUSE_BUTTON_LAST)
+        {
+            return;
+        }
 
-        //if (m_LockKeyMods)
-        //{
-        //    mods &= ~(DAIS_MOD_CAPS_LOCK | DAIS_MOD_NUM_LOCK);
-        //}
+        if (!m_LockKeyMods)
+        {
+            mods &= ~(DAIS_MOD_CAPS_LOCK | DAIS_MOD_NUM_LOCK);
+        }
 
-        //if (action == DAIS_RELEASE
-        //    && m_StickyMouseButtons)
-        //{
-        //    m_MouseButtons[button] = DAIS_STICK
-        //}
-        //else
-        //{
-        //    m_MouseButtons[button] = (char)action;
-        //}
+        if (action == DAIS_RELEASE
+            && m_StickyMouseButtons)
+        {
+            m_MouseButtons[button] = DAIS_STICK;
+        }
+        else
+        {
+            m_MouseButtons[button] = (int8_t)action;
+        }
 
         if (m_Callbacks.mouseButton)
         {
@@ -780,17 +1017,80 @@ namespace dais
 
     void Window::OnKey(int32_t key, int32_t scancode, int32_t action, int32_t mods)
     {
-        //TODO:
+        if (key >= 0
+            && key <= DAIS_KEY_LAST)
+        {
+            bool repeated = false;
+
+            if (action == DAIS_RELEASE
+                && m_Keys[key] == DAIS_RELEASE)
+            {
+                return;
+            }
+
+            if (action == DAIS_PRESS
+                && m_Keys[key] == DAIS_PRESS)
+            {
+                repeated = true;
+            }
+
+            if (action == DAIS_RELEASE
+                && m_StickyKeys)
+            {
+                m_Keys[key] = DAIS_STICK;
+            }
+            else
+            {
+                m_Keys[key] = (int8_t)action;
+            }
+
+            if (repeated)
+            {
+                action = DAIS_REPEAT;
+            }
+        }
+
+        if (!m_LockKeyMods)
+        {
+            mods &= ~(DAIS_MOD_CAPS_LOCK | DAIS_MOD_NUM_LOCK);
+        }
+
+        if (m_Callbacks.key)
+        {
+            m_Callbacks.key(this, key, scancode, action, mods);
+        }
     }
 
     void Window::OnChar(uint32_t codepoint, int32_t mods, bool plain)
     {
-        //TODO:
+        if (codepoint < 32
+            || (codepoint > 126 && codepoint < 160))
+        {
+            return;
+        }
+
+        if (!m_LockKeyMods)
+        {
+            mods &= ~(DAIS_MOD_CAPS_LOCK | DAIS_MOD_NUM_LOCK);
+        }
+
+        OnCharMods(codepoint, mods);
+
+        if (plain)
+        {
+            if (m_Callbacks.character)
+            {
+                m_Callbacks.character(this, codepoint);
+            }
+        }
     }
 
     void Window::OnCharMods(uint32_t codepoint, int32_t mods)
     {
-        //TODO:
+        if (m_Callbacks.characterMods)
+        {
+            m_Callbacks.characterMods(this, codepoint, mods);
+        }
     }
 
     void Window::OnDrop(uint32_t count, const char** paths)

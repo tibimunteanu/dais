@@ -9,6 +9,9 @@ namespace dais
     DWORD WindowsPlatform::s_ForegroundLockTimeout = 0;
     int32_t WindowsPlatform::s_AcquiredMonitorCount = 0;
     char* WindowsPlatform::s_ClipboardString = nullptr;
+    int16_t WindowsPlatform::s_Keycodes[] = {};
+    int16_t WindowsPlatform::s_Scancodes[] = {};
+    char WindowsPlatform::s_KeyNames[][5] = {};
     double WindowsPlatform::s_RestoreCursorPositionX = 0.0;
     double WindowsPlatform::s_RestoreCursorPositionY = 0.0;
     Window* WindowsPlatform::s_DisabledCursorWindow = nullptr;
@@ -29,6 +32,9 @@ namespace dais
         {
             return false;
         }
+
+        WindowsPlatform::CreateKeyTables();
+        WindowsPlatform::UpdateKeyNames();
 
         WindowsPlatform::SetProcessDpiAware();
 
@@ -106,9 +112,26 @@ namespace dais
         PollEvents();
     }
 
-    bool Platform::IsRawMouseMotionSupported()
+    bool Platform::PlatformIsRawMouseMotionSupported()
     {
         return true;
+    }
+
+    const char* Platform::PlatformGetScancodeName(int32_t scancode)
+    {
+        if (scancode < 0
+            || scancode >(KF_EXTENDED | 0xff)
+            || WindowsPlatform::s_Keycodes[scancode] == DAIS_KEY_UNKNOWN)
+        {
+            DAIS_ERROR("Invalid scancode!");
+            return nullptr;
+        }
+        return WindowsPlatform::s_KeyNames[WindowsPlatform::s_Keycodes[scancode]];
+    }
+
+    int32_t Platform::PlatformGetKeyScancode(int32_t key)
+    {
+        return WindowsPlatform::s_Scancodes[key];
     }
 
 
@@ -206,6 +229,145 @@ namespace dais
         if (s_Libs.dwmapi.instance) FreeLibrary(s_Libs.dwmapi.instance);
         if (s_Libs.shcore.instance) FreeLibrary(s_Libs.shcore.instance);
         if (s_Libs.ntdll.instance) FreeLibrary(s_Libs.ntdll.instance);
+    }
+
+    void WindowsPlatform::CreateKeyTables()
+    {
+        int32_t scancode;
+
+        memset(s_Keycodes, -1, sizeof(s_Keycodes));
+        memset(s_Scancodes, -1, sizeof(s_Scancodes));
+
+        s_Keycodes[0x00B] = DAIS_KEY_0;
+        s_Keycodes[0x002] = DAIS_KEY_1;
+        s_Keycodes[0x003] = DAIS_KEY_2;
+        s_Keycodes[0x004] = DAIS_KEY_3;
+        s_Keycodes[0x005] = DAIS_KEY_4;
+        s_Keycodes[0x006] = DAIS_KEY_5;
+        s_Keycodes[0x007] = DAIS_KEY_6;
+        s_Keycodes[0x008] = DAIS_KEY_7;
+        s_Keycodes[0x009] = DAIS_KEY_8;
+        s_Keycodes[0x00A] = DAIS_KEY_9;
+        s_Keycodes[0x01E] = DAIS_KEY_A;
+        s_Keycodes[0x030] = DAIS_KEY_B;
+        s_Keycodes[0x02E] = DAIS_KEY_C;
+        s_Keycodes[0x020] = DAIS_KEY_D;
+        s_Keycodes[0x012] = DAIS_KEY_E;
+        s_Keycodes[0x021] = DAIS_KEY_F;
+        s_Keycodes[0x022] = DAIS_KEY_G;
+        s_Keycodes[0x023] = DAIS_KEY_H;
+        s_Keycodes[0x017] = DAIS_KEY_I;
+        s_Keycodes[0x024] = DAIS_KEY_J;
+        s_Keycodes[0x025] = DAIS_KEY_K;
+        s_Keycodes[0x026] = DAIS_KEY_L;
+        s_Keycodes[0x032] = DAIS_KEY_M;
+        s_Keycodes[0x031] = DAIS_KEY_N;
+        s_Keycodes[0x018] = DAIS_KEY_O;
+        s_Keycodes[0x019] = DAIS_KEY_P;
+        s_Keycodes[0x010] = DAIS_KEY_Q;
+        s_Keycodes[0x013] = DAIS_KEY_R;
+        s_Keycodes[0x01F] = DAIS_KEY_S;
+        s_Keycodes[0x014] = DAIS_KEY_T;
+        s_Keycodes[0x016] = DAIS_KEY_U;
+        s_Keycodes[0x02F] = DAIS_KEY_V;
+        s_Keycodes[0x011] = DAIS_KEY_W;
+        s_Keycodes[0x02D] = DAIS_KEY_X;
+        s_Keycodes[0x015] = DAIS_KEY_Y;
+        s_Keycodes[0x02C] = DAIS_KEY_Z;
+
+        s_Keycodes[0x028] = DAIS_KEY_APOSTROPHE;
+        s_Keycodes[0x02B] = DAIS_KEY_BACKSLASH;
+        s_Keycodes[0x033] = DAIS_KEY_COMMA;
+        s_Keycodes[0x00D] = DAIS_KEY_EQUAL;
+        s_Keycodes[0x029] = DAIS_KEY_GRAVE_ACCENT;
+        s_Keycodes[0x01A] = DAIS_KEY_LEFT_BRACKET;
+        s_Keycodes[0x00C] = DAIS_KEY_MINUS;
+        s_Keycodes[0x034] = DAIS_KEY_PERIOD;
+        s_Keycodes[0x01B] = DAIS_KEY_RIGHT_BRACKET;
+        s_Keycodes[0x027] = DAIS_KEY_SEMICOLON;
+        s_Keycodes[0x035] = DAIS_KEY_SLASH;
+        s_Keycodes[0x056] = DAIS_KEY_WORLD_2;
+
+        s_Keycodes[0x00E] = DAIS_KEY_BACKSPACE;
+        s_Keycodes[0x153] = DAIS_KEY_DELETE;
+        s_Keycodes[0x14F] = DAIS_KEY_END;
+        s_Keycodes[0x01C] = DAIS_KEY_ENTER;
+        s_Keycodes[0x001] = DAIS_KEY_ESCAPE;
+        s_Keycodes[0x147] = DAIS_KEY_HOME;
+        s_Keycodes[0x152] = DAIS_KEY_INSERT;
+        s_Keycodes[0x15D] = DAIS_KEY_MENU;
+        s_Keycodes[0x151] = DAIS_KEY_PAGE_DOWN;
+        s_Keycodes[0x149] = DAIS_KEY_PAGE_UP;
+        s_Keycodes[0x045] = DAIS_KEY_PAUSE;
+        s_Keycodes[0x146] = DAIS_KEY_PAUSE;
+        s_Keycodes[0x039] = DAIS_KEY_SPACE;
+        s_Keycodes[0x00F] = DAIS_KEY_TAB;
+        s_Keycodes[0x03A] = DAIS_KEY_CAPS_LOCK;
+        s_Keycodes[0x145] = DAIS_KEY_NUM_LOCK;
+        s_Keycodes[0x046] = DAIS_KEY_SCROLL_LOCK;
+        s_Keycodes[0x03B] = DAIS_KEY_F1;
+        s_Keycodes[0x03C] = DAIS_KEY_F2;
+        s_Keycodes[0x03D] = DAIS_KEY_F3;
+        s_Keycodes[0x03E] = DAIS_KEY_F4;
+        s_Keycodes[0x03F] = DAIS_KEY_F5;
+        s_Keycodes[0x040] = DAIS_KEY_F6;
+        s_Keycodes[0x041] = DAIS_KEY_F7;
+        s_Keycodes[0x042] = DAIS_KEY_F8;
+        s_Keycodes[0x043] = DAIS_KEY_F9;
+        s_Keycodes[0x044] = DAIS_KEY_F10;
+        s_Keycodes[0x057] = DAIS_KEY_F11;
+        s_Keycodes[0x058] = DAIS_KEY_F12;
+        s_Keycodes[0x064] = DAIS_KEY_F13;
+        s_Keycodes[0x065] = DAIS_KEY_F14;
+        s_Keycodes[0x066] = DAIS_KEY_F15;
+        s_Keycodes[0x067] = DAIS_KEY_F16;
+        s_Keycodes[0x068] = DAIS_KEY_F17;
+        s_Keycodes[0x069] = DAIS_KEY_F18;
+        s_Keycodes[0x06A] = DAIS_KEY_F19;
+        s_Keycodes[0x06B] = DAIS_KEY_F20;
+        s_Keycodes[0x06C] = DAIS_KEY_F21;
+        s_Keycodes[0x06D] = DAIS_KEY_F22;
+        s_Keycodes[0x06E] = DAIS_KEY_F23;
+        s_Keycodes[0x076] = DAIS_KEY_F24;
+        s_Keycodes[0x038] = DAIS_KEY_LEFT_ALT;
+        s_Keycodes[0x01D] = DAIS_KEY_LEFT_CONTROL;
+        s_Keycodes[0x02A] = DAIS_KEY_LEFT_SHIFT;
+        s_Keycodes[0x15B] = DAIS_KEY_LEFT_SUPER;
+        s_Keycodes[0x137] = DAIS_KEY_PRINT_SCREEN;
+        s_Keycodes[0x138] = DAIS_KEY_RIGHT_ALT;
+        s_Keycodes[0x11D] = DAIS_KEY_RIGHT_CONTROL;
+        s_Keycodes[0x036] = DAIS_KEY_RIGHT_SHIFT;
+        s_Keycodes[0x15C] = DAIS_KEY_RIGHT_SUPER;
+        s_Keycodes[0x150] = DAIS_KEY_DOWN;
+        s_Keycodes[0x14B] = DAIS_KEY_LEFT;
+        s_Keycodes[0x14D] = DAIS_KEY_RIGHT;
+        s_Keycodes[0x148] = DAIS_KEY_UP;
+
+        s_Keycodes[0x052] = DAIS_KEY_KP_0;
+        s_Keycodes[0x04F] = DAIS_KEY_KP_1;
+        s_Keycodes[0x050] = DAIS_KEY_KP_2;
+        s_Keycodes[0x051] = DAIS_KEY_KP_3;
+        s_Keycodes[0x04B] = DAIS_KEY_KP_4;
+        s_Keycodes[0x04C] = DAIS_KEY_KP_5;
+        s_Keycodes[0x04D] = DAIS_KEY_KP_6;
+        s_Keycodes[0x047] = DAIS_KEY_KP_7;
+        s_Keycodes[0x048] = DAIS_KEY_KP_8;
+        s_Keycodes[0x049] = DAIS_KEY_KP_9;
+        s_Keycodes[0x04E] = DAIS_KEY_KP_ADD;
+        s_Keycodes[0x053] = DAIS_KEY_KP_DECIMAL;
+        s_Keycodes[0x135] = DAIS_KEY_KP_DIVIDE;
+        s_Keycodes[0x11C] = DAIS_KEY_KP_ENTER;
+        s_Keycodes[0x059] = DAIS_KEY_KP_EQUAL;
+        s_Keycodes[0x037] = DAIS_KEY_KP_MULTIPLY;
+        s_Keycodes[0x04A] = DAIS_KEY_KP_SUBTRACT;
+
+        for (scancode = 0; scancode < 512; scancode++)
+        {
+            if (s_Keycodes[scancode] > 0)
+            {
+                s_Scancodes[s_Keycodes[scancode]] = scancode;
+            }
+        }
     }
 
     void WindowsPlatform::SetProcessDpiAware()
@@ -500,6 +662,58 @@ namespace dais
         }
 
         return true;
+    }
+
+    /// <summary> Updates key names according to the current keyboard layout </summary>
+    void WindowsPlatform::UpdateKeyNames()
+    {
+        memset(s_KeyNames, 0, sizeof(s_KeyNames));
+
+        for (int32_t key = DAIS_KEY_SPACE; key <= DAIS_KEY_LAST; key++)
+        {
+            int32_t scancode = s_Scancodes[key];
+            if (scancode == -1)
+            {
+                continue;
+            }
+
+            UINT vk;
+            if (key >= DAIS_KEY_KP_0
+                && key <= DAIS_KEY_KP_ADD)
+            {
+                const UINT vks[] =
+                {
+                    VK_NUMPAD0,  VK_NUMPAD1,  VK_NUMPAD2, VK_NUMPAD3,
+                    VK_NUMPAD4,  VK_NUMPAD5,  VK_NUMPAD6, VK_NUMPAD7,
+                    VK_NUMPAD8,  VK_NUMPAD9,  VK_DECIMAL, VK_DIVIDE,
+                    VK_MULTIPLY, VK_SUBTRACT, VK_ADD
+                };
+
+                vk = vks[key - DAIS_KEY_KP_0];
+            }
+            else
+            {
+                vk = MapVirtualKey(scancode, MAPVK_VSC_TO_VK);
+            }
+
+            WCHAR chars[16];
+            BYTE state[256] = { 0 };
+            int length = ToUnicode(vk, scancode, state, chars, sizeof(chars) / sizeof(WCHAR), 0);
+            if (length == -1)
+            {
+                length = ToUnicode(vk, scancode, state, chars, sizeof(chars) / sizeof(WCHAR), 0);
+            }
+
+            if (length < 1)
+            {
+                continue;
+            }
+
+            WideCharToMultiByte(CP_UTF8, 0, chars, 1,
+                s_KeyNames[key],
+                sizeof(s_KeyNames[key]),
+                NULL, NULL);
+        }
     }
 
 

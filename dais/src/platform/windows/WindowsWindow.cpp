@@ -220,6 +220,76 @@ namespace dais
         }
     }
 
+    HICON WindowsWindow::CreateIcon(const Image* image, int32_t xHot, int32_t yHot, bool icon)
+    {
+        BITMAPV5HEADER bi = {};
+        bi.bV5Size = sizeof(bi);
+        bi.bV5Width = image->width;
+        bi.bV5Height = -image->height;
+        bi.bV5Planes = 1;
+        bi.bV5BitCount = 32;
+        bi.bV5Compression = BI_BITFIELDS;
+        bi.bV5RedMask = 0x00ff0000;
+        bi.bV5GreenMask = 0x0000ff00;
+        bi.bV5BlueMask = 0x000000ff;
+        bi.bV5AlphaMask = 0xff000000;
+
+        HDC dc = GetDC(NULL);
+        uint8_t* target = NULL;
+        HBITMAP color = CreateDIBSection(dc, (BITMAPINFO*)&bi, DIB_RGB_COLORS, (void**)&target, NULL, (DWORD)0);
+        ReleaseDC(NULL, dc);
+
+        if (!color)
+        {
+            DAIS_ERROR("Failed to create a RGBA bitmap!");
+            return NULL;
+        }
+
+        HBITMAP mask = CreateBitmap(image->width, image->height, 1, 1, NULL);
+        if (!mask)
+        {
+            DAIS_ERROR("Failed to create a mask bitmap!");
+            return NULL;
+        }
+
+        uint8_t* source = image->pixels;
+        for (int32_t i = 0; i < image->width * image->height; i++)
+        {
+            target[0] = source[2];
+            target[1] = source[1];
+            target[2] = source[0];
+            target[3] = source[3];
+            target += 4;
+            source += 4;
+        }
+
+        ICONINFO ii = {};
+        ii.fIcon = icon;
+        ii.xHotspot = xHot;
+        ii.yHotspot = yHot;
+        ii.hbmMask = mask;
+        ii.hbmColor = color;
+
+        HICON handle = CreateIconIndirect(&ii);
+
+        DeleteObject(color);
+        DeleteObject(mask);
+
+        if (!handle)
+        {
+            if (icon)
+            {
+                DAIS_ERROR("Failed to create icon!");
+            }
+            else
+            {
+                DAIS_ERROR("Failed to create cursor!");
+            }
+        }
+
+        return handle;
+    }
+
 
 
     ////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
@@ -231,6 +301,7 @@ namespace dais
 
         m_Maximized = config.maximized;
         m_ScaleToMonitor = config.scaleToMonitor;
+        m_KeyMenu = config.keyMenu;
     }
 
     WindowsWindow::~WindowsWindow()
@@ -489,6 +560,49 @@ namespace dais
         }
         SetWindowTextW(m_Handle, wideTitle);
         free(wideTitle);
+    }
+
+    void WindowsWindow::PlatformSetIcon(const std::vector<Image*>& images)
+    {
+        HICON bigIcon = NULL, smallIcon = NULL;
+
+        if (images.size())
+        {
+            const Image* bigImage = WindowsWindow::ChooseImage(images, GetSystemMetrics(SM_CXICON), GetSystemMetrics(SM_CYICON));
+            const Image* smallImage = WindowsWindow::ChooseImage(images, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON));
+
+            bigIcon = CreateIcon(bigImage, 0, 0, true);
+            smallIcon = CreateIcon(smallImage, 0, 0, true);
+        }
+        else
+        {
+            bigIcon = (HICON)GetClassLongPtrW(m_Handle, GCLP_HICON);
+            smallIcon = (HICON)GetClassLongPtrW(m_Handle, GCLP_HICONSM);
+        }
+
+        SendMessageW(m_Handle, WM_SETICON, ICON_BIG, (LPARAM)bigIcon);
+        SendMessageW(m_Handle, WM_SETICON, ICON_SMALL, (LPARAM)smallIcon);
+
+        if (m_BigIcon)
+        {
+            DestroyIcon(m_BigIcon);
+        }
+
+        if (m_SmallIcon)
+        {
+            DestroyIcon(m_SmallIcon);
+        }
+
+        if (images.size())
+        {
+            m_BigIcon = bigIcon;
+            m_SmallIcon = smallIcon;
+        }
+    }
+
+    void WindowsWindow::PlatformSetCursorType(Cursor* cursor)
+    {
+
     }
 
     void WindowsWindow::PlatformSetPosition(int32_t x, int32_t y)
@@ -968,7 +1082,7 @@ namespace dais
                 }
 
                 if (m_Monitor
-                    && m_AutoIconify)
+                    && m_AutoMinimize)
                 {
                     PlatformMinimize();
                 }
@@ -978,38 +1092,38 @@ namespace dais
                 return 0;
             }
 
-            case WM_SYSCOMMAND:
-            {
-                switch (wParam & 0xfff0)
-                {
-                    case SC_SCREENSAVE:
-                    case SC_MONITORPOWER:
-                    {
-                        if (m_Monitor)
-                        {
-                            //we are running in full screen mode,
-                            //so disallow screen saver and blanking
-                            return 0;
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
+            //case WM_SYSCOMMAND:
+            //{
+            //    switch (wParam & 0xfff0)
+            //    {
+            //        case SC_SCREENSAVE:
+            //        case SC_MONITORPOWER:
+            //        {
+            //            if (m_Monitor)
+            //            {
+            //                //we are running in full screen mode,
+            //                //so disallow screen saver and blanking
+            //                return 0;
+            //            }
+            //            else
+            //            {
+            //                break;
+            //            }
+            //        }
 
-                    //TODO: user trying to access application menu using ALT?
-                    //case SC_KEYMENU:
-                    //{
-                    //    if (m_KeyMenu)
-                    //    {
-                    //        return 0;
-                    //    }
-                    //    break;
-                    //}
-                }
+            //        //TODO: user trying to access application menu using ALT?
+            //        case SC_KEYMENU:
+            //        {
+            //            //if (!m_KeyMenu)
+            //            {
+            //                return 0;
+            //            }
+            //            break;
+            //        }
+            //    }
 
-                break;
-            }
+            //    break;
+            //}
 
             case WM_CLOSE:
             {
@@ -1332,26 +1446,26 @@ namespace dais
                 return 0;
             }
 
-            case WM_PAINT:
-            {
-                OnNeedUpdate();
-                break;
-            }
+            //case WM_PAINT:
+            //{
+            //    OnNeedUpdate();
+            //    break;
+            //}
 
             case WM_ERASEBKGND:
             {
                 return TRUE;
             }
 
-            case WM_NCACTIVATE:
-            case WM_NCPAINT:
-            {
-                // Prevent title bar from being drawn after restoring a minimized undecorated window
-                if (!m_Decorated)
-                    return TRUE;
+            //case WM_NCACTIVATE:
+            //case WM_NCPAINT:
+            //{
+            //    // Prevent title bar from being drawn after restoring a minimized undecorated window
+            //    if (!m_Decorated)
+            //        return TRUE;
 
-                break;
-            }
+            //    break;
+            //}
 
             case WM_DWMCOMPOSITIONCHANGED:
             case WM_DWMCOLORIZATIONCOLORCHANGED:
@@ -1375,11 +1489,11 @@ namespace dais
                     RECT source = { 0 }, target = { 0 };
                     SIZE* size = (SIZE*)lParam;
 
-                    WindowsPlatform::s_Libs.user32.AdjustWindowRectExForDpi(&source, 
+                    WindowsPlatform::s_Libs.user32.AdjustWindowRectExForDpi(&source,
                         GetStyle(), FALSE, GetStyleEx(),
                         WindowsPlatform::s_Libs.user32.GetDpiForWindow(m_Handle));
 
-                    WindowsPlatform::s_Libs.user32.AdjustWindowRectExForDpi(&target, 
+                    WindowsPlatform::s_Libs.user32.AdjustWindowRectExForDpi(&target,
                         GetStyle(), FALSE, GetStyleEx(),
                         LOWORD(wParam));
 
@@ -1399,7 +1513,7 @@ namespace dais
 
                 // Resize windowed mode windows that either permit rescaling or that
                 // need it to compensate for non-client area scaling
-                if (!m_Monitor 
+                if (!m_Monitor
                     && (m_ScaleToMonitor || WindowsPlatform::IsWindows10CreatorsUpdateOrGreater()))
                 {
                     RECT* suggested = (RECT*)lParam;
@@ -1416,26 +1530,26 @@ namespace dais
                 break;
             }
 
-            case WM_SETCURSOR:
-            {
-                if (LOWORD(lParam) == HTCLIENT)
-                {
-                    UpdateCursorImage();
-                    return TRUE;
-                }
+            //case WM_SETCURSOR:
+            //{
+            //    if (LOWORD(lParam) == HTCLIENT)
+            //    {
+            //        UpdateCursorImage();
+            //        return TRUE;
+            //    }
 
-                break;
-            }
+            //    break;
+            //}
 
             case WM_DROPFILES:
             {
                 HDROP drop = (HDROP)wParam;
-                POINT pt;
-
                 const int count = DragQueryFileW(drop, 0xffffffff, NULL, 0);
+
                 char** paths = (char**)calloc(count, sizeof(char*));
 
                 // Move the mouse to the position of the drop
+                POINT pt;
                 DragQueryPoint(drop, &pt);
 
                 OnCursorPositionChanged(pt.x, pt.y);
@@ -1650,9 +1764,9 @@ namespace dais
     {
         if (m_CursorMode == DAIS_CURSOR_NORMAL)
         {
-            if (m_Cursors.size())
+            if (m_Cursor)
             {
-                SetCursor(((WindowsCursor*)m_Cursors[0])->m_Handle);
+                SetCursor(((WindowsCursor*)m_Cursor)->m_Handle);
             }
             else
             {
@@ -1679,13 +1793,6 @@ namespace dais
         {
             ClipCursor(NULL);
         }
-    }
-
-    void WindowsWindow::CenterCursorInContentArea()
-    {
-        int32_t width, height;
-        PlatformGetSize(&width, &height);
-        PlatformSetCursorPosition(width * 0.5f, height * 0.5f);
     }
 
     DWORD WindowsWindow::GetStyle() const

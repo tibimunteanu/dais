@@ -1,20 +1,10 @@
 #pragma once
 
 #include "engine/core/Base.h"
+#include "engine/core/Input.h"
 #include "engine/core/Cursor.h"
 #include "engine/core/Monitor.h"
 #include "engine/core/Window.h"
-
-#define DAIS_CURSOR_NORMAL          1
-#define DAIS_CURSOR_HIDDEN          2
-#define DAIS_CURSOR_DISABLED        3
-
-#define DAIS_MOD_SHIFT           0x0001
-#define DAIS_MOD_CONTROL         0x0002
-#define DAIS_MOD_ALT             0x0004
-#define DAIS_MOD_SUPER           0x0008
-#define DAIS_MOD_CAPS_LOCK       0x0010
-#define DAIS_MOD_NUM_LOCK        0x0020
 
 namespace dais
 {
@@ -50,6 +40,11 @@ namespace dais
         static Monitor* GetPrimaryMonitor();
 
         static bool IsRawMouseMotionSupported();
+        static const char* GetKeyName(int32_t key, int32_t scancode);
+        static int32_t GetKeyScancode(int32_t key);
+
+        static Cursor* CreateCursor(const Image* image, int32_t xHot, int32_t yHot);
+        static Cursor* CreateStandardCursor(int32_t shape);
 
         static const char* GetClipboardString();
         static void SetClipboardString(const char* string);
@@ -69,5 +64,8 @@ namespace dais
         static void PlatformPollEvents();
         static void PlatformWaitEvents();
         static void PlatformWaitEventsTimeout(double timeout);
+        static bool PlatformIsRawMouseMotionSupported();
+        static const char* PlatformGetScancodeName(int32_t scancode);
+        static int32_t PlatformGetKeyScancode(int32_t key);
     };
 }

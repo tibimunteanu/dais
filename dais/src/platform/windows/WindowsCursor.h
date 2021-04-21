@@ -8,6 +8,10 @@ namespace dais
     class WindowsCursor : public Cursor
     {
     public:
-        HCURSOR m_Handle;
+        HCURSOR m_Handle = nullptr;
+
+    public:
+        WindowsCursor();
+        virtual ~WindowsCursor();
     };
 }

@@ -11,8 +11,8 @@ namespace dais
     typedef void(*WindowCloseCallback)(Window*);
     typedef void(*WindowRefreshCallback)(Window*);
     typedef void(*WindowFocusCallback)(Window*, bool);
-    typedef void(*WindowMinimizeCallback)(Window*, int32_t);
-    typedef void(*WindowMaximizeCallback)(Window*, int32_t);
+    typedef void(*WindowMinimizeCallback)(Window*, bool);
+    typedef void(*WindowMaximizeCallback)(Window*, bool);
     typedef void(*WindowFramebufferSizeCallback)(Window*, int32_t, int32_t);
     typedef void(*WindowContentScaleCallback)(Window*, float, float);
     typedef void(*WindowMouseButtonCallback)(Window*, int32_t, int32_t, int32_t);
@@ -41,6 +41,9 @@ namespace dais
         bool mousePassthrough;
         bool scaleToMonitor;
         int32_t refreshRate;
+
+        //win32 only
+        bool keyMenu;
     };
 
     struct FramebufferConfig
@@ -78,21 +81,25 @@ namespace dais
         bool m_Decorated = false;
         bool m_Resizable = false;
         bool m_FocusOnShow = false;
-        bool m_AutoIconify = false;
+        bool m_AutoMinimize = false;
         bool m_MousePassthrough = false;
         bool m_ShouldClose = false;
         int32_t m_Numerator = -1;
         int32_t m_Denominator = -1;
+
         int32_t m_CursorMode = 0;
+        int8_t m_MouseButtons[DAIS_MOUSE_BUTTON_LAST + 1] = {};
+        int8_t m_Keys[DAIS_KEY_LAST + 1] = {};
         bool m_StickyKeys = false;
         bool m_StickyMouseButtons = false;
         bool m_LockKeyMods = false;
         bool m_RawMouseMotion = false;
         double m_VirtualCursorPositionX = 0.0;
         double m_VirtualCursorPositionY = 0.0;
+
         VideoMode m_VideoMode = {};
         Monitor* m_Monitor = nullptr;
-        std::vector<Cursor*> m_Cursors = {};
+        Cursor* m_Cursor = nullptr;
 
         struct WindowCallbacks
         {
@@ -148,9 +155,15 @@ namespace dais
         void GetContentScale(float* xScale, float* yScale);
         float GetOpacity();
         const Monitor* GetMonitor() const;
+        int32_t GetInputMode(int32_t mode); //DAIS_CURSOR_NORMAL, etc or true false
+        int32_t GetKey(int32_t key);
+        int32_t GetGetMouseButton(int32_t button);
+        void GetCursorPosition(double* x, double* y);
         void* GetNativeHandle() const;
 
         void SetTitle(const std::string& title);
+        void SetIcon(const std::vector<Image*>& images);
+        void SetCursorType(Cursor* cursor);
         void SetPosition(int32_t x, int32_t y);
         void SetSize(int32_t width, int32_t height);
         void SetSizeLimits(int32_t minWidth, int32_t minHeight, int32_t maxWidth, int32_t maxHeight);
@@ -164,6 +177,8 @@ namespace dais
         void SetMousePassThrough(bool value);
         void SetShouldClose(bool value);
         void SetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate);
+        void SetInputMode(int32_t mode, int32_t value);
+        void SetCursorPosition(double x, double y);
 
         void Maximize();
         void Minimize();
@@ -172,6 +187,7 @@ namespace dais
         void Hide();
         void Focus();
         void RequestAttention();
+        void CenterCursorInContentArea();
 
         void SetPositionCallback(WindowPositionCallback callback);
         void SetSizeCallback(WindowSizeCallback callback);
@@ -182,6 +198,7 @@ namespace dais
         void SetMaximizeCallback(WindowMaximizeCallback callback);
         void SetFramebufferSizeCallback(WindowFramebufferSizeCallback callback);
         void SetContentScaleCallback(WindowContentScaleCallback callback);
+
         void SetKeyCallback(WindowKeyCallback callback);
         void SetCharCallback(WindowCharCallback callback);
         void SetCharModsCallback(WindowCharModsCallback callback);
@@ -190,6 +207,9 @@ namespace dais
         void SetCursorEnterCallback(WindowCursorEnterCallback callback);
         void SetScrollCallback(WindowScrollCallback callback);
         void SetDropCallback(WindowDropCallback callback);
+
+    protected:
+        const Image* ChooseImage(const std::vector<Image*>& images, int32_t width, int32_t height);
 
     protected:
         virtual bool PlatformIsMaximized() const = 0;
@@ -210,6 +230,8 @@ namespace dais
         virtual void* PlatformGetHandle() const = 0;
 
         virtual void PlatformSetTitle(const std::string& title) = 0;
+        virtual void PlatformSetIcon(const std::vector<Image*>& images) = 0;
+        virtual void PlatformSetCursorType(Cursor* cursor) = 0;
         virtual void PlatformSetPosition(int32_t x, int32_t y) = 0;
         virtual void PlatformSetSize(int32_t width, int32_t height) = 0;
         virtual void PlatformSetSizeLimits(int32_t minWidth, int32_t minHeight, int32_t maxWidth, int32_t maxHeight) = 0;

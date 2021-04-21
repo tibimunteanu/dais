@@ -16,6 +16,7 @@ namespace dais
         bool m_Transparent = false; //whether to enable framebuffer transparency on DWM
         bool m_FrameAction = false;
         bool m_CursorTracked = false;
+        bool m_KeyMenu = false;
         int32_t m_LastCursorPositionX = 0;
         int32_t m_LastCursorPositionY = 0;
         WCHAR m_HighSurrogate = {}; //the last received high surrogate when decoding pairs of UTF-16 messages
@@ -23,6 +24,7 @@ namespace dais
     public:
         static void GetFullSize(DWORD style, DWORD styleEx, int contentWidth, int contentHeight, int* fullWidth, int* fullHeight, UINT dpi);
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+        static HICON CreateIcon(const Image* image, int32_t xHot, int32_t yHot, bool icon);
 
     public:
         WindowsWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor);
@@ -48,6 +50,8 @@ namespace dais
         void* PlatformGetHandle() const override;
 
         void PlatformSetTitle(const std::string& title) override;
+        void PlatformSetIcon(const std::vector<Image*>& images) override;
+        void PlatformSetCursorType(Cursor* cursor) override;
         void PlatformSetPosition(int32_t x, int32_t y) override;
         void PlatformSetSize(int32_t width, int32_t height) override;
         void PlatformSetSizeLimits(int32_t minWidth, int32_t minHeight, int32_t maxWidth, int32_t maxHeight) override;
@@ -84,7 +88,6 @@ namespace dais
         void SetCursorEnabled(bool enabled);
         void UpdateCursorImage();
         void UpdateClipRect(bool clipToWindow);
-        void CenterCursorInContentArea();
         DWORD GetStyle() const;
         DWORD GetStyleEx() const;
         void UpdateStyles();

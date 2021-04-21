@@ -97,5 +97,289 @@
 #endif 
 // End of platform detection
 
+struct Image
+{
+    int32_t width;
+    int32_t height;
+    uint8_t* pixels;
+};
+
 #include "engine/core/Utils.h"
 
+#define DAIS_RELEASE                0
+#define DAIS_PRESS                  1
+#define DAIS_REPEAT                 2
+
+#define DAIS_STICK                  3
+#define DAIS_JOYSTICK_AXIS          1
+#define DAIS_JOYSTICK_BUTTON        2
+#define DAIS_JOYSTICK_HATBIT        3
+
+#define DAIS_HAT_CENTERED           0
+#define DAIS_HAT_UP                 1
+#define DAIS_HAT_RIGHT              2
+#define DAIS_HAT_DOWN               4
+#define DAIS_HAT_LEFT               8
+#define DAIS_HAT_RIGHT_UP           (DAIS_HAT_RIGHT | DAIS_HAT_UP)
+#define DAIS_HAT_RIGHT_DOWN         (DAIS_HAT_RIGHT | DAIS_HAT_DOWN)
+#define DAIS_HAT_LEFT_UP            (DAIS_HAT_LEFT  | DAIS_HAT_UP)
+#define DAIS_HAT_LEFT_DOWN          (DAIS_HAT_LEFT  | DAIS_HAT_DOWN)
+
+#define DAIS_KEY_UNKNOWN            -1
+
+/* Printable keys */
+#define DAIS_KEY_SPACE              32
+#define DAIS_KEY_APOSTROPHE         39  /* ' */
+#define DAIS_KEY_COMMA              44  /* , */
+#define DAIS_KEY_MINUS              45  /* - */
+#define DAIS_KEY_PERIOD             46  /* . */
+#define DAIS_KEY_SLASH              47  /* / */
+#define DAIS_KEY_0                  48
+#define DAIS_KEY_1                  49
+#define DAIS_KEY_2                  50
+#define DAIS_KEY_3                  51
+#define DAIS_KEY_4                  52
+#define DAIS_KEY_5                  53
+#define DAIS_KEY_6                  54
+#define DAIS_KEY_7                  55
+#define DAIS_KEY_8                  56
+#define DAIS_KEY_9                  57
+#define DAIS_KEY_SEMICOLON          59  /* ; */
+#define DAIS_KEY_EQUAL              61  /* = */
+#define DAIS_KEY_A                  65
+#define DAIS_KEY_B                  66
+#define DAIS_KEY_C                  67
+#define DAIS_KEY_D                  68
+#define DAIS_KEY_E                  69
+#define DAIS_KEY_F                  70
+#define DAIS_KEY_G                  71
+#define DAIS_KEY_H                  72
+#define DAIS_KEY_I                  73
+#define DAIS_KEY_J                  74
+#define DAIS_KEY_K                  75
+#define DAIS_KEY_L                  76
+#define DAIS_KEY_M                  77
+#define DAIS_KEY_N                  78
+#define DAIS_KEY_O                  79
+#define DAIS_KEY_P                  80
+#define DAIS_KEY_Q                  81
+#define DAIS_KEY_R                  82
+#define DAIS_KEY_S                  83
+#define DAIS_KEY_T                  84
+#define DAIS_KEY_U                  85
+#define DAIS_KEY_V                  86
+#define DAIS_KEY_W                  87
+#define DAIS_KEY_X                  88
+#define DAIS_KEY_Y                  89
+#define DAIS_KEY_Z                  90
+#define DAIS_KEY_LEFT_BRACKET       91  /* [ */
+#define DAIS_KEY_BACKSLASH          92  /* \ */
+#define DAIS_KEY_RIGHT_BRACKET      93  /* ] */
+#define DAIS_KEY_GRAVE_ACCENT       96  /* ` */
+#define DAIS_KEY_WORLD_1            161 /* non-US #1 */
+#define DAIS_KEY_WORLD_2            162 /* non-US #2 */
+
+/* Function keys */
+#define DAIS_KEY_ESCAPE             256
+#define DAIS_KEY_ENTER              257
+#define DAIS_KEY_TAB                258
+#define DAIS_KEY_BACKSPACE          259
+#define DAIS_KEY_INSERT             260
+#define DAIS_KEY_DELETE             261
+#define DAIS_KEY_RIGHT              262
+#define DAIS_KEY_LEFT               263
+#define DAIS_KEY_DOWN               264
+#define DAIS_KEY_UP                 265
+#define DAIS_KEY_PAGE_UP            266
+#define DAIS_KEY_PAGE_DOWN          267
+#define DAIS_KEY_HOME               268
+#define DAIS_KEY_END                269
+#define DAIS_KEY_CAPS_LOCK          280
+#define DAIS_KEY_SCROLL_LOCK        281
+#define DAIS_KEY_NUM_LOCK           282
+#define DAIS_KEY_PRINT_SCREEN       283
+#define DAIS_KEY_PAUSE              284
+#define DAIS_KEY_F1                 290
+#define DAIS_KEY_F2                 291
+#define DAIS_KEY_F3                 292
+#define DAIS_KEY_F4                 293
+#define DAIS_KEY_F5                 294
+#define DAIS_KEY_F6                 295
+#define DAIS_KEY_F7                 296
+#define DAIS_KEY_F8                 297
+#define DAIS_KEY_F9                 298
+#define DAIS_KEY_F10                299
+#define DAIS_KEY_F11                300
+#define DAIS_KEY_F12                301
+#define DAIS_KEY_F13                302
+#define DAIS_KEY_F14                303
+#define DAIS_KEY_F15                304
+#define DAIS_KEY_F16                305
+#define DAIS_KEY_F17                306
+#define DAIS_KEY_F18                307
+#define DAIS_KEY_F19                308
+#define DAIS_KEY_F20                309
+#define DAIS_KEY_F21                310
+#define DAIS_KEY_F22                311
+#define DAIS_KEY_F23                312
+#define DAIS_KEY_F24                313
+#define DAIS_KEY_F25                314
+#define DAIS_KEY_KP_0               320
+#define DAIS_KEY_KP_1               321
+#define DAIS_KEY_KP_2               322
+#define DAIS_KEY_KP_3               323
+#define DAIS_KEY_KP_4               324
+#define DAIS_KEY_KP_5               325
+#define DAIS_KEY_KP_6               326
+#define DAIS_KEY_KP_7               327
+#define DAIS_KEY_KP_8               328
+#define DAIS_KEY_KP_9               329
+#define DAIS_KEY_KP_DECIMAL         330
+#define DAIS_KEY_KP_DIVIDE          331
+#define DAIS_KEY_KP_MULTIPLY        332
+#define DAIS_KEY_KP_SUBTRACT        333
+#define DAIS_KEY_KP_ADD             334
+#define DAIS_KEY_KP_ENTER           335
+#define DAIS_KEY_KP_EQUAL           336
+#define DAIS_KEY_LEFT_SHIFT         340
+#define DAIS_KEY_LEFT_CONTROL       341
+#define DAIS_KEY_LEFT_ALT           342
+#define DAIS_KEY_LEFT_SUPER         343
+#define DAIS_KEY_RIGHT_SHIFT        344
+#define DAIS_KEY_RIGHT_CONTROL      345
+#define DAIS_KEY_RIGHT_ALT          346
+#define DAIS_KEY_RIGHT_SUPER        347
+#define DAIS_KEY_MENU               348
+
+#define DAIS_KEY_LAST               DAIS_KEY_MENU
+
+#define DAIS_MOD_SHIFT           0x0001
+#define DAIS_MOD_CONTROL         0x0002
+#define DAIS_MOD_ALT             0x0004
+#define DAIS_MOD_SUPER           0x0008
+#define DAIS_MOD_CAPS_LOCK       0x0010
+#define DAIS_MOD_NUM_LOCK        0x0020
+
+#define DAIS_MOUSE_BUTTON_1         0
+#define DAIS_MOUSE_BUTTON_2         1
+#define DAIS_MOUSE_BUTTON_3         2
+#define DAIS_MOUSE_BUTTON_4         3
+#define DAIS_MOUSE_BUTTON_5         4
+#define DAIS_MOUSE_BUTTON_6         5
+#define DAIS_MOUSE_BUTTON_7         6
+#define DAIS_MOUSE_BUTTON_8         7
+#define DAIS_MOUSE_BUTTON_LAST      DAIS_MOUSE_BUTTON_8
+#define DAIS_MOUSE_BUTTON_LEFT      DAIS_MOUSE_BUTTON_1
+#define DAIS_MOUSE_BUTTON_RIGHT     DAIS_MOUSE_BUTTON_2
+#define DAIS_MOUSE_BUTTON_MIDDLE    DAIS_MOUSE_BUTTON_3
+
+#define DAIS_JOYSTICK_1             0
+#define DAIS_JOYSTICK_2             1
+#define DAIS_JOYSTICK_3             2
+#define DAIS_JOYSTICK_4             3
+#define DAIS_JOYSTICK_5             4
+#define DAIS_JOYSTICK_6             5
+#define DAIS_JOYSTICK_7             6
+#define DAIS_JOYSTICK_8             7
+#define DAIS_JOYSTICK_9             8
+#define DAIS_JOYSTICK_10            9
+#define DAIS_JOYSTICK_11            10
+#define DAIS_JOYSTICK_12            11
+#define DAIS_JOYSTICK_13            12
+#define DAIS_JOYSTICK_14            13
+#define DAIS_JOYSTICK_15            14
+#define DAIS_JOYSTICK_16            15
+#define DAIS_JOYSTICK_LAST          DAIS_JOYSTICK_16
+
+#define DAIS_GAMEPAD_BUTTON_A               0
+#define DAIS_GAMEPAD_BUTTON_B               1
+#define DAIS_GAMEPAD_BUTTON_X               2
+#define DAIS_GAMEPAD_BUTTON_Y               3
+#define DAIS_GAMEPAD_BUTTON_LEFT_BUMPER     4
+#define DAIS_GAMEPAD_BUTTON_RIGHT_BUMPER    5
+#define DAIS_GAMEPAD_BUTTON_BACK            6
+#define DAIS_GAMEPAD_BUTTON_START           7
+#define DAIS_GAMEPAD_BUTTON_GUIDE           8
+#define DAIS_GAMEPAD_BUTTON_LEFT_THUMB      9
+#define DAIS_GAMEPAD_BUTTON_RIGHT_THUMB     10
+#define DAIS_GAMEPAD_BUTTON_DPAD_UP         11
+#define DAIS_GAMEPAD_BUTTON_DPAD_RIGHT      12
+#define DAIS_GAMEPAD_BUTTON_DPAD_DOWN       13
+#define DAIS_GAMEPAD_BUTTON_DPAD_LEFT       14
+#define DAIS_GAMEPAD_BUTTON_LAST            DAIS_GAMEPAD_BUTTON_DPAD_LEFT
+
+#define DAIS_GAMEPAD_BUTTON_CROSS       DAIS_GAMEPAD_BUTTON_A
+#define DAIS_GAMEPAD_BUTTON_CIRCLE      DAIS_GAMEPAD_BUTTON_B
+#define DAIS_GAMEPAD_BUTTON_SQUARE      DAIS_GAMEPAD_BUTTON_X
+#define DAIS_GAMEPAD_BUTTON_TRIANGLE    DAIS_GAMEPAD_BUTTON_Y
+
+#define DAIS_GAMEPAD_AXIS_LEFT_X        0
+#define DAIS_GAMEPAD_AXIS_LEFT_Y        1
+#define DAIS_GAMEPAD_AXIS_RIGHT_X       2
+#define DAIS_GAMEPAD_AXIS_RIGHT_Y       3
+#define DAIS_GAMEPAD_AXIS_LEFT_TRIGGER  4
+#define DAIS_GAMEPAD_AXIS_RIGHT_TRIGGER 5
+#define DAIS_GAMEPAD_AXIS_LAST          DAIS_GAMEPAD_AXIS_RIGHT_TRIGGER
+
+// These are the standard cursor shapes that can be requested from the window system.
+#define DAIS_ARROW_CURSOR           0x00036001  // The regular arrow cursor shape.
+#define DAIS_IBEAM_CURSOR           0x00036002  // The text input I-beam cursor shape.
+#define DAIS_CROSSHAIR_CURSOR       0x00036003  // The crosshair cursor shape.
+#define DAIS_POINTING_HAND_CURSOR   0x00036004  // The pointing hand cursor shape.
+#define DAIS_RESIZE_EW_CURSOR       0x00036005  // The horizontal resize/move arrow shape.  This is usually a horizontal double-headed arrow.
+#define DAIS_RESIZE_NS_CURSOR       0x00036006  // The vertical resize/move shape.  This is usually a vertical double-headed  arrow.
+#define DAIS_RESIZE_NWSE_CURSOR     0x00036007  // The top-left to bottom-right diagonal resize/move shape.  This is usually a diagonal double-headed arrow.
+#define DAIS_RESIZE_NESW_CURSOR     0x00036008  // The top-right to bottom-left diagonal resize/move shape.  This is usually a diagonal double-headed arrow.
+#define DAIS_RESIZE_ALL_CURSOR      0x00036009  // The omni-directional resize cursor/move shape.  This is usually either a combined horizontal and vertical double-headed arrow or a grabbing hand.
+#define DAIS_NOT_ALLOWED_CURSOR     0x0003600A  // The operation-not-allowed shape.  This is usually a circle with a diagonal line through it.
+
+#define DAIS_CURSOR                 0x00033001
+#define DAIS_STICKY_KEYS            0x00033002
+#define DAIS_STICKY_MOUSE_BUTTONS   0x00033003
+#define DAIS_LOCK_KEY_MODS          0x00033004
+#define DAIS_RAW_MOUSE_MOTION       0x00033005
+
+#define DAIS_CURSOR_NORMAL          0x00034001
+#define DAIS_CURSOR_HIDDEN          0x00034002
+#define DAIS_CURSOR_DISABLED        0x00034003
+
+//The regular arrow cursor shape.
+#define DAIS_ARROW_CURSOR           0x00036001
+
+//The text input I-beam cursor shape.
+#define DAIS_IBEAM_CURSOR           0x00036002
+
+//The crosshair cursor shape.
+#define DAIS_CROSSHAIR_CURSOR       0x00036003
+
+//The pointing hand cursor shape.
+#define DAIS_POINTING_HAND_CURSOR   0x00036004
+
+//The horizontal resize/move arrow shape.  This is usually a horizontal double-headed arrow.
+#define DAIS_RESIZE_EW_CURSOR       0x00036005
+
+//The vertical resize/move shape.  This is usually a vertical double-headed arrow.
+#define DAIS_RESIZE_NS_CURSOR       0x00036006
+
+//The top-left to bottom-right diagonal resize/move shape.  This is usually a diagonal double-headed arrow.
+//NOTE: macos - This shape is provided by a private system API and may fail with ref DAIS_CURSOR_UNAVAILABLE in the future.
+//NOTE: x11 - This shape is provided by a newer standard not supported by all cursor themes.
+//NOTE: wayland - This shape is provided by a newer standard not supported by all cursor themes.
+#define DAIS_RESIZE_NWSE_CURSOR     0x00036007
+
+//The top-right to bottom-left diagonal resize/move shape.  This is usually a diagonal double-headed arrow.
+//NOTE: macos - This shape is provided by a private system API and may fail with DAIS_CURSOR_UNAVAILABLE in the future.
+//NOTE: x11 - This shape is provided by a newer standard not supported by all cursor themes.
+//NOTE: wayland - This shape is provided by a newer standard not supported by all cursor themes.
+#define DAIS_RESIZE_NESW_CURSOR     0x00036008
+
+//The omni-directional resize cursor/move shape.  This is usually either a
+//combined horizontal and vertical double-headed arrow or a grabbing hand.
+#define DAIS_RESIZE_ALL_CURSOR      0x00036009
+
+//The operation-not-allowed shape.  This is usually a circle with a diagonal line through it.
+//NOTE: x11 - This shape is provided by a newer standard not supported by all cursor themes.
+//NOTE: wayland - This shape is provided by a newer standard not supported by all cursor themes.
+#define DAIS_NOT_ALLOWED_CURSOR     0x0003600A
+
+#define DAIS_JOYSTICK_HAT_BUTTONS   0x00050001
