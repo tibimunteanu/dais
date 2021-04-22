@@ -22,13 +22,14 @@ int main(int argc, char** argv)
     windowConfig.title = "Test";
     windowConfig.width = 960;
     windowConfig.height = 540;
-    windowConfig.focused = true;
-    windowConfig.focusOnShow = true;
+    windowConfig.resizable = true;
     windowConfig.visible = true;
     windowConfig.decorated = true;
-    windowConfig.resizable = true;
+    windowConfig.focused = true;
+    windowConfig.autoIconify = true;
+    windowConfig.centerCursor = true;
+    windowConfig.focusOnShow = true;
 
-    windowConfig.floating = true;
     windowConfig.scaleToMonitor = true;
     windowConfig.refreshRate = -1;
 
@@ -39,6 +40,7 @@ int main(int argc, char** argv)
     fbConfig.alphaBits = 8;
     fbConfig.depthBits = 24;
     fbConfig.stencilBits = 8;
+    fbConfig.doubleBuffer = true;
     fbConfig.sRGB = true;
     
     dais::Window* window = dais::Platform::OpenWindow(windowConfig, fbConfig, nullptr);

@@ -602,7 +602,10 @@ namespace dais
 
     void WindowsWindow::PlatformSetCursorType(Cursor* cursor)
     {
-
+        if (IsCursorInContentArea())
+        {
+            UpdateCursorImage();
+        }
     }
 
     void WindowsWindow::PlatformSetPosition(int32_t x, int32_t y)
@@ -1092,38 +1095,38 @@ namespace dais
                 return 0;
             }
 
-            //case WM_SYSCOMMAND:
-            //{
-            //    switch (wParam & 0xfff0)
-            //    {
-            //        case SC_SCREENSAVE:
-            //        case SC_MONITORPOWER:
-            //        {
-            //            if (m_Monitor)
-            //            {
-            //                //we are running in full screen mode,
-            //                //so disallow screen saver and blanking
-            //                return 0;
-            //            }
-            //            else
-            //            {
-            //                break;
-            //            }
-            //        }
+            case WM_SYSCOMMAND:
+            {
+                switch (wParam & 0xfff0)
+                {
+                    case SC_SCREENSAVE:
+                    case SC_MONITORPOWER:
+                    {
+                        if (m_Monitor)
+                        {
+                            //we are running in full screen mode,
+                            //so disallow screen saver and blanking
+                            return 0;
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
 
-            //        //TODO: user trying to access application menu using ALT?
-            //        case SC_KEYMENU:
-            //        {
-            //            //if (!m_KeyMenu)
-            //            {
-            //                return 0;
-            //            }
-            //            break;
-            //        }
-            //    }
+                    //user trying to access application menu using ALT?
+                    case SC_KEYMENU:
+                    {
+                        if (!m_KeyMenu)
+                        {
+                            return 0;
+                        }
+                        break;
+                    }
+                }
 
-            //    break;
-            //}
+                break;
+            }
 
             case WM_CLOSE:
             {
@@ -1132,12 +1135,11 @@ namespace dais
                 return 0;
             }
 
-            //TODO:
-            //case WM_INPUTLANGCHANGE:
-            //{
-            //    UpdateKeyNames();
-            //    break;
-            //}
+            case WM_INPUTLANGCHANGE:
+            {
+                WindowsPlatform::UpdateKeyNames();
+                break;
+            }
 
             case WM_CHAR:
             case WM_SYSCHAR:
@@ -1170,12 +1172,11 @@ namespace dais
                     OnChar(codepoint, GetKeyMods(), uMsg != WM_SYSCHAR);
                 }
 
-                //TODO:
-                //if (uMsg == WM_SYSCHAR
-                //    && m_KeyMenu)
-                //{
-                //    break;
-                //}
+                if (uMsg == WM_SYSCHAR
+                    && m_KeyMenu)
+                {
+                    break;
+                }
 
                 return 0;
             }
@@ -1194,19 +1195,160 @@ namespace dais
                 return 0;
             }
 
-            //TODO:
-            //case WM_KEYDOWN:
-            //case WM_SYSKEYDOWN:
-            //case WM_KEYUP:
-            //case WM_SYSKEYUP:
-            //case WM_LBUTTONDOWN:
-            //case WM_RBUTTONDOWN:
-            //case WM_MBUTTONDOWN:
-            //case WM_XBUTTONDOWN:
-            //case WM_LBUTTONUP:
-            //case WM_RBUTTONUP:
-            //case WM_MBUTTONUP:
-            //case WM_XBUTTONUP:
+            case WM_KEYDOWN:
+            case WM_SYSKEYDOWN:
+            case WM_KEYUP:
+            case WM_SYSKEYUP:
+            {
+                const int32_t action = (HIWORD(lParam) & KF_UP) ? DAIS_RELEASE : DAIS_PRESS;
+                const int32_t mods = GetKeyMods();
+
+                int32_t scancode = (HIWORD(lParam) & (KF_EXTENDED | 0xff));
+                if (!scancode)
+                {
+                    //NOTE: some synthetic key messages have a scancode of zero
+                    //HACK: map the virtual key back to a usable scancode
+                    scancode = MapVirtualKeyW((UINT)wParam, MAPVK_VK_TO_VSC);
+                }
+
+                int32_t key = WindowsPlatform::s_Keycodes[scancode];
+
+                //the ctrl keys require special handling
+                if (wParam == VK_CONTROL)
+                {
+                    if (HIWORD(lParam) & KF_EXTENDED)
+                    {
+                        //right side keys have the extended key bit set
+                        key = DAIS_KEY_RIGHT_CONTROL;
+                    }
+                    else
+                    {
+                        //NOTE: alt gr sends left ctrl followed by right alt
+                        //HACK: we only want one event for alt gr, so if we
+                        //detect this sequence, we discard this left ctrl
+                        //message now and later report right alt normally
+                        const DWORD time = GetMessageTime();
+                        MSG next;
+                        if (PeekMessageW(&next, NULL, 0, 0, PM_NOREMOVE))
+                        {
+                            if (next.message == WM_KEYDOWN
+                                || next.message == WM_SYSKEYDOWN
+                                || next.message == WM_KEYUP
+                                || next.message == WM_SYSKEYUP)
+                            {
+                                if (next.wParam == VK_MENU
+                                    && (HIWORD(next.lParam) & KF_EXTENDED)
+                                    && next.time == time)
+                                {
+                                    //next message is right alt down so discard this
+                                    break;
+                                }
+                            }
+                        }
+
+                        //this is a regular left ctrl message
+                        key = DAIS_KEY_LEFT_CONTROL;
+                    }
+                }
+                else if (wParam == VK_PROCESSKEY)
+                {
+                    //IME notifies that keys have been filteres by setting the
+                    //virtual keycode to VK_PROCESSKEY
+                    break;
+                }
+
+                if (action == DAIS_RELEASE
+                    && wParam == VK_SHIFT)
+                {
+                    //HACK: release both shift keys on shift up event, as when
+                    //both are pressed the first release does not exit any event
+                    //NOTE: the other half of this is in Platform::PollEvents
+                    OnKey(DAIS_KEY_LEFT_SHIFT, scancode, action, mods);
+                    OnKey(DAIS_KEY_RIGHT_SHIFT, scancode, action, mods);
+                }
+                else if (wParam == VK_SNAPSHOT)
+                {
+                    //HACK: key down is not reported for the print screen key
+                    OnKey(key, scancode, DAIS_PRESS, mods);
+                    OnKey(key, scancode, DAIS_RELEASE, mods);
+                }
+                else
+                {
+                    OnKey(key, scancode, action, mods);
+                }
+
+                break;
+            }
+
+            case WM_LBUTTONDOWN:
+            case WM_RBUTTONDOWN:
+            case WM_MBUTTONDOWN:
+            case WM_XBUTTONDOWN:
+            case WM_LBUTTONUP:
+            case WM_RBUTTONUP:
+            case WM_MBUTTONUP:
+            case WM_XBUTTONUP:
+            {
+                int32_t button;
+                if (uMsg == WM_LBUTTONDOWN
+                    || uMsg == WM_LBUTTONUP)
+                {
+                    button = DAIS_MOUSE_BUTTON_LEFT;
+                }
+                else if (uMsg == WM_RBUTTONDOWN
+                    || uMsg == WM_RBUTTONUP)
+                {
+                    button = DAIS_MOUSE_BUTTON_RIGHT;
+                }
+                else if (uMsg == WM_MBUTTONDOWN
+                    || uMsg == WM_MBUTTONUP)
+                {
+                    button = DAIS_MOUSE_BUTTON_MIDDLE;
+                }
+                else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
+                {
+                    button = DAIS_MOUSE_BUTTON_4;
+                }
+                else
+                {
+                    button = DAIS_MOUSE_BUTTON_5;
+                }
+
+                int32_t action;
+                if (uMsg == WM_LBUTTONDOWN
+                    || uMsg == WM_RBUTTONDOWN
+                    || uMsg == WM_MBUTTONDOWN
+                    || uMsg == WM_XBUTTONDOWN)
+                {
+                    action = DAIS_PRESS;
+                }
+                else
+                {
+                    action = DAIS_RELEASE;
+                }
+
+                int32_t i;
+                for (i = 0; i <= DAIS_MOUSE_BUTTON_LAST; i++)
+                {
+                    if (m_MouseButtons[i] == DAIS_PRESS)
+                    {
+                        break;
+                    }
+                }
+
+                if (i > DAIS_MOUSE_BUTTON_LAST)
+                {
+                    ReleaseCapture();
+                }
+
+                if (uMsg == WM_XBUTTONDOWN
+                    || uMsg == WM_XBUTTONUP)
+                {
+                    return TRUE;
+                }
+
+                return 0;
+            }
 
             case WM_MOUSEMOVE:
             {
@@ -1254,8 +1396,58 @@ namespace dais
                 return 0;
             }
 
-            //TODO:
-            //case WM_INPUT:
+            case WM_INPUT:
+            {
+                if (WindowsPlatform::s_DisabledCursorWindow != this)
+                {
+                    break;
+                }
+
+                if (!m_RawMouseMotion)
+                {
+                    break;
+                }
+
+                UINT size = 0;
+                HRAWINPUT ri = (HRAWINPUT)lParam;
+
+                GetRawInputData(ri, RID_INPUT, NULL, &size, sizeof(RAWINPUTHEADER));
+                if (size > (UINT)WindowsPlatform::s_RawInputSize)
+                {
+                    free(WindowsPlatform::s_RawInput);
+                    WindowsPlatform::s_RawInput = (RAWINPUT*)calloc(size, 1);
+                    WindowsPlatform::s_RawInputSize = size;
+                }
+
+                size = WindowsPlatform::s_RawInputSize;
+
+                if (GetRawInputData(ri, RID_INPUT, 
+                    WindowsPlatform::s_RawInput, 
+                    &size, sizeof(RAWINPUTHEADER)) == (UINT)-1)
+                {
+                    DAIS_ERROR("Failed to retrieve raw input data!");
+                    break;
+                }
+
+                RAWINPUT* data = WindowsPlatform::s_RawInput;
+                int32_t dx, dy;
+                if (data->data.mouse.usFlags & MOUSE_MOVE_ABSOLUTE)
+                {
+                    dx = data->data.mouse.lLastX - m_LastCursorPositionX;
+                    dy = data->data.mouse.lLastY - m_LastCursorPositionY;
+                }
+                else
+                {
+                    dx = data->data.mouse.lLastX;
+                    dy = data->data.mouse.lLastY;
+                }
+
+                OnCursorPositionChanged(m_VirtualCursorPositionX + dx, m_VirtualCursorPositionY + dy);
+
+                m_LastCursorPositionX += dx;
+                m_LastCursorPositionY += dy;
+                break;
+            }
 
             case WM_MOUSELEAVE:
             {
@@ -1446,26 +1638,26 @@ namespace dais
                 return 0;
             }
 
-            //case WM_PAINT:
-            //{
-            //    OnNeedUpdate();
-            //    break;
-            //}
+            case WM_PAINT:
+            {
+                OnNeedUpdate();
+                break;
+            }
 
             case WM_ERASEBKGND:
             {
                 return TRUE;
             }
 
-            //case WM_NCACTIVATE:
-            //case WM_NCPAINT:
-            //{
-            //    // Prevent title bar from being drawn after restoring a minimized undecorated window
-            //    if (!m_Decorated)
-            //        return TRUE;
+            case WM_NCACTIVATE:
+            case WM_NCPAINT:
+            {
+                // Prevent title bar from being drawn after restoring a minimized undecorated window
+                if (!m_Decorated)
+                    return TRUE;
 
-            //    break;
-            //}
+                break;
+            }
 
             case WM_DWMCOMPOSITIONCHANGED:
             case WM_DWMCOLORIZATIONCOLORCHANGED:
@@ -1530,16 +1722,16 @@ namespace dais
                 break;
             }
 
-            //case WM_SETCURSOR:
-            //{
-            //    if (LOWORD(lParam) == HTCLIENT)
-            //    {
-            //        UpdateCursorImage();
-            //        return TRUE;
-            //    }
+            case WM_SETCURSOR:
+            {
+                if (LOWORD(lParam) == HTCLIENT)
+                {
+                    UpdateCursorImage();
+                    return TRUE;
+                }
 
-            //    break;
-            //}
+                break;
+            }
 
             case WM_DROPFILES:
             {
@@ -1576,12 +1768,9 @@ namespace dais
                 DragFinish(drop);
                 return 0;
             }
-
-            default:
-            {
-                return DefWindowProcW(m_Handle, uMsg, wParam, lParam);
-            }
         }
+
+        return DefWindowProcW(m_Handle, uMsg, wParam, lParam);
     }
 
 

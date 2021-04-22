@@ -69,6 +69,13 @@ namespace dais
         m_Floating = config.floating;
         m_Resizable = config.resizable;
         m_MousePassthrough = config.mousePassthrough;
+        m_CursorMode = DAIS_CURSOR_NORMAL;
+        m_MinWidth = -1;
+        m_MinHeight = -1;
+        m_MaxWidth = -1;
+        m_MaxHeight = -1;
+        m_Numerator = -1;
+        m_Denominator = -1;
 
         m_VideoMode = {};
         m_VideoMode.width = config.width;
