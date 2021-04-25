@@ -3,154 +3,7 @@
 
 namespace dais
 {
-    //////////////////////////////////////// STATIC ///////////////////////////////////////////
-
-    Window* Window::PlatformCreate(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
-    {
-        DAIS_TRACE("[WindowsWindow] PlatformCreate");
-
-        WindowsWindow* window = new WindowsWindow(windowConfig, contextConfig, framebufferConfig, monitor);
-
-        DWORD style = window->GetStyle();
-        DWORD styleEx = window->GetStyleEx();
-
-        //setup position
-        int xPos, yPos;
-        int fullWidth, fullHeight;
-        if (monitor)
-        {
-            //temporary placement until the monitor video mode is set
-            monitor->GetPosition(&xPos, &yPos);
-            VideoMode* videoMode = monitor->GetVideoMode();
-
-            fullWidth = videoMode->width;
-            fullHeight = videoMode->height;
-        }
-        else
-        {
-            xPos = CW_USEDEFAULT;
-            yPos = CW_USEDEFAULT;
-
-            if (windowConfig->maximized)
-            {
-                style |= WS_MAXIMIZE;
-            }
-
-            WindowsWindow::GetFullSize(style, styleEx,
-                windowConfig->width, windowConfig->height,
-                &fullWidth, &fullHeight,
-                USER_DEFAULT_SCREEN_DPI);
-        }
-
-        WCHAR* wideTitle = WindowsPlatform::UTF8ToWideString(windowConfig->title.c_str());
-        if (!wideTitle)
-        {
-            DAIS_ERROR("Failed to create window with invalid title '%s'!", windowConfig->title.c_str());
-
-            delete window;
-            return nullptr;
-        }
-
-        HWND windowHandle = CreateWindowExW(styleEx,
-            DAIS_WINDOW_CLASS,
-            wideTitle,
-            style,
-            xPos, yPos,
-            fullWidth, fullHeight,
-            NULL, //no parent window
-            NULL, //no window menu
-            GetModuleHandleW(NULL),
-            window);
-
-        free(wideTitle);
-
-        if (!windowHandle)
-        {
-            DAIS_ERROR("Failed to create window '%s'!", windowConfig->title.c_str());
-
-            delete window;
-            return nullptr;
-        }
-
-        window->ChangeMessageFilter();
-
-        // adjust window rect to account for DPI scaling of the window frame 
-        // and (if enabled) DPI scaling of the content area
-        // this cannot be done until we know what monitor the window was placed on
-        if (!monitor)
-        {
-            RECT rect = { 0, 0, windowConfig->width, windowConfig->height };
-
-            if (windowConfig->scaleToMonitor)
-            {
-                float xScale, yScale;
-                window->PlatformGetContentScale(&xScale, &yScale);
-                rect.right = (int)(rect.right * xScale);
-                rect.bottom = (int)(rect.bottom * yScale);
-            }
-
-            ClientToScreen(windowHandle, (POINT*)&rect.left);
-            ClientToScreen(windowHandle, (POINT*)&rect.right);
-
-            WindowsPlatform::AdjustRect(&rect, windowHandle, style, styleEx);
-
-            //only update the restored window rect as the window may be maximizesd
-            WINDOWPLACEMENT wp = {};
-            wp.length = sizeof(wp);
-            GetWindowPlacement(windowHandle, &wp);
-            wp.rcNormalPosition = rect;
-            wp.showCmd = SW_HIDE;
-            SetWindowPlacement(windowHandle, &wp);
-        }
-
-        DragAcceptFiles(windowHandle, TRUE);
-
-        if (framebufferConfig->transparent)
-        {
-            window->UpdateFramebufferTransparency();
-            window->m_Transparent = true;
-        }
-
-        window->PlatformGetSize(&window->m_Width, &window->m_Height);
-
-        if (contextConfig->client != DAIS_NO_API)
-        {
-            if (contextConfig->source == DAIS_NATIVE_CONTEXT_API)
-            {
-                DAIS_TRACE("Initializing WGL!");
-                if (!WglContext::InitWGL())
-                {
-                    DAIS_ERROR("Failed to init WGL!");
-                    delete window;
-                    return nullptr;
-                }
-
-                DAIS_TRACE("Creating WGL context!");
-                if (!WglContext::CreateContextWGL(window, contextConfig, framebufferConfig))
-                {
-                    DAIS_ERROR("Failed to create WGL context!");
-                    delete window;
-                    return nullptr;
-                }
-            }
-            else
-            {
-                DAIS_ERROR("We only support DAIS_NATOVE_CONTEXT_API for now!");
-                delete window;
-                return nullptr;
-            }
-        }
-
-        if (window->m_Monitor)
-        {
-            window->PlatformShow();
-            window->PlatformFocus();
-            window->AcquireMonitor();
-            window->FitToMonitor();
-        }
-
-        return window;
-    }
+    ///////////////////////////////// STATIC INTERNAL API /////////////////////////////////////
 
     /// <summary> Translate content area size to full window size according to styles and DPI </summary>
     void WindowsWindow::GetFullSize(DWORD style, DWORD styleEx, int contentWidth, int contentHeight, int* fullWidth, int* fullHeight, UINT dpi)
@@ -320,13 +173,158 @@ namespace dais
 
 
 
+    ///////////////////////////////////// STATIC CREATE ///////////////////////////////////////
+
+    Window* Window::PlatformCreate(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+    {
+        WindowsWindow* window = new WindowsWindow(windowConfig, contextConfig, framebufferConfig, monitor);
+
+        DWORD style = window->GetStyle();
+        DWORD styleEx = window->GetStyleEx();
+
+        //setup position
+        int xPos, yPos;
+        int fullWidth, fullHeight;
+        if (monitor)
+        {
+            //temporary placement until the monitor video mode is set
+            monitor->GetPosition(&xPos, &yPos);
+            VideoMode* videoMode = monitor->GetVideoMode();
+
+            fullWidth = videoMode->width;
+            fullHeight = videoMode->height;
+        }
+        else
+        {
+            xPos = CW_USEDEFAULT;
+            yPos = CW_USEDEFAULT;
+
+            if (windowConfig->maximized)
+            {
+                style |= WS_MAXIMIZE;
+            }
+
+            WindowsWindow::GetFullSize(style, styleEx,
+                windowConfig->width, windowConfig->height,
+                &fullWidth, &fullHeight,
+                USER_DEFAULT_SCREEN_DPI);
+        }
+
+        WCHAR* wideTitle = WindowsPlatform::UTF8ToWideString(windowConfig->title.c_str());
+        if (!wideTitle)
+        {
+            DAIS_ERROR("Failed to create window with invalid title '%s'!", windowConfig->title.c_str());
+
+            delete window;
+            return nullptr;
+        }
+
+        HWND windowHandle = CreateWindowExW(styleEx,
+            DAIS_WINDOW_CLASS,
+            wideTitle,
+            style,
+            xPos, yPos,
+            fullWidth, fullHeight,
+            NULL, //no parent window
+            NULL, //no window menu
+            GetModuleHandleW(NULL),
+            window);
+
+        free(wideTitle);
+
+        if (!windowHandle)
+        {
+            DAIS_ERROR("Failed to create window '%s'!", windowConfig->title.c_str());
+
+            delete window;
+            return nullptr;
+        }
+
+        window->ChangeMessageFilter();
+
+        // adjust window rect to account for DPI scaling of the window frame 
+        // and (if enabled) DPI scaling of the content area
+        // this cannot be done until we know what monitor the window was placed on
+        if (!monitor)
+        {
+            RECT rect = { 0, 0, windowConfig->width, windowConfig->height };
+
+            if (windowConfig->scaleToMonitor)
+            {
+                float xScale, yScale;
+                window->PlatformGetContentScale(&xScale, &yScale);
+                rect.right = (int)(rect.right * xScale);
+                rect.bottom = (int)(rect.bottom * yScale);
+            }
+
+            ClientToScreen(windowHandle, (POINT*)&rect.left);
+            ClientToScreen(windowHandle, (POINT*)&rect.right);
+
+            WindowsPlatform::AdjustRect(&rect, windowHandle, style, styleEx);
+
+            //only update the restored window rect as the window may be maximizesd
+            WINDOWPLACEMENT wp = {};
+            wp.length = sizeof(wp);
+            GetWindowPlacement(windowHandle, &wp);
+            wp.rcNormalPosition = rect;
+            wp.showCmd = SW_HIDE;
+            SetWindowPlacement(windowHandle, &wp);
+        }
+
+        DragAcceptFiles(windowHandle, TRUE);
+
+        if (framebufferConfig->transparent)
+        {
+            window->UpdateFramebufferTransparency();
+            window->m_Transparent = true;
+        }
+
+        window->PlatformGetSize(&window->m_Width, &window->m_Height);
+
+        if (contextConfig->client != DAIS_NO_API)
+        {
+            if (contextConfig->source == DAIS_NATIVE_CONTEXT_API)
+            {
+                if (!WglContext::InitWGL())
+                {
+                    DAIS_ERROR("Failed to init WGL!");
+                    delete window;
+                    return nullptr;
+                }
+
+                if (!WglContext::CreateContextWGL(window, contextConfig, framebufferConfig))
+                {
+                    DAIS_ERROR("Failed to create WGL context!");
+                    delete window;
+                    return nullptr;
+                }
+            }
+            else
+            {
+                DAIS_ERROR("We only support DAIS_NATOVE_CONTEXT_API for now!");
+                delete window;
+                return nullptr;
+            }
+        }
+
+        if (window->m_Monitor)
+        {
+            window->PlatformShow();
+            window->PlatformFocus();
+            window->AcquireMonitor();
+            window->FitToMonitor();
+        }
+
+        return window;
+    }
+
+
+
     ////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
 
     WindowsWindow::WindowsWindow(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
         : Window(windowConfig, contextConfig, framebufferConfig, monitor)
     {
-        DAIS_TRACE("[WindowsWindow] Constructor");
-
         m_Maximized = windowConfig->maximized;
         m_ScaleToMonitor = windowConfig->scaleToMonitor;
         m_KeyMenu = windowConfig->keyMenu;
@@ -336,8 +334,6 @@ namespace dais
 
     WindowsWindow::~WindowsWindow()
     {
-        DAIS_TRACE("[WindowsWindow] Destructor");
-
         if (m_Monitor)
         {
             ReleaseMonitor();
@@ -368,36 +364,26 @@ namespace dais
 
     bool WindowsWindow::PlatformIsMaximized() const
     {
-        DAIS_TRACE("[WindowsWindow] PlatformIsMaximized");
-
         return IsZoomed(m_Handle);
     }
 
     bool WindowsWindow::PlatformIsMinimized() const
     {
-        DAIS_TRACE("[WindowsWindow] PlatformIsMinimized");
-
         return IsIconic(m_Handle);
     }
 
     bool WindowsWindow::PlatformIsVisible() const
     {
-        DAIS_TRACE("[WindowsWindow] PlatformIsVisible");
-
         return IsWindowVisible(m_Handle);
     }
 
     bool WindowsWindow::PlatformIsHovered() const
     {
-        DAIS_TRACE("[WindowsWindow] PlatformIsHovered");
-
         return IsCursorInContentArea();
     }
 
     bool WindowsWindow::PlatformIsFocused() const
     {
-        DAIS_TRACE("[WindowsWindow] PlatformIsFocused");
-
         return GetActiveWindow() == m_Handle;
     }
 
@@ -439,8 +425,6 @@ namespace dais
 
     void WindowsWindow::PlatformGetPosition(int32_t* x, int32_t* y) const
     {
-        DAIS_TRACE("[WindowsWindow] PlatformGetPosition");
-
         POINT position = { 0, 0 };
         ClientToScreen(m_Handle, &position);
 
@@ -456,8 +440,6 @@ namespace dais
 
     void WindowsWindow::PlatformGetSize(int32_t* width, int32_t* height) const
     {
-        DAIS_TRACE("[WindowsWindow] PlatformGetSize");
-
         RECT rect;
         GetClientRect(m_Handle, &rect);
 
@@ -478,8 +460,6 @@ namespace dais
 
     void WindowsWindow::PlatformGetFrameSize(int32_t* left, int32_t* top, int32_t* right, int32_t* bottom) const
     {
-        DAIS_TRACE("[WindowsWindow] PlatformGetFrameSize");
-
         RECT rect;
         int32_t width, height;
 
@@ -508,8 +488,6 @@ namespace dais
 
     void WindowsWindow::PlatformGetContentScale(float* xScale, float* yScale)
     {
-        DAIS_TRACE("[WindowsWindow] PlatformGetContentScale");
-
         HMONITOR monitorHandle = MonitorFromWindow(m_Handle, MONITOR_DEFAULTTONEAREST);
         WindowsMonitor::GetContentScale(monitorHandle, xScale, yScale);
     }
@@ -579,16 +557,12 @@ namespace dais
 
     void* WindowsWindow::PlatformGetHandle() const
     {
-        DAIS_TRACE("[WindowsWindow] PlatformGetHandle");
-
         return m_Handle;
     }
 
 
     void WindowsWindow::PlatformSetTitle(const std::string& title)
     {
-        DAIS_TRACE("[WindowsWindow] PlatformSetTitle");
-
         WCHAR* wideTitle = WindowsPlatform::UTF8ToWideString(title.c_str());
         if (!wideTitle)
         {
@@ -646,8 +620,6 @@ namespace dais
 
     void WindowsWindow::PlatformSetPosition(int32_t x, int32_t y)
     {
-        DAIS_TRACE("[WindowsWindow] PlatformSetPosition");
-
         RECT rect = { x, y, x, y };
 
         AdjustRect(&rect);
@@ -659,8 +631,6 @@ namespace dais
 
     void WindowsWindow::PlatformSetSize(int32_t width, int32_t height)
     {
-        DAIS_TRACE("[WindowsWindow] PlatformSetSize");
-
         if (m_Monitor)
         {
             if (m_Monitor->GetWindow() == this)
@@ -739,17 +709,14 @@ namespace dais
         }
     }
 
+
     void WindowsWindow::PlatformSetDecorated(bool value)
     {
-        DAIS_TRACE("[WindowsWindow] PlatformSetDecorated");
-
         UpdateStyles();
     }
 
     void WindowsWindow::PlatformSetFloating(bool value)
     {
-        DAIS_TRACE("[WindowsWindow] PlatformSetFloating");
-
         const HWND after = value
             ? HWND_TOPMOST
             : HWND_NOTOPMOST;
@@ -760,15 +727,11 @@ namespace dais
 
     void WindowsWindow::PlatformSetResizable(bool value)
     {
-        DAIS_TRACE("[WindowsWindow] PlatformSetResizable");
-
         UpdateStyles();
     }
 
     void WindowsWindow::PlatformSetMousePassThrough(bool value)
     {
-        DAIS_TRACE("[WindowsWindow] PlatformSetMousePassThrough");
-
         COLORREF key = 0;
         BYTE alpha = 0;
         DWORD flags = 0;
@@ -846,8 +809,6 @@ namespace dais
 
     void WindowsWindow::PlatformSetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate)
     {
-        DAIS_TRACE("[WindowsWindow] PlatformSetMonitor");
-
         if (m_Monitor == monitor)
         {
             if (m_Monitor)
@@ -1004,50 +965,36 @@ namespace dais
 
     void WindowsWindow::PlatformMaximize()
     {
-        DAIS_TRACE("[WindowsWindow] PlatformMaximize");
-
         ShowWindow(m_Handle, SW_MAXIMIZE);
     }
 
     void WindowsWindow::PlatformMinimize()
     {
-        DAIS_TRACE("[WindowsWindow] PlatformMinimize");
-
         ShowWindow(m_Handle, SW_MINIMIZE);
     }
 
     void WindowsWindow::PlatformRestore()
     {
-        DAIS_TRACE("[WindowsWindow] PlatformRestore");
-
         ShowWindow(m_Handle, SW_RESTORE);
     }
 
     void WindowsWindow::PlatformShow()
     {
-        DAIS_TRACE("[WindowsWindow] PlatformShow");
-
         ShowWindow(m_Handle, SW_SHOWNA);
     }
 
     void WindowsWindow::PlatformHide()
     {
-        DAIS_TRACE("[WindowsWindow] PlatformHide");
-
         ShowWindow(m_Handle, SW_HIDE);
     }
 
     void WindowsWindow::PlatformRequestAttention()
     {
-        DAIS_TRACE("[WindowsWindow] PlatformRequestAttention");
-
         FlashWindow(m_Handle, TRUE);
     }
 
     void WindowsWindow::PlatformFocus()
     {
-        DAIS_TRACE("[WindowsWindow] PlatformFocus");
-
         BringWindowToTop(m_Handle);
         SetForegroundWindow(m_Handle);
         SetFocus(m_Handle);
@@ -1055,7 +1002,7 @@ namespace dais
 
 
 
-    ////////////////////////////////////// INTERNAL ///////////////////////////////////////////
+    //////////////////////////////////////// UTILS ///////////////////////////////////////////
 
     LRESULT WindowsWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
@@ -1808,7 +1755,6 @@ namespace dais
 
         return DefWindowProcW(m_Handle, uMsg, wParam, lParam);
     }
-
 
     /// <summary> Make this window and its video mode active on its monitor </summary>
     void WindowsWindow::AcquireMonitor()

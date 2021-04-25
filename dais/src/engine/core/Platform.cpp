@@ -2,18 +2,7 @@
 
 namespace dais
 {
-    void* ThreadLocalStorage::Get()
-    {
-        return PlatformGet();
-    }
-
-    void ThreadLocalStorage::Set(void* value)
-    {
-        PlatformSet(value);
-    }
-
-
-    ////////////////////////////////////// STATIC MEMBERS /////////////////////////////////////////
+    ////////////////////////////////////// STATIC INIT ///////////////////////////////////////////
 
     Platform::Hints Platform::s_Hints = {};
     std::vector<Window*> Platform::s_Windows = {};
@@ -91,7 +80,7 @@ namespace dais
         s_Hints.window.visible = true;
         s_Hints.window.decorated = true;
         s_Hints.window.focused = true;
-        s_Hints.window.autoIconify = true;
+        s_Hints.window.autoMinimize = true;
         s_Hints.window.centerCursor = true;
         s_Hints.window.focusOnShow = true;
         s_Hints.window.scaleToMonitor = true;
@@ -134,15 +123,11 @@ namespace dais
 
     const std::vector<Window*>& Platform::GetWindows()
     {
-        DAIS_TRACE("[Platform] GetWindows");
-
         return s_Windows;
     }
 
     Window* Platform::GetPrimaryWindow()
     {
-        DAIS_TRACE("[Platform] GetPrimaryWindow");
-
         return s_Windows.size() > 0
             ? s_Windows[0]
             : nullptr;
@@ -150,15 +135,11 @@ namespace dais
 
     const std::vector<Monitor*>& Platform::GetMonitors()
     {
-        DAIS_TRACE("[Platform] GetMonitors");
-
         return s_Monitors;
     }
 
     Monitor* Platform::GetPrimaryMonitor()
     {
-        DAIS_TRACE("[Platform] GetPrimaryMonitor");
-
         return s_Monitors.size() > 0
             ? s_Monitors[0]
             : nullptr;

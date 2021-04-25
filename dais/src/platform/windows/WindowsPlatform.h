@@ -2,6 +2,7 @@
 
 #include "engine/core/Platform.h"
 #include "platform/windows/WindowsBase.h"
+#include "platform/windows/WindowsThreadLocalStorage.h"
 #include "platform/windows/WglContext.h"
 #include "platform/windows/WindowsCursor.h"
 #include "platform/windows/WindowsMonitor.h"
@@ -9,21 +10,6 @@
 
 namespace dais
 {
-    class WindowsThreadLocalStorage : public ThreadLocalStorage
-    {
-    public:
-        bool m_Allocated;
-        DWORD m_Index;
-
-    public:
-        WindowsThreadLocalStorage() = default;
-        ~WindowsThreadLocalStorage();
-
-    private:
-        void* PlatformGet() override;
-        void PlatformSet(void* value) override;
-    };
-
     class WindowsPlatform : public Platform
     {
     public:
@@ -98,20 +84,25 @@ namespace dais
             } ntdll;
         } s_Libs;
 
-    public:
+    public: DAIS_INTERNAL_API
         static bool LoadLibraries();
         static void FreeLibraries();
+
         static void CreateKeyTables();
-        static void SetProcessDpiAware();
+        static void UpdateKeyNames();
+
         static void SetForegroundLockTimeout();
         static void RestoreForegroundLockTimeout();
+        static void SetProcessDpiAware();
+
         static void AdjustRect(RECT* rect, HWND windowHandle, DWORD style, DWORD styleEx);
         static void AdjustRect(RECT* rect, DWORD style, DWORD styleEx, UINT dpi);
+
         static void PollMonitors();
+
         static bool RegisterWindowClass();
         static void UnregisterWindowClass();
         static bool CreateHelperWindow();
-        static void UpdateKeyNames();
 
         static bool IsWindowsVersionOrGreater(WORD major, WORD minor, WORD sp);
         static bool IsWindowsVistaOrGreater();
@@ -125,8 +116,8 @@ namespace dais
         static char* WideStringToUTF8(const WCHAR* source);
         static bool WideStringToUTF8(const WCHAR* source, std::string& target);
         static bool WideStringToUTF8(const WCHAR source[], char target[]);
+        static bool WideStringToUTF8(const WCHAR source[], char target[], int32_t processCharCount);
         static WCHAR* UTF8ToWideString(const char* source);
-
     };
 }
 

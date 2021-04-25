@@ -2,49 +2,7 @@
 
 namespace dais
 {
-    ThreadLocalStorage* ThreadLocalStorage::Create()
-    {
-        DWORD index = TlsAlloc();
-        if (index == TLS_OUT_OF_INDEXES)
-        {
-            DAIS_ERROR("Failed to allocate TLS index!");
-            return nullptr;
-        }
-
-        WindowsThreadLocalStorage* tls = new WindowsThreadLocalStorage();
-        tls->m_Index = index;
-        tls->m_Allocated = true;
-
-        return tls;
-    }
-
-    WindowsThreadLocalStorage::~WindowsThreadLocalStorage()
-    {
-        if (m_Allocated)
-        {
-            TlsFree(m_Index);
-        }
-    }
-
-    void* WindowsThreadLocalStorage::PlatformGet()
-    {
-        if (m_Allocated)
-        {
-            return TlsGetValue(m_Index);
-        }
-        return nullptr;
-    }
-
-    void WindowsThreadLocalStorage::PlatformSet(void* value)
-    {
-        if (m_Allocated)
-        {
-            TlsSetValue(m_Index, value);
-        }
-    }
-
-
-    ////////////////////////////////////// STATIC MEMBERS /////////////////////////////////////////
+    ////////////////////////////////////// STATIC INIT ////////////////////////////////////////////
 
     HWND WindowsPlatform::s_HelperWindowHandle = nullptr;
     HDEVNOTIFY WindowsPlatform::s_DeviceNotificationHandle = nullptr;
@@ -164,7 +122,7 @@ namespace dais
     const char* Platform::PlatformGetScancodeName(int32_t scancode)
     {
         if (scancode < 0
-            || scancode >(KF_EXTENDED | 0xff)
+            || scancode > (KF_EXTENDED | 0xff)
             || WindowsPlatform::s_Keycodes[scancode] == DAIS_KEY_UNKNOWN)
         {
             DAIS_ERROR("Invalid scancode!");
@@ -181,8 +139,6 @@ namespace dais
 
     bool WindowsPlatform::LoadLibraries()
     {
-        DAIS_TRACE("[WindowsPlatform] Loading libraries");
-
         //XInput
         {
             int i;
@@ -264,8 +220,6 @@ namespace dais
 
     void WindowsPlatform::FreeLibraries()
     {
-        DAIS_TRACE("[WindowsPlatform] Free libraries");
-
         if (s_Libs.xInput.instance) FreeLibrary(s_Libs.xInput.instance);
         if (s_Libs.dInput8.instance) FreeLibrary(s_Libs.dInput8.instance);
         if (s_Libs.winmm.instance) FreeLibrary(s_Libs.winmm.instance);
@@ -274,6 +228,7 @@ namespace dais
         if (s_Libs.shcore.instance) FreeLibrary(s_Libs.shcore.instance);
         if (s_Libs.ntdll.instance) FreeLibrary(s_Libs.ntdll.instance);
     }
+
 
     void WindowsPlatform::CreateKeyTables()
     {
@@ -414,6 +369,69 @@ namespace dais
         }
     }
 
+    /// <summary> Updates key names according to the current keyboard layout </summary>
+    void WindowsPlatform::UpdateKeyNames()
+    {
+        memset(s_KeyNames, 0, sizeof(s_KeyNames));
+
+        for (int32_t key = DAIS_KEY_SPACE; key <= DAIS_KEY_LAST; key++)
+        {
+            int32_t scancode = s_Scancodes[key];
+            if (scancode == -1)
+            {
+                continue;
+            }
+
+            UINT vk;
+            if (key >= DAIS_KEY_KP_0
+                && key <= DAIS_KEY_KP_ADD)
+            {
+                const UINT vks[] =
+                {
+                    VK_NUMPAD0,  VK_NUMPAD1,  VK_NUMPAD2, VK_NUMPAD3,
+                    VK_NUMPAD4,  VK_NUMPAD5,  VK_NUMPAD6, VK_NUMPAD7,
+                    VK_NUMPAD8,  VK_NUMPAD9,  VK_DECIMAL, VK_DIVIDE,
+                    VK_MULTIPLY, VK_SUBTRACT, VK_ADD
+                };
+
+                vk = vks[key - DAIS_KEY_KP_0];
+            }
+            else
+            {
+                vk = MapVirtualKey(scancode, MAPVK_VSC_TO_VK);
+            }
+
+            WCHAR chars[16];
+            BYTE state[256] = { 0 };
+            int length = ToUnicode(vk, scancode, state, chars, sizeof(chars) / sizeof(WCHAR), 0);
+            if (length == -1)
+            {
+                //dead-key character (accent or diacritic)
+                //QUESTION: why do we retry this call?
+                length = ToUnicode(vk, scancode, state, chars, sizeof(chars) / sizeof(WCHAR), 0);
+            }
+
+            if (length < 1)
+            {
+                continue;
+            }
+
+            WideStringToUTF8(chars, s_KeyNames[key], 1);
+        }
+    }
+
+
+    void WindowsPlatform::SetForegroundLockTimeout()
+    {
+        SystemParametersInfoW(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &s_ForegroundLockTimeout, 0);
+        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UIntToPtr(0), SPIF_SENDCHANGE);
+    }
+
+    void WindowsPlatform::RestoreForegroundLockTimeout()
+    {
+        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UIntToPtr(s_ForegroundLockTimeout), SPIF_SENDCHANGE);
+    }
+
     void WindowsPlatform::SetProcessDpiAware()
     {
         if (IsWindows10CreatorsUpdateOrGreater())
@@ -430,16 +448,6 @@ namespace dais
         }
     }
 
-    void WindowsPlatform::SetForegroundLockTimeout()
-    {
-        SystemParametersInfoW(SPI_GETFOREGROUNDLOCKTIMEOUT, 0, &s_ForegroundLockTimeout, 0);
-        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UIntToPtr(0), SPIF_SENDCHANGE);
-    }
-
-    void WindowsPlatform::RestoreForegroundLockTimeout()
-    {
-        SystemParametersInfoW(SPI_SETFOREGROUNDLOCKTIMEOUT, 0, UIntToPtr(s_ForegroundLockTimeout), SPIF_SENDCHANGE);
-    }
 
     void WindowsPlatform::AdjustRect(RECT* rect, HWND windowHandle, DWORD style, DWORD styleEx)
     {
@@ -466,10 +474,9 @@ namespace dais
         }
     }
 
+
     void WindowsPlatform::PollMonitors()
     {
-        DAIS_TRACE("[WindowsPlatform] PollMonitors");
-
         //copy the array of pointers to the monitors
         std::vector<Monitor*> disconnected = s_Monitors;
 
@@ -634,6 +641,7 @@ namespace dais
         }
     }
 
+
     bool WindowsPlatform::RegisterWindowClass()
     {
         WNDCLASSEXW wc = {};
@@ -708,58 +716,6 @@ namespace dais
         return true;
     }
 
-    /// <summary> Updates key names according to the current keyboard layout </summary>
-    void WindowsPlatform::UpdateKeyNames()
-    {
-        memset(s_KeyNames, 0, sizeof(s_KeyNames));
-
-        for (int32_t key = DAIS_KEY_SPACE; key <= DAIS_KEY_LAST; key++)
-        {
-            int32_t scancode = s_Scancodes[key];
-            if (scancode == -1)
-            {
-                continue;
-            }
-
-            UINT vk;
-            if (key >= DAIS_KEY_KP_0
-                && key <= DAIS_KEY_KP_ADD)
-            {
-                const UINT vks[] =
-                {
-                    VK_NUMPAD0,  VK_NUMPAD1,  VK_NUMPAD2, VK_NUMPAD3,
-                    VK_NUMPAD4,  VK_NUMPAD5,  VK_NUMPAD6, VK_NUMPAD7,
-                    VK_NUMPAD8,  VK_NUMPAD9,  VK_DECIMAL, VK_DIVIDE,
-                    VK_MULTIPLY, VK_SUBTRACT, VK_ADD
-                };
-
-                vk = vks[key - DAIS_KEY_KP_0];
-            }
-            else
-            {
-                vk = MapVirtualKey(scancode, MAPVK_VSC_TO_VK);
-            }
-
-            WCHAR chars[16];
-            BYTE state[256] = { 0 };
-            int length = ToUnicode(vk, scancode, state, chars, sizeof(chars) / sizeof(WCHAR), 0);
-            if (length == -1)
-            {
-                length = ToUnicode(vk, scancode, state, chars, sizeof(chars) / sizeof(WCHAR), 0);
-            }
-
-            if (length < 1)
-            {
-                continue;
-            }
-
-            WideCharToMultiByte(CP_UTF8, 0, chars, 1,
-                s_KeyNames[key],
-                sizeof(s_KeyNames[key]),
-                NULL, NULL);
-        }
-    }
-
 
     bool WindowsPlatform::IsWindowsVersionOrGreater(WORD major, WORD minor, WORD sp)
     {
@@ -824,7 +780,7 @@ namespace dais
         char* target;
         int size;
 
-        size = WideCharToMultiByte(CP_UTF8, 0, source, -1, nullptr, 0, nullptr, nullptr);
+        size = WideCharToMultiByte(CP_UTF8, 0, source, -1, nullptr, 0, NULL, NULL);
         if (!size)
         {
             return nullptr;
@@ -832,7 +788,7 @@ namespace dais
 
         target = (char*)calloc(size, 1);
 
-        if (!WideCharToMultiByte(CP_UTF8, 0, source, -1, target, size, nullptr, nullptr))
+        if (!WideCharToMultiByte(CP_UTF8, 0, source, -1, target, size, NULL, NULL))
         {
             free(target);
             return nullptr;
@@ -855,7 +811,12 @@ namespace dais
 
     bool WindowsPlatform::WideStringToUTF8(const WCHAR source[], char target[])
     {
-        return WideCharToMultiByte(CP_UTF8, 0, source, -1, target, sizeof(target), nullptr, nullptr);
+        return WideCharToMultiByte(CP_UTF8, 0, source, -1, target, sizeof(target), NULL, NULL);
+    }
+
+    bool WindowsPlatform::WideStringToUTF8(const WCHAR source[], char target[], int32_t processCharCount)
+    {
+        return WideCharToMultiByte(CP_UTF8, 0, source, processCharCount, target, sizeof(target), NULL, NULL);
     }
 
     WCHAR* WindowsPlatform::UTF8ToWideString(const char* source)

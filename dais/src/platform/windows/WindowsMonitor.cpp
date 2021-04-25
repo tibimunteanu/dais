@@ -2,7 +2,7 @@
 
 namespace dais
 {
-//////////////////////////////////////// STATIC ///////////////////////////////////////////
+    //////////////////////////////////////// STATIC ///////////////////////////////////////////
 
     BOOL CALLBACK WindowsMonitor::SetHandle(HMONITOR handle, HDC dc, RECT* rect, LPARAM data)
     {
@@ -50,12 +50,10 @@ namespace dais
 
 
 
-////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
+    ////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
 
     WindowsMonitor::WindowsMonitor(DISPLAY_DEVICEW* adapter, DISPLAY_DEVICEW* display)
     {
-        DAIS_TRACE("[WindowsMonitor] Constructor");
-
         WindowsPlatform::WideStringToUTF8(display ? display->DeviceString : adapter->DeviceString, m_Name);
 
         wcscpy(m_AdapterName, adapter->DeviceName);
@@ -106,17 +104,14 @@ namespace dais
 
     WindowsMonitor::~WindowsMonitor()
     {
-        DAIS_TRACE("[WindowsMonitor] Destructor");
     }
 
 
 
-///////////////////////////////////// PLATFORM API ////////////////////////////////////////
+    ///////////////////////////////////// PLATFORM API ////////////////////////////////////////
 
     void WindowsMonitor::PlatformGetPosition(int32_t* x, int32_t* y) const
     {
-        DAIS_TRACE("[WindowsMonitor] PlatformGetMonitorPosition");
-
         DEVMODEW dm = {};
         dm.dmSize = sizeof(dm);
 
@@ -134,8 +129,6 @@ namespace dais
 
     void WindowsMonitor::PlatformGetWorkarea(int32_t* x, int32_t* y, int32_t* width, int32_t* height) const
     {
-        DAIS_TRACE("[WindowsMonitor] PlatformGetWorkarea");
-
         MONITORINFO mi = {};
         mi.cbSize = sizeof(mi);
 
@@ -161,15 +154,12 @@ namespace dais
 
     void WindowsMonitor::PlatformGetContentScale(float* xScale, float* yScale) const
     {
-        DAIS_TRACE("[WindowsMonitor] PlatformGetContentScale");
-
         WindowsMonitor::GetContentScale(m_Handle, xScale, yScale);
     }
 
+
     void WindowsMonitor::PlatformGetVideoModes(std::vector<VideoMode*>& videoModes)
     {
-        DAIS_TRACE("[WindowsMonitor] PlatformGetVideoModes");
-
         int32_t videoModeIndex = 0;
 
         for (;;)
@@ -244,8 +234,6 @@ namespace dais
 
     void WindowsMonitor::PlatformGetVideoMode(VideoMode* videoMode)
     {
-        DAIS_TRACE("[WindowsMonitor] PlatformGetVideoMode");
-
         DEVMODEW dm = {};
         dm.dmSize = sizeof(dm);
 
@@ -309,6 +297,7 @@ namespace dais
             m_ModeChanged = false;
         }
     }
+
 
     bool WindowsMonitor::PlatformGetGammaRamp(GammaRamp* ramp)
     {

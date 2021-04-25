@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/core/Base.h"
+#include "engine/core/ThreadLocalStorage.h"
 #include "engine/core/Context.h"
 #include "engine/core/Input.h"
 #include "engine/core/Cursor.h"
@@ -12,27 +13,10 @@ namespace dais
     typedef void(*MonitorCallback)(Monitor*);
     typedef void(*JoystickCallback)(int32_t, int32_t);
 
-    class ThreadLocalStorage
-    {
-    public:
-        static ThreadLocalStorage* Create();
-
-    public:
-        ThreadLocalStorage() = default;
-        virtual ~ThreadLocalStorage() = default;
-
-    public:
-        void* Get();
-        void Set(void* value);
-
-    protected:
-        virtual void* PlatformGet() = 0;
-        virtual void PlatformSet(void* value) = 0;
-    };
-
     class Platform
     {
     public:
+        //TODO: why are we persisting these hints?
         static struct Hints
         {
             FramebufferConfig framebuffer;
@@ -57,7 +41,7 @@ namespace dais
             JoystickCallback joystickDisconnected;
         } s_Callbacks;
 
-    public:
+    public: DAIS_PUBLIC_API
         static bool Init();
         static void Terminate();
 
@@ -91,7 +75,7 @@ namespace dais
 
         static void SetHintsToDefult();
 
-    private:
+    private: DAIS_PLATFORM_API
         static bool PlatformInit();
         static void PlatformTerminate();
         static void PlatformPollEvents();

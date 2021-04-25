@@ -33,7 +33,7 @@ namespace dais
         bool visible;
         bool focused;
         bool focusOnShow;
-        bool autoIconify;
+        bool autoMinimize;
         bool floating;
         bool maximized;
         bool resizable;
@@ -151,7 +151,7 @@ namespace dais
     protected:
         Window(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
 
-    public:
+    public: DAIS_PUBLIC_API
         static Window* Create(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
         static Window* PlatformCreate(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
 
@@ -159,7 +159,7 @@ namespace dais
         virtual ~Window();
         friend class Context;
 
-    public:
+    public: DAIS_PUBLIC_API
         bool IsMaximized() const;
         bool IsMinimized() const;
         bool IsVisible() const;
@@ -170,7 +170,7 @@ namespace dais
         bool IsResizable() const;
         bool IsFocusOnShow() const;
         bool IsFramebufferTransparent() const;
-        bool IsAutoIconify() const;
+        bool IsAutoMinimize() const;
         bool IsMousePassThrough() const;
         bool ShouldClose() const; // Close icon pressed
 
@@ -201,7 +201,7 @@ namespace dais
         void SetDecorated(bool value);
         void SetResizable(bool value);
         void SetFocusOnShow(bool value);
-        void SetAutoIconify(bool value);
+        void SetAutoMinimize(bool value);
         void SetMousePassThrough(bool value);
         void SetShouldClose(bool value);
         void SetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate);
@@ -236,10 +236,10 @@ namespace dais
         void SetScrollCallback(WindowScrollCallback callback);
         void SetDropCallback(WindowDropCallback callback);
 
-    protected:
+    protected: DAIS_UTILS
         const Image* ChooseImage(const std::vector<Image*>& images, int32_t width, int32_t height);
 
-    protected:
+    protected: DAIS_PLATFORM_API
         virtual bool PlatformIsMaximized() const = 0;
         virtual bool PlatformIsMinimized() const = 0;
         virtual bool PlatformIsVisible() const = 0;
@@ -265,16 +265,16 @@ namespace dais
         virtual void PlatformSetSizeLimits(int32_t minWidth, int32_t minHeight, int32_t maxWidth, int32_t maxHeight) = 0;
         virtual void PlatformSetAspectRatio(int32_t numerator, int32_t denominator) = 0;
         virtual void PlatformSetOpacity(float opacity) = 0;
-        virtual void PlatformSetCursor(Cursor* cursor) = 0;
-        virtual void PlatformSetCursorPosition(double x, double y) = 0;
-        virtual void PlatformSetCursorMode(int32_t mode) = 0;
-        virtual void PlatformSetRawMouseMotion(bool enabled) = 0;
         virtual void PlatformSetDecorated(bool value) = 0;
         virtual void PlatformSetFloating(bool value) = 0;
         virtual void PlatformSetResizable(bool value) = 0;
         virtual void PlatformSetMousePassThrough(bool value) = 0;
         virtual void PlatformSetClipboardString(const char* string) = 0;
         virtual void PlatformSetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate) = 0;
+        virtual void PlatformSetCursor(Cursor* cursor) = 0;
+        virtual void PlatformSetCursorPosition(double x, double y) = 0;
+        virtual void PlatformSetCursorMode(int32_t mode) = 0;
+        virtual void PlatformSetRawMouseMotion(bool enabled) = 0;
 
         virtual void PlatformMaximize() = 0;
         virtual void PlatformMinimize() = 0;
@@ -284,7 +284,7 @@ namespace dais
         virtual void PlatformRequestAttention() = 0;
         virtual void PlatformFocus() = 0;
 
-    protected:
+    protected: DAIS_EVENT_INPUT_API
         void OnPositionChanged(int32_t x, int32_t y);
         void OnSizeChanged(int32_t width, int32_t height);
         void OnClosed();

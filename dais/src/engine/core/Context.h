@@ -48,7 +48,7 @@ namespace dais
         GetProcAddressFun m_GetProcAddress;
         DestroyContextFun m_Destroy;
 
-    public:
+    public: DAIS_PUBLIC_API
         static bool StringInExtensionString(const char* string, const char* extensions);
         static const FramebufferConfig* ChooseFramebufferConfig(const FramebufferConfig* desired, const std::vector<FramebufferConfig>& alternatives);
         static bool RefreshContextAttribs(Window* window, const ContextConfig* contextConfig);

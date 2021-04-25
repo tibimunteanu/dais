@@ -2,7 +2,8 @@
 
 namespace dais
 {
-    //static
+    ///////////////////////////////////// PUBLIC STATIC API ///////////////////////////////////////
+
     bool Context::StringInExtensionString(const char* string, const char* extensions)
     {
         const char* start = extensions;

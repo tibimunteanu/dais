@@ -5,12 +5,12 @@
 
 static void OnMonitorConnected(dais::Monitor* monitor)
 {
-    std::cout << "[MAIN] OnMonitorConnected: " << std::endl << "\t" << monitor->GetName() << std::endl;
+    std::cout << "[MAIN] OnMonitorConnected: " << monitor->GetName() << std::endl;
 }
 
 static void OnMonitorDisconnected(dais::Monitor* monitor)
 {
-    std::cout << "[MAIN] OnMonitorDisconnected: " << std::endl << "\t" << monitor->GetName() << std::endl;
+    std::cout << "[MAIN] OnMonitorDisconnected: " << monitor->GetName() << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     dais::Platform::s_Hints.window.visible = true;
     dais::Platform::s_Hints.window.decorated = true;
     dais::Platform::s_Hints.window.focused = true;
-    dais::Platform::s_Hints.window.autoIconify = true;
+    dais::Platform::s_Hints.window.autoMinimize = true;
     dais::Platform::s_Hints.window.centerCursor = true;
     dais::Platform::s_Hints.window.focusOnShow = true;
     dais::Platform::s_Hints.window.scaleToMonitor = true;
@@ -54,29 +54,29 @@ int main(int argc, char** argv)
     }
 
     std::cout 
-        << "OpenGL "
+        << "Current context: OpenGL "
         << window->GetContext()->m_Major << "." << window->GetContext()->m_Minor << "." << window->GetContext()->m_Revision
         << std::endl;
 
     //const char* glVersion = (const char*)window->GetContext()->GetString(GL_VERSION);
-    const char* glVendor = (const char*)window->GetContext()->GetString(GL_VENDOR);
+    //const char* glVendor = (const char*)window->GetContext()->GetString(GL_VENDOR);
     //const char* glRenderer = (const char*)glGetString(GL_RENDERER);
-    if (!glVendor)
-    {
-        GLenum err = glGetError();
-        switch (err)
-        {
-            case GL_INVALID_ENUM: std::cout << "GL Invalid enum" << std::endl; break;
-            case GL_INVALID_VALUE: std::cout << "GL Invalid value" << std::endl; break;
-            case GL_INVALID_OPERATION: std::cout << "GL Invalid operation" << std::endl; break;
-            case GL_OUT_OF_MEMORY: std::cout << "GL Out of memory" << std::endl; break;
-            case GL_NO_ERROR: std::cout << "GL No error" << std::endl; break;
-        }
-    }
-    else
-    {
-        std::cout << glVendor << std::endl;
-    }
+    //if (!glVendor)
+    //{
+    //    GLenum err = glGetError();
+    //    switch (err)
+    //    {
+    //        case GL_INVALID_ENUM: std::cout << "GL Invalid enum" << std::endl; break;
+    //        case GL_INVALID_VALUE: std::cout << "GL Invalid value" << std::endl; break;
+    //        case GL_INVALID_OPERATION: std::cout << "GL Invalid operation" << std::endl; break;
+    //        case GL_OUT_OF_MEMORY: std::cout << "GL Out of memory" << std::endl; break;
+    //        case GL_NO_ERROR: std::cout << "GL No error" << std::endl; break;
+    //    }
+    //}
+    //else
+    //{
+    //    std::cout << glVendor << std::endl;
+    //}
 
     while (!window->ShouldClose())
     {
@@ -84,6 +84,7 @@ int main(int argc, char** argv)
     }
 
     //test monitor api
+    std::cout << "Connected monitors: " << std::endl;
     const std::vector<dais::Monitor*>& monitors = dais::Platform::GetMonitors();
     for (int32_t m = 0; m < monitors.size(); m++)
     {
@@ -93,11 +94,11 @@ int main(int argc, char** argv)
     dais::Monitor* currentMonitor = dais::Platform::GetPrimaryMonitor();
     if (currentMonitor)
     {
-        std::cout << "\t" << currentMonitor->GetName() << std::endl;
+        std::cout << "Current monitor: " << currentMonitor->GetName() << std::endl;
 
         const std::vector<dais::VideoMode*>& videoModes = currentMonitor->GetVideoModes();
 
-        std::cout << "\t" << videoModes.size() << " modes" << std::endl;
+        std::cout << "Video modes (" << videoModes.size() << "):" << std::endl;
         for (int32_t m = 0; m < videoModes.size(); m++)
         {
             std::cout << "\t" << *videoModes[m] << std::endl;
@@ -106,23 +107,23 @@ int main(int argc, char** argv)
         dais::VideoMode* currentVideoMode = currentMonitor->GetVideoMode();
         if (currentVideoMode)
         {
-            std::cout << "\t" << *currentVideoMode << std::endl;
+            std::cout << "Current video mode: " << *currentVideoMode << std::endl;
         }
 
         int32_t x, y;
         currentMonitor->GetPosition(&x, &y);
-        std::cout << "\tx: " << x << ", y: " << y << std::endl;
+        std::cout << "Position: x: " << x << ", y: " << y << std::endl;
 
         int32_t w, h;
         currentMonitor->GetWorkarea(&x, &y, &w, &h);
-        std::cout << "\tx: " << x << ", y: " << y << ", w: " << w << ", h: " << h << std::endl;
+        std::cout << "Workarea: x: " << x << ", y: " << y << ", w: " << w << ", h: " << h << std::endl;
 
         currentMonitor->GetPhysicalSize(&w, &h);
-        std::cout << "\tw: " << w << "mm, h: " << h << "mm" << std::endl;
+        std::cout << "Physical size: w: " << w << "mm, h: " << h << "mm" << std::endl;
 
         float xScale, yScale;
         currentMonitor->GetContentScale(&xScale, &yScale);
-        std::cout << "\txScale: " << xScale << ", yScale: " << yScale << std::endl;
+        std::cout << "Content scale: xScale: " << xScale << ", yScale: " << yScale << std::endl;
     }
 
     dais::Platform::Terminate();

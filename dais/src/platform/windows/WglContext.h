@@ -45,7 +45,7 @@ namespace dais
         HGLRC m_Handle;
         int32_t m_Interval;
 
-    public:
+    public: DAIS_INTERNAL_API
         static bool InitWGL();
         static void TerminateWGL();
         static bool CreateContextWGL(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);

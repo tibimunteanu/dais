@@ -115,7 +115,7 @@ namespace dais
 
         Window* m_Window = nullptr;
 
-    protected:
+    protected: DAIS_UTILS
         static void SplitBPP(int32_t bpp, int32_t* red, int32_t* green, int32_t* blue);
 
     protected:
@@ -124,35 +124,41 @@ namespace dais
     public:
         virtual ~Monitor();
 
-    public:
+    public: DAIS_PUBLIC_API
         const std::string& GetName() const;
+
         void GetPosition(int32_t* x, int32_t* y) const;
         void GetWorkarea(int32_t* x, int32_t* y, int32_t* width, int32_t* height) const;
         void GetContentScale(float* xScale, float* yScale) const;
         void GetPhysicalSize(int32_t* widthInMillimeters, int32_t* heightInMillimeters) const;
+
         const std::vector<VideoMode*>& GetVideoModes();
         VideoMode* GetVideoMode();
         void SetVideoMode(const VideoMode* videoMode);
         void RestoreVideoMode();
+
         void SetGamma(float gamma);
         const GammaRamp* GetGammaRamp();
         void SetGammaRamp(GammaRamp* ramp);
         void RestoreOriginalGammaRamp();
+
         Window* GetWindow() const;
         void SetWindow(Window* window);
 
-    protected:
+    protected: DAIS_UTILS
         bool RefreshVideoModes();
         const VideoMode* GetClosestVideoMode(const VideoMode* videoMode);
 
-    private:
+    private: DAIS_PLATFORM_API
         virtual void PlatformGetPosition(int32_t* x, int32_t* y) const = 0;
         virtual void PlatformGetWorkarea(int32_t* x, int32_t* y, int32_t* width, int32_t* height) const = 0;
         virtual void PlatformGetContentScale(float* xScale, float* yScale) const = 0;
+
         virtual void PlatformGetVideoModes(std::vector<VideoMode*>& videoModes) = 0;
         virtual void PlatformGetVideoMode(VideoMode* videoMode) = 0;
         virtual void PlatformSetVideoMode(const VideoMode* videoMode) = 0;
         virtual void PlatformRestoreVideoMode() = 0;
+
         virtual bool PlatformGetGammaRamp(GammaRamp* ramp) = 0;
         virtual void PlatformSetGammaRamp(const GammaRamp* ramp) = 0;
     };

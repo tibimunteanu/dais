@@ -12,6 +12,12 @@
 #include <algorithm>
 #include <malloc.h>
 
+#define DAIS_PUBLIC_API 
+#define DAIS_PLATFORM_API 
+#define DAIS_INTERNAL_API 
+#define DAIS_EVENT_INPUT_API 
+#define DAIS_UTILS 
+
 //HACK: __VA_ARGS__ expansion to get past MSVC "BUG"
 #define DAIS_EXPAND_VARGS(x) x
 

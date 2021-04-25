@@ -21,7 +21,7 @@ namespace dais
         int32_t m_LastCursorPositionY = 0;
         WCHAR m_HighSurrogate = {}; //the last received high surrogate when decoding pairs of UTF-16 messages
 
-    public:
+    public: DAIS_INTERNAL_API
         static void GetFullSize(DWORD style, DWORD styleEx, int contentWidth, int contentHeight, int* fullWidth, int* fullHeight, UINT dpi);
         static LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
         static HICON CreateIcon(const Image* image, int32_t xHot, int32_t yHot, bool icon);
@@ -32,7 +32,7 @@ namespace dais
         friend class Window;
         friend class WglContext;
 
-    private:
+    private: DAIS_PLATFORM_API
         bool PlatformIsMaximized() const override;
         bool PlatformIsMinimized() const override;
         bool PlatformIsVisible() const override;
@@ -58,16 +58,16 @@ namespace dais
         void PlatformSetSizeLimits(int32_t minWidth, int32_t minHeight, int32_t maxWidth, int32_t maxHeight) override;
         void PlatformSetAspectRatio(int32_t numerator, int32_t denominator) override;
         void PlatformSetOpacity(float opacity) override;
-        void PlatformSetCursor(Cursor* cursor) override;
-        void PlatformSetCursorPosition(double x, double y) override;
-        void PlatformSetCursorMode(int32_t mode) override;
-        void PlatformSetRawMouseMotion(bool enabled) override;
         void PlatformSetDecorated(bool value) override;
         void PlatformSetFloating(bool value) override;
         void PlatformSetResizable(bool value) override;
         void PlatformSetMousePassThrough(bool value) override;
         void PlatformSetClipboardString(const char* string) override;
         void PlatformSetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate) override;
+        void PlatformSetCursor(Cursor* cursor) override;
+        void PlatformSetCursorPosition(double x, double y) override;
+        void PlatformSetCursorMode(int32_t mode) override;
+        void PlatformSetRawMouseMotion(bool enabled) override;
 
         void PlatformMaximize() override;
         void PlatformMinimize() override;
@@ -77,7 +77,7 @@ namespace dais
         void PlatformRequestAttention() override;
         void PlatformFocus() override;
 
-    private:
+    private: DAIS_UTILS
         LRESULT HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
         void AcquireMonitor();
