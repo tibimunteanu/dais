@@ -46,6 +46,31 @@ namespace dais
         bool keyMenu;
     };
 
+    struct ContextConfig
+    {
+        int32_t client;
+        int32_t source;
+        int32_t major;
+        int32_t minor;
+        bool forward;
+        bool debug;
+        bool noerror;
+        int32_t profile;
+        int32_t robustness;
+        int32_t release;
+        Window* share;
+
+    public:
+        bool IsValid() const
+        {
+            //TODO: check whether the desired context attributes are valid.
+            // this should check things like whether the specified client API
+            // version exists and whether all relevant options have supported
+            // and non-conflicting values
+            return true;
+        }
+    };
+
     struct FramebufferConfig
     {
         int32_t redBits;
@@ -100,6 +125,7 @@ namespace dais
         VideoMode m_VideoMode = {};
         Monitor* m_Monitor = nullptr;
         Cursor* m_Cursor = nullptr;
+        Context* m_Context = nullptr;
 
         struct WindowCallbacks
         {
@@ -123,14 +149,15 @@ namespace dais
         } m_Callbacks = {};
 
     protected:
-        Window(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor);
+        Window(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
 
     public:
-        static Window* Create(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor);
-        static Window* PlatformCreate(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor);
+        static Window* Create(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
+        static Window* PlatformCreate(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
 
     public:
         virtual ~Window();
+        friend class Context;
 
     public:
         bool IsMaximized() const;
@@ -159,6 +186,7 @@ namespace dais
         int32_t GetKey(int32_t key);
         int32_t GetGetMouseButton(int32_t button);
         void GetCursorPosition(double* x, double* y);
+        Context* GetContext();
         void* GetNativeHandle() const;
 
         void SetTitle(const std::string& title);

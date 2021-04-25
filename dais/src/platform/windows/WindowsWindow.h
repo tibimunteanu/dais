@@ -27,9 +27,10 @@ namespace dais
         static HICON CreateIcon(const Image* image, int32_t xHot, int32_t yHot, bool icon);
 
     public:
-        WindowsWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor);
+        WindowsWindow(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
         virtual ~WindowsWindow();
         friend class Window;
+        friend class WglContext;
 
     private:
         bool PlatformIsMaximized() const override;

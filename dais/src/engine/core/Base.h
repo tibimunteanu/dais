@@ -34,7 +34,6 @@
 #define DAIS_FATAL(...)
 #endif
 
-
 /////////////////////////////////////// ASSERT /////////////////////////////////////////
 #ifdef DAIS_DEBUG
 #define DAIS_ENABLE_ASSERTS
@@ -57,20 +56,19 @@
 
 ///////////////////////////////// PLATFORM DETECTION ///////////////////////////////////
 #ifdef _WIN32
-    /* Windows x64/x86 */
+// Windows x64/x86
 #ifdef _WIN64
-    /* Windows x64  */
+// Windows x64
 #define DAIS_PLATFORM_WINDOWS
 #else
-    /* Windows x86 */
+    // Windows x86
 #error "x86 Builds are not supported!"
 #endif
+
 #elif defined(__APPLE__) || defined(__MACH__)
 #include <TargetConditionals.h>
-/* TARGET_OS_MAC exists on all the platforms
- * so we must check all of them (in this order)
- * to ensure that we're running on MAC
- * and not some other Apple platform */
+// TARGET_OS_MAC exists on all the platforms so we must check all of them
+// (in this order) to ensure that we're running on MAC and not some other Apple platform
 #if TARGET_IPHONE_SIMULATOR == 1
 #error "IOS simulator is not supported!"
 #elif TARGET_OS_IPHONE == 1
@@ -82,9 +80,8 @@
 #else
 #error "Unknown Apple platform!"
 #endif
- /* We also have to check __ANDROID__ before __linux__
-  * since android is based on the linux kernel
-  * it has __linux__ defined */
+ // We also have to check __ANDROID__ before __linux__ since android is
+ // based on the linux kernel it has __linux__ defined
 #elif defined(__ANDROID__)
 #define DAIS_PLATFORM_ANDROID
 #error "Android is not supported!"
@@ -92,10 +89,55 @@
 #define DAIS_PLATFORM_LINUX
 #error "Linux is not supported!"
 #else
-    /* Unknown compiler/platform */
+    // Unknown compiler/platform
 #error "Unknown platform!"
 #endif 
 // End of platform detection
+
+//It is customary to use APIENTRY for OpenGL function pointer declarations on all platforms.
+//Additionally, the Window OpenGL header needs APIENTRY.
+#if !defined(APIENTRY)
+#if defined(_WIN32)
+#define APIENTRY __stdcall
+#else
+#define APIENTRY
+#endif
+#endif
+
+//Some Windows OpenGL headers need this.
+#if !defined(WINGDIAPI) && defined(_WIN32)
+#define WINGDIAPI __declspec(dllimport)
+#endif
+
+//Some Windows GLU headers need this.
+#if !defined(CALLBACK) && defined(_WIN32)
+#define CALLBACK __stdcall
+#endif
+
+#define GL_VERSION 0x1f02
+#define GL_NONE 0
+#define GL_COLOR_BUFFER_BIT 0x00004000
+#define GL_UNSIGNED_BYTE 0x1401
+#define GL_EXTENSIONS 0x1f03
+#define GL_NUM_EXTENSIONS 0x821d
+#define GL_CONTEXT_FLAGS 0x821e
+#define GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT 0x00000001
+#define GL_CONTEXT_FLAG_DEBUG_BIT 0x00000002
+#define GL_CONTEXT_PROFILE_MASK 0x9126
+#define GL_CONTEXT_COMPATIBILITY_PROFILE_BIT 0x00000002
+#define GL_CONTEXT_CORE_PROFILE_BIT 0x00000001
+#define GL_RESET_NOTIFICATION_STRATEGY_ARB 0x8256
+#define GL_LOSE_CONTEXT_ON_RESET_ARB 0x8252
+#define GL_NO_RESET_NOTIFICATION_ARB 0x8261
+#define GL_CONTEXT_RELEASE_BEHAVIOR 0x82fb
+#define GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH 0x82fc
+#define GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR 0x00000008
+
+typedef int GLint;
+typedef unsigned int GLuint;
+typedef unsigned int GLenum;
+typedef unsigned int GLbitfield;
+typedef unsigned char GLubyte;
 
 struct Image
 {
@@ -105,6 +147,31 @@ struct Image
 };
 
 #include "engine/core/Utils.h"
+
+#define DAIS_NO_API                          0
+#define DAIS_OPENGL_API             0x00030001
+#define DAIS_OPENGL_ES_API          0x00030002
+
+#define DAIS_NO_ROBUSTNESS                   0
+#define DAIS_NO_RESET_NOTIFICATION  0x00031001
+#define DAIS_LOSE_CONTEXT_ON_RESET  0x00031002
+
+#define DAIS_OPENGL_ANY_PROFILE              0
+#define DAIS_OPENGL_CORE_PROFILE    0x00032001
+#define DAIS_OPENGL_COMPAT_PROFILE  0x00032002
+
+#define DAIS_ANY_RELEASE_BEHAVIOR            0
+#define DAIS_RELEASE_BEHAVIOR_FLUSH 0x00035001
+#define DAIS_RELEASE_BEHAVIOR_NONE  0x00035002
+
+#define DAIS_NATIVE_CONTEXT_API     0x00036001
+#define DAIS_EGL_CONTEXT_API        0x00036002
+#define DAIS_OSMESA_CONTEXT_API     0x00036003
+
+#define DAIS_POLL_PRESENCE          0
+#define DAIS_POLL_AXES              1
+#define DAIS_POLL_BUTTONS           2
+#define DAIS_POLL_ALL               (DAIS_POLL_AXES | DAIS_POLL_BUTTONS)
 
 #define DAIS_RELEASE                0
 #define DAIS_PRESS                  1

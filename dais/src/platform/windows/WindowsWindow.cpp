@@ -5,11 +5,11 @@ namespace dais
 {
     //////////////////////////////////////// STATIC ///////////////////////////////////////////
 
-    Window* Window::PlatformCreate(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor)
+    Window* Window::PlatformCreate(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
     {
         DAIS_TRACE("[WindowsWindow] PlatformCreate");
 
-        WindowsWindow* window = new WindowsWindow(config, fbConfig, monitor);
+        WindowsWindow* window = new WindowsWindow(windowConfig, contextConfig, framebufferConfig, monitor);
 
         DWORD style = window->GetStyle();
         DWORD styleEx = window->GetStyleEx();
@@ -31,21 +31,21 @@ namespace dais
             xPos = CW_USEDEFAULT;
             yPos = CW_USEDEFAULT;
 
-            if (config.maximized)
+            if (windowConfig->maximized)
             {
                 style |= WS_MAXIMIZE;
             }
 
             WindowsWindow::GetFullSize(style, styleEx,
-                config.width, config.height,
+                windowConfig->width, windowConfig->height,
                 &fullWidth, &fullHeight,
                 USER_DEFAULT_SCREEN_DPI);
         }
 
-        WCHAR* wideTitle = WindowsPlatform::UTF8ToWideString(config.title.c_str());
+        WCHAR* wideTitle = WindowsPlatform::UTF8ToWideString(windowConfig->title.c_str());
         if (!wideTitle)
         {
-            DAIS_ERROR("Failed to create window with invalid title '%s'!", config.title.c_str());
+            DAIS_ERROR("Failed to create window with invalid title '%s'!", windowConfig->title.c_str());
 
             delete window;
             return nullptr;
@@ -66,7 +66,7 @@ namespace dais
 
         if (!windowHandle)
         {
-            DAIS_ERROR("Failed to create window '%s'!", config.title.c_str());
+            DAIS_ERROR("Failed to create window '%s'!", windowConfig->title.c_str());
 
             delete window;
             return nullptr;
@@ -79,9 +79,9 @@ namespace dais
         // this cannot be done until we know what monitor the window was placed on
         if (!monitor)
         {
-            RECT rect = { 0, 0, config.width, config.height };
+            RECT rect = { 0, 0, windowConfig->width, windowConfig->height };
 
-            if (config.scaleToMonitor)
+            if (windowConfig->scaleToMonitor)
             {
                 float xScale, yScale;
                 window->PlatformGetContentScale(&xScale, &yScale);
@@ -105,13 +105,41 @@ namespace dais
 
         DragAcceptFiles(windowHandle, TRUE);
 
-        if (fbConfig.transparent)
+        if (framebufferConfig->transparent)
         {
             window->UpdateFramebufferTransparency();
             window->m_Transparent = true;
         }
 
         window->PlatformGetSize(&window->m_Width, &window->m_Height);
+
+        if (contextConfig->client != DAIS_NO_API)
+        {
+            if (contextConfig->source == DAIS_NATIVE_CONTEXT_API)
+            {
+                DAIS_TRACE("Initializing WGL!");
+                if (!WglContext::InitWGL())
+                {
+                    DAIS_ERROR("Failed to init WGL!");
+                    delete window;
+                    return nullptr;
+                }
+
+                DAIS_TRACE("Creating WGL context!");
+                if (!WglContext::CreateContextWGL(window, contextConfig, framebufferConfig))
+                {
+                    DAIS_ERROR("Failed to create WGL context!");
+                    delete window;
+                    return nullptr;
+                }
+            }
+            else
+            {
+                DAIS_ERROR("We only support DAIS_NATOVE_CONTEXT_API for now!");
+                delete window;
+                return nullptr;
+            }
+        }
 
         if (window->m_Monitor)
         {
@@ -294,14 +322,16 @@ namespace dais
 
     ////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
 
-    WindowsWindow::WindowsWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor)
-        : Window(config, fbConfig, monitor)
+    WindowsWindow::WindowsWindow(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+        : Window(windowConfig, contextConfig, framebufferConfig, monitor)
     {
         DAIS_TRACE("[WindowsWindow] Constructor");
 
-        m_Maximized = config.maximized;
-        m_ScaleToMonitor = config.scaleToMonitor;
-        m_KeyMenu = config.keyMenu;
+        m_Maximized = windowConfig->maximized;
+        m_ScaleToMonitor = windowConfig->scaleToMonitor;
+        m_KeyMenu = windowConfig->keyMenu;
+
+        m_Context = new WglContext();
     }
 
     WindowsWindow::~WindowsWindow()
@@ -311,6 +341,12 @@ namespace dais
         if (m_Monitor)
         {
             ReleaseMonitor();
+        }
+
+        if (m_Context->m_Destroy)
+        {
+            m_Context->m_Destroy(this);
+            delete m_Context;
         }
 
         if (WindowsPlatform::s_DisabledCursorWindow == this)
@@ -1421,8 +1457,8 @@ namespace dais
 
                 size = WindowsPlatform::s_RawInputSize;
 
-                if (GetRawInputData(ri, RID_INPUT, 
-                    WindowsPlatform::s_RawInput, 
+                if (GetRawInputData(ri, RID_INPUT,
+                    WindowsPlatform::s_RawInput,
                     &size, sizeof(RAWINPUTHEADER)) == (UINT)-1)
                 {
                     DAIS_ERROR("Failed to retrieve raw input data!");

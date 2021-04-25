@@ -1,5 +1,8 @@
 #include "engine/core/Platform.h"
 
+#pragma comment(lib, "opengl32")
+#include <GL/gl.h>
+
 static void OnMonitorConnected(dais::Monitor* monitor)
 {
     std::cout << "[MAIN] OnMonitorConnected: " << std::endl << "\t" << monitor->GetName() << std::endl;
@@ -18,35 +21,61 @@ int main(int argc, char** argv)
     dais::Platform::Init();
 
     //test window api
-    dais::WindowConfig windowConfig = {};
-    windowConfig.title = "Test";
-    windowConfig.width = 960;
-    windowConfig.height = 540;
-    windowConfig.resizable = true;
-    windowConfig.visible = true;
-    windowConfig.decorated = true;
-    windowConfig.focused = true;
-    windowConfig.autoIconify = true;
-    windowConfig.centerCursor = true;
-    windowConfig.focusOnShow = true;
+    dais::Platform::s_Hints = {};
+    dais::Platform::s_Hints.refreshRate = -1;
+    dais::Platform::s_Hints.window.title = "Test";
+    dais::Platform::s_Hints.window.width = 960;
+    dais::Platform::s_Hints.window.height = 540;
+    dais::Platform::s_Hints.window.resizable = true;
+    dais::Platform::s_Hints.window.visible = true;
+    dais::Platform::s_Hints.window.decorated = true;
+    dais::Platform::s_Hints.window.focused = true;
+    dais::Platform::s_Hints.window.autoIconify = true;
+    dais::Platform::s_Hints.window.centerCursor = true;
+    dais::Platform::s_Hints.window.focusOnShow = true;
+    dais::Platform::s_Hints.window.scaleToMonitor = true;
+    dais::Platform::s_Hints.context.client = DAIS_OPENGL_API;
+    dais::Platform::s_Hints.context.source = DAIS_NATIVE_CONTEXT_API;
+    dais::Platform::s_Hints.context.major = 1;
+    dais::Platform::s_Hints.context.minor = 0;
+    dais::Platform::s_Hints.framebuffer.redBits = 8;
+    dais::Platform::s_Hints.framebuffer.greenBits = 8;
+    dais::Platform::s_Hints.framebuffer.blueBits = 8;
+    dais::Platform::s_Hints.framebuffer.alphaBits = 8;
+    dais::Platform::s_Hints.framebuffer.depthBits = 24;
+    dais::Platform::s_Hints.framebuffer.stencilBits = 8;
+    dais::Platform::s_Hints.framebuffer.doubleBuffer = true;
+    dais::Platform::s_Hints.framebuffer.sRGB = true;
 
-    windowConfig.scaleToMonitor = true;
-    windowConfig.refreshRate = -1;
-
-    dais::FramebufferConfig fbConfig = {};
-    fbConfig.redBits = 8;
-    fbConfig.greenBits = 8;
-    fbConfig.blueBits = 8;
-    fbConfig.alphaBits = 8;
-    fbConfig.depthBits = 24;
-    fbConfig.stencilBits = 8;
-    fbConfig.doubleBuffer = true;
-    fbConfig.sRGB = true;
-    
-    dais::Window* window = dais::Platform::OpenWindow(windowConfig, fbConfig, nullptr);
+    dais::Window* window = dais::Platform::OpenWindow(nullptr);
     if (!window)
     {
         throw std::runtime_error("Could not open window!");
+    }
+
+    std::cout 
+        << "OpenGL "
+        << window->GetContext()->m_Major << "." << window->GetContext()->m_Minor << "." << window->GetContext()->m_Revision
+        << std::endl;
+
+    //const char* glVersion = (const char*)window->GetContext()->GetString(GL_VERSION);
+    const char* glVendor = (const char*)window->GetContext()->GetString(GL_VENDOR);
+    //const char* glRenderer = (const char*)glGetString(GL_RENDERER);
+    if (!glVendor)
+    {
+        GLenum err = glGetError();
+        switch (err)
+        {
+            case GL_INVALID_ENUM: std::cout << "GL Invalid enum" << std::endl; break;
+            case GL_INVALID_VALUE: std::cout << "GL Invalid value" << std::endl; break;
+            case GL_INVALID_OPERATION: std::cout << "GL Invalid operation" << std::endl; break;
+            case GL_OUT_OF_MEMORY: std::cout << "GL Out of memory" << std::endl; break;
+            case GL_NO_ERROR: std::cout << "GL No error" << std::endl; break;
+        }
+    }
+    else
+    {
+        std::cout << glVendor << std::endl;
     }
 
     while (!window->ShouldClose())

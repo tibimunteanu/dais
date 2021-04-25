@@ -2,12 +2,28 @@
 
 #include "engine/core/Platform.h"
 #include "platform/windows/WindowsBase.h"
+#include "platform/windows/WglContext.h"
 #include "platform/windows/WindowsCursor.h"
 #include "platform/windows/WindowsMonitor.h"
 #include "platform/windows/WindowsWindow.h"
 
 namespace dais
 {
+    class WindowsThreadLocalStorage : public ThreadLocalStorage
+    {
+    public:
+        bool m_Allocated;
+        DWORD m_Index;
+
+    public:
+        WindowsThreadLocalStorage() = default;
+        ~WindowsThreadLocalStorage();
+
+    private:
+        void* PlatformGet() override;
+        void PlatformSet(void* value) override;
+    };
+
     class WindowsPlatform : public Platform
     {
     public:

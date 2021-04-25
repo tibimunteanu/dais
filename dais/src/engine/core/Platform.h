@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/core/Base.h"
+#include "engine/core/Context.h"
 #include "engine/core/Input.h"
 #include "engine/core/Cursor.h"
 #include "engine/core/Monitor.h"
@@ -11,8 +12,37 @@ namespace dais
     typedef void(*MonitorCallback)(Monitor*);
     typedef void(*JoystickCallback)(int32_t, int32_t);
 
+    class ThreadLocalStorage
+    {
+    public:
+        static ThreadLocalStorage* Create();
+
+    public:
+        ThreadLocalStorage() = default;
+        virtual ~ThreadLocalStorage() = default;
+
+    public:
+        void* Get();
+        void Set(void* value);
+
+    protected:
+        virtual void* PlatformGet() = 0;
+        virtual void PlatformSet(void* value) = 0;
+    };
+
     class Platform
     {
+    public:
+        static struct Hints
+        {
+            FramebufferConfig framebuffer;
+            WindowConfig window;
+            ContextConfig context;
+            int32_t refreshRate;
+        } s_Hints;
+
+        static ThreadLocalStorage* s_ContextSlot;
+
     protected:
         static std::vector<Window*> s_Windows;
         static std::vector<Monitor*> s_Monitors;
@@ -31,7 +61,8 @@ namespace dais
         static bool Init();
         static void Terminate();
 
-        static Window* OpenWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor);
+        static Window* OpenWindow(Monitor* monitor);
+        static Window* OpenWindow(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
 
         static const std::vector<Window*>& GetWindows();
         static Window* GetPrimaryWindow();
@@ -57,6 +88,8 @@ namespace dais
         static void PollEvents();
         static void WaitEvents();
         static void WaitEventsTimeout(double timeout);
+
+        static void SetHintsToDefult();
 
     private:
         static bool PlatformInit();

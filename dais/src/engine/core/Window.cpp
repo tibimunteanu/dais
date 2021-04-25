@@ -4,31 +4,46 @@ namespace dais
 {
     ////////////////////////////////////// STATIC ////////////////////////////////////////
 
-    Window* Window::Create(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor)
+    Window* Window::Create(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
     {
         DAIS_TRACE("[Window] Create");
 
-        if (config.title.empty())
+        if (windowConfig->title.empty())
         {
             DAIS_ERROR("Window title cannot be empty!");
             return nullptr;
         }
 
-        if (config.width <= 0
-            || config.height <= 0)
+        if (windowConfig->width <= 0
+            || windowConfig->height <= 0)
         {
-            DAIS_ERROR("Invalid window size %i x %i", config.width, config.height);
+            DAIS_ERROR("Invalid window size %i x %i", windowConfig->width, windowConfig->height);
             return nullptr;
         }
 
-        Window* window = PlatformCreate(config, fbConfig, monitor);
+        if (!contextConfig->IsValid())
+        {
+            DAIS_ERROR("Context config is not valid!");
+            return nullptr;
+        }
+
+        Window* window = PlatformCreate(windowConfig, contextConfig, framebufferConfig, monitor);
 
         if (!window)
         {
             return nullptr;
         }
 
-        if (config.mousePassthrough)
+        if (contextConfig->client != DAIS_NO_API)
+        {
+            if (!Context::RefreshContextAttribs(window, contextConfig))
+            {
+                delete window;
+                return nullptr;
+            }
+        }
+
+        if (windowConfig->mousePassthrough)
         {
             window->PlatformSetMousePassThrough(true);
         }
@@ -39,10 +54,10 @@ namespace dais
         }
         else
         {
-            if (config.visible)
+            if (windowConfig->visible)
             {
                 window->PlatformShow();
-                if (config.focused)
+                if (windowConfig->focused)
                 {
                     window->PlatformFocus();
                 }
@@ -56,19 +71,19 @@ namespace dais
 
     ////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
 
-    Window::Window(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor)
+    Window::Window(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
     {
         DAIS_TRACE("[Window] Constructor");
 
-        m_Title = config.title;
-        m_Width = config.width;
-        m_Height = config.height;
-        m_Decorated = config.decorated;
-        m_FocusOnShow = config.focusOnShow;
-        m_AutoMinimize = config.autoIconify;
-        m_Floating = config.floating;
-        m_Resizable = config.resizable;
-        m_MousePassthrough = config.mousePassthrough;
+        m_Title = windowConfig->title;
+        m_Width = windowConfig->width;
+        m_Height = windowConfig->height;
+        m_Decorated = windowConfig->decorated;
+        m_FocusOnShow = windowConfig->focusOnShow;
+        m_AutoMinimize = windowConfig->autoIconify;
+        m_Floating = windowConfig->floating;
+        m_Resizable = windowConfig->resizable;
+        m_MousePassthrough = windowConfig->mousePassthrough;
         m_CursorMode = DAIS_CURSOR_NORMAL;
         m_MinWidth = -1;
         m_MinHeight = -1;
@@ -78,12 +93,12 @@ namespace dais
         m_Denominator = -1;
 
         m_VideoMode = {};
-        m_VideoMode.width = config.width;
-        m_VideoMode.height = config.height;
-        m_VideoMode.redBits = fbConfig.redBits;
-        m_VideoMode.greenBits = fbConfig.greenBits;
-        m_VideoMode.blueBits = fbConfig.blueBits;
-        m_VideoMode.refreshRate = config.refreshRate;
+        m_VideoMode.width = windowConfig->width;
+        m_VideoMode.height = windowConfig->height;
+        m_VideoMode.redBits = framebufferConfig->redBits;
+        m_VideoMode.greenBits = framebufferConfig->greenBits;
+        m_VideoMode.blueBits = framebufferConfig->blueBits;
+        m_VideoMode.refreshRate = Platform::s_Hints.refreshRate;
 
         m_Monitor = monitor;
     }
@@ -91,6 +106,12 @@ namespace dais
     Window::~Window()
     {
         DAIS_TRACE("[Window] Destructor");
+
+        //the window's context must not be current on another thread when the window is destroyed
+        if (Platform::s_ContextSlot->Get() == this)
+        {
+            Context::MakeContextCurrentGL(nullptr);
+        }
     }
 
 
@@ -325,6 +346,11 @@ namespace dais
         DAIS_TRACE("[Window] GetMonitor");
 
         return m_Monitor;
+    }
+
+    Context* Window::GetContext()
+    {
+        return m_Context;
     }
 
     void* Window::GetNativeHandle() const

@@ -2,11 +2,24 @@
 
 namespace dais
 {
+    void* ThreadLocalStorage::Get()
+    {
+        return PlatformGet();
+    }
+
+    void ThreadLocalStorage::Set(void* value)
+    {
+        PlatformSet(value);
+    }
+
+
     ////////////////////////////////////// STATIC MEMBERS /////////////////////////////////////////
 
+    Platform::Hints Platform::s_Hints = {};
     std::vector<Window*> Platform::s_Windows = {};
     std::vector<Monitor*> Platform::s_Monitors = {};
     std::vector<Cursor*> Platform::s_Cursors = {};
+    ThreadLocalStorage* Platform::s_ContextSlot = nullptr;
     Platform::Callbacks Platform::s_Callbacks = {};
 
 
@@ -15,7 +28,20 @@ namespace dais
 
     bool Platform::Init()
     {
-        return Platform::PlatformInit();
+        if (!Platform::PlatformInit())
+        {
+            return false;
+        }
+
+        s_ContextSlot = ThreadLocalStorage::Create();
+        if (!s_ContextSlot)
+        {
+            return false;
+        }
+
+        SetHintsToDefult();
+
+        return true;
     }
 
     void Platform::Terminate()
@@ -37,6 +63,8 @@ namespace dais
             }
         }
 
+        delete s_ContextSlot;
+
         Platform::PlatformTerminate();
     }
 
@@ -55,15 +83,47 @@ namespace dais
         Platform::PlatformWaitEventsTimeout(timeout);
     }
 
+    void Platform::SetHintsToDefult()
+    {
+        s_Hints = {};
+        s_Hints.refreshRate = -1;
+        s_Hints.window.resizable = true;
+        s_Hints.window.visible = true;
+        s_Hints.window.decorated = true;
+        s_Hints.window.focused = true;
+        s_Hints.window.autoIconify = true;
+        s_Hints.window.centerCursor = true;
+        s_Hints.window.focusOnShow = true;
+        s_Hints.window.scaleToMonitor = true;
+        s_Hints.context.client = DAIS_OPENGL_API;
+        s_Hints.context.source = DAIS_NATIVE_CONTEXT_API;
+        s_Hints.context.major = 1;
+        s_Hints.context.minor = 0;
+        s_Hints.framebuffer.redBits = 8;
+        s_Hints.framebuffer.greenBits = 8;
+        s_Hints.framebuffer.blueBits = 8;
+        s_Hints.framebuffer.alphaBits = 8;
+        s_Hints.framebuffer.depthBits = 24;
+        s_Hints.framebuffer.stencilBits = 8;
+        s_Hints.framebuffer.doubleBuffer = true;
+        s_Hints.framebuffer.sRGB = true;
+    }
+
 
     bool Platform::IsRawMouseMotionSupported()
     {
         return Platform::PlatformIsRawMouseMotionSupported();
     }
 
-    Window* Platform::OpenWindow(WindowConfig config, FramebufferConfig fbConfig, Monitor* monitor)
+
+    Window* Platform::OpenWindow(Monitor* monitor)
     {
-        Window* window = Window::Create(config, fbConfig, monitor);
+        return OpenWindow(&s_Hints.window, &s_Hints.context, &s_Hints.framebuffer, monitor);
+    }
+
+    Window* Platform::OpenWindow(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+    {
+        Window* window = Window::Create(windowConfig, contextConfig, framebufferConfig, monitor);
         if (window)
         {
             s_Windows.push_back(window);
@@ -178,3 +238,4 @@ namespace dais
         s_Callbacks.monitorDisconnected = callback;
     }
 }
+
