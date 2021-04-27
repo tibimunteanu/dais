@@ -1,7 +1,6 @@
 #include "engine/core/Platform.h"
 
-#pragma comment(lib, "opengl32")
-#include <GL/gl.h>
+#include "external/glad.h"
 
 static void OnMonitorConnected(dais::Monitor* monitor)
 {
@@ -19,57 +18,6 @@ int main(int argc, char** argv)
     dais::Platform::SetMonitorDisconnectedCallback(OnMonitorDisconnected);
 
     dais::Platform::Init();
-
-    //test window api
-    dais::Platform::s_Hints = {};
-    dais::Platform::s_Hints.refreshRate = -1;
-    dais::Platform::s_Hints.window.title = "Test";
-    dais::Platform::s_Hints.window.width = 960;
-    dais::Platform::s_Hints.window.height = 540;
-    dais::Platform::s_Hints.window.resizable = true;
-    dais::Platform::s_Hints.window.visible = true;
-    dais::Platform::s_Hints.window.decorated = true;
-    dais::Platform::s_Hints.window.focused = true;
-    dais::Platform::s_Hints.window.autoMinimize = true;
-    dais::Platform::s_Hints.window.centerCursor = true;
-    dais::Platform::s_Hints.window.focusOnShow = true;
-    dais::Platform::s_Hints.window.scaleToMonitor = true;
-    dais::Platform::s_Hints.context.client = DAIS_OPENGL_API;
-    dais::Platform::s_Hints.context.source = DAIS_NATIVE_CONTEXT_API;
-    dais::Platform::s_Hints.context.major = 1;
-    dais::Platform::s_Hints.context.minor = 0;
-    dais::Platform::s_Hints.framebuffer.redBits = 8;
-    dais::Platform::s_Hints.framebuffer.greenBits = 8;
-    dais::Platform::s_Hints.framebuffer.blueBits = 8;
-    dais::Platform::s_Hints.framebuffer.alphaBits = 8;
-    dais::Platform::s_Hints.framebuffer.depthBits = 24;
-    dais::Platform::s_Hints.framebuffer.stencilBits = 8;
-    dais::Platform::s_Hints.framebuffer.doubleBuffer = true;
-    dais::Platform::s_Hints.framebuffer.sRGB = true;
-
-    dais::Window* window = dais::Platform::OpenWindow(nullptr);
-    if (!window)
-    {
-        throw std::runtime_error("Could not open window!");
-    }
-
-    std::cout 
-        << "Current context: OpenGL "
-        << window->GetContext()->m_Major << "." << window->GetContext()->m_Minor << "." << window->GetContext()->m_Revision
-        << std::endl;
-
-    dais::Context::MakeContextCurrentGL(window);
-    dais::Context::SwapIntervalGL(1);
-
-    //loop
-    while (!window->ShouldClose())
-    {
-        glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        dais::Context::SwapBuffersGL(window);
-        dais::Platform::PollEvents();
-    }
 
     //test monitor api
     std::cout << "Connected monitors: " << std::endl;
@@ -112,6 +60,63 @@ int main(int argc, char** argv)
         float xScale, yScale;
         currentMonitor->GetContentScale(&xScale, &yScale);
         std::cout << "Content scale: xScale: " << xScale << ", yScale: " << yScale << std::endl;
+    }
+
+    //test window api
+    dais::Platform::s_Hints = {};
+    dais::Platform::s_Hints.refreshRate = -1;
+    dais::Platform::s_Hints.window.title = "Test";
+    dais::Platform::s_Hints.window.width = 960;
+    dais::Platform::s_Hints.window.height = 540;
+    dais::Platform::s_Hints.window.resizable = true;
+    dais::Platform::s_Hints.window.visible = true;
+    dais::Platform::s_Hints.window.decorated = true;
+    dais::Platform::s_Hints.window.focused = true;
+    dais::Platform::s_Hints.window.autoMinimize = true;
+    dais::Platform::s_Hints.window.centerCursor = true;
+    dais::Platform::s_Hints.window.focusOnShow = true;
+    dais::Platform::s_Hints.window.scaleToMonitor = true;
+    dais::Platform::s_Hints.context.client = DAIS_OPENGL_API;
+    dais::Platform::s_Hints.context.source = DAIS_NATIVE_CONTEXT_API;
+    dais::Platform::s_Hints.context.major = 1;
+    dais::Platform::s_Hints.context.minor = 0;
+    dais::Platform::s_Hints.framebuffer.redBits = 8;
+    dais::Platform::s_Hints.framebuffer.greenBits = 8;
+    dais::Platform::s_Hints.framebuffer.blueBits = 8;
+    dais::Platform::s_Hints.framebuffer.alphaBits = 8;
+    dais::Platform::s_Hints.framebuffer.depthBits = 24;
+    dais::Platform::s_Hints.framebuffer.stencilBits = 8;
+    dais::Platform::s_Hints.framebuffer.doubleBuffer = true;
+    dais::Platform::s_Hints.framebuffer.sRGB = true;
+
+    dais::Window* window = dais::Platform::OpenWindow(nullptr);
+    if (!window)
+    {
+        throw std::runtime_error("Could not open window!");
+    }
+
+    std::cout 
+        << "Current context: OpenGL "
+        << window->GetContext()->m_Major << "." << window->GetContext()->m_Minor << "." << window->GetContext()->m_Revision
+        << std::endl;
+
+    dais::Context::MakeContextCurrentGL(window);
+
+    if (!gladLoadGLLoader((GLADloadproc)dais::Context::GetProcAddressGL))
+    {
+        throw std::runtime_error("Could not initialize OpenGL loader!");
+    }
+
+    dais::Context::SwapIntervalGL(1);
+
+    //loop
+    while (!window->ShouldClose())
+    {
+        glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        dais::Context::SwapBuffersGL(window);
+        dais::Platform::PollEvents();
     }
 
     dais::Platform::Terminate();

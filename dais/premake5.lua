@@ -24,6 +24,11 @@ project "dais"
         "src/engine/**.c",
         "src/engine/**.hpp",
         "src/engine/**.cpp",
+
+        "src/external/**.h",
+        "src/external/**.c",
+        "src/external/**.hpp",
+        "src/external/**.cpp",
     }
 
     filter { "system:Windows" }
