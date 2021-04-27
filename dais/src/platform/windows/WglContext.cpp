@@ -24,62 +24,71 @@ namespace dais
             return false;
         }
 
-        s_WGL.createContext = (PFN_wglCreateContext)GetProcAddress(s_WGL.instance, "wglCreateContext");
-        s_WGL.deleteContext = (PFN_wglDeleteContext)GetProcAddress(s_WGL.instance, "wglDeleteContext");
-        s_WGL.getProcAddress = (PFN_wglGetProcAddress)GetProcAddress(s_WGL.instance, "wglGetProcAddress");
-        s_WGL.getCurrentDC = (PFN_wglGetCurrentDC)GetProcAddress(s_WGL.instance, "wglGetCurrentDC");
-        s_WGL.getCurrentContext = (PFN_wglGetCurrentContext)GetProcAddress(s_WGL.instance, "wglGetCurrentContext");
-        s_WGL.makeCurrent = (PFN_wglMakeCurrent)GetProcAddress(s_WGL.instance, "wglMakeCurrent");
-        s_WGL.shareLists = (PFN_wglShareLists)GetProcAddress(s_WGL.instance, "wglShareLists");
+        //load common wgl function pointers from opengl32.dll
+        s_WGL.createContext = (PFNWGLCREATECONTEXTPROC)GetProcAddress(s_WGL.instance, "wglCreateContext");
+        s_WGL.deleteContext = (PFNWGLDELETECONTEXTPROC)GetProcAddress(s_WGL.instance, "wglDeleteContext");
+        s_WGL.getProcAddress = (PFNWGLGETPROCADDRESSPROC)GetProcAddress(s_WGL.instance, "wglGetProcAddress");
+        s_WGL.getCurrentDC = (PFNWGLGETCURRENTDCPROC)GetProcAddress(s_WGL.instance, "wglGetCurrentDC");
+        s_WGL.getCurrentContext = (PFNWGLGETCURRENTCONTEXTPROC)GetProcAddress(s_WGL.instance, "wglGetCurrentContext");
+        s_WGL.makeCurrent = (PFNWGLMAKECURRENTPROC)GetProcAddress(s_WGL.instance, "wglMakeCurrent");
+        s_WGL.shareLists = (PFNWGLSHARELISTSPROC)GetProcAddress(s_WGL.instance, "wglShareLists");
 
-        //NOTE: a dummy context has to be created for opengl32.dll to load the OpenGL ICD,
-        //from which we can then query WGL extensions
-        //NOTE: this code will accept the Microsoft GDI ICD; accelerated context createion
-        //failure occurs during manual pixel format enumeration
+        //get a dummy DC from the helper window
+        HDC dummyDC = GetDC(WindowsPlatform::s_HelperWindowHandle);
 
-        HDC dc = GetDC(WindowsPlatform::s_HelperWindowHandle);
+        //choose a dummy pixel format
+        PIXELFORMATDESCRIPTOR dummyPFD = {};
+        dummyPFD.nSize = sizeof(dummyPFD);
+        dummyPFD.nVersion = 1;
+        dummyPFD.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
+        dummyPFD.iPixelType = PFD_TYPE_RGBA;
+        dummyPFD.cColorBits = 24;
 
-        PIXELFORMATDESCRIPTOR pfd = {};
-        pfd.nSize = sizeof(pfd);
-        pfd.nVersion = 1;
-        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER;
-        pfd.iPixelType = PFD_TYPE_RGBA;
-        pfd.cColorBits = 24;
+        int dummyPFDID = ChoosePixelFormat(dummyDC, &dummyPFD);
+        if (dummyPFDID == 0)
+        {
+            DAIS_ERROR("Failed to choose pixel format for dummy context!");
+            return false;
+        }
 
-        if (!SetPixelFormat(dc, ChoosePixelFormat(dc, &pfd), &pfd))
+        //set the dummy pixel format
+        if (!SetPixelFormat(dummyDC, dummyPFDID, &dummyPFD))
         {
             DAIS_ERROR("Failed to set pixel format for dummy context!");
             return false;
         }
 
-        HGLRC rc = s_WGL.createContext(dc);
-        if (!rc)
+        //create dummy rendering context
+        HGLRC dummyRC = s_WGL.createContext(dummyDC);
+        if (!dummyRC)
         {
-            DAIS_ERROR("Failed to create dummy context!");
+            DAIS_ERROR("Failed to create dummy rendering context!");
             return false;
         }
 
-        HDC pdc = s_WGL.getCurrentDC();
-        HGLRC prc = s_WGL.getCurrentContext();
+        HDC prevDC = s_WGL.getCurrentDC();
+        HGLRC prevRC = s_WGL.getCurrentContext();
 
-        if (!s_WGL.makeCurrent(dc, rc))
+        //make the dummy context current
+        if (!s_WGL.makeCurrent(dummyDC, dummyRC))
         {
             DAIS_ERROR("Failed to make dummy context current!");
-            s_WGL.makeCurrent(pdc, prc);
-            s_WGL.deleteContext(rc);
+
+            //restore previous context and delete dummy context
+            s_WGL.makeCurrent(prevDC, prevRC);
+            s_WGL.deleteContext(dummyRC);
+
             return false;
         }
 
-        //NOTE: functions must be loaded first as they are needed to retrieve the
-        //extension string that tells us whether the functions are supported
+        //load function pointers for common extensions
         s_WGL.getExtensionsStringEXT = (PFNWGLGETEXTENSIONSSTRINGEXTPROC)s_WGL.getProcAddress("wglGetExtensionsStringEXT");
         s_WGL.getExtensionsStringARB = (PFNWGLGETEXTENSIONSSTRINGARBPROC)s_WGL.getProcAddress("wglGetExtensionsStringARB");
         s_WGL.createContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)s_WGL.getProcAddress("wglCreateContextAttribsARB");
         s_WGL.swapIntervalEXT = (PFNWGLSWAPINTERVALEXTPROC)s_WGL.getProcAddress("wglSwapIntervalEXT");
         s_WGL.getPixelFormatAttribivARB = (PFNWGLGETPIXELFORMATATTRIBIVARBPROC)s_WGL.getProcAddress("wglGetPixelFormatAttribivARB");
 
-        //NOTE: WGL_ARB_extensions_string and WGL_EXT_extensions_string are not 
-        //checked below as we are already using them
+        //cache some common extension support
         s_WGL.ARB_Multisample = WglContext::ExtensionSupportedWGL("WGL_ARB_multisample");
         s_WGL.ARB_FramebufferSRGB = WglContext::ExtensionSupportedWGL("WGL_ARB_framebuffer_sRGB");
         s_WGL.EXT_FramebufferSRGB = WglContext::ExtensionSupportedWGL("WGL_EXT_framebuffer_sRGB");
@@ -93,8 +102,10 @@ namespace dais
         s_WGL.ARB_PixelFormat = WglContext::ExtensionSupportedWGL("WGL_ARB_pixel_format");
         s_WGL.ARB_ContextFlushControl = WglContext::ExtensionSupportedWGL("WGL_ARB_context_flush_control");
 
-        s_WGL.makeCurrent(pdc, prc);
-        s_WGL.deleteContext(rc);
+        //restore previous context and delete dummy context
+        s_WGL.makeCurrent(prevDC, prevRC);
+        s_WGL.deleteContext(dummyRC);
+
         return true;
     }
 
@@ -103,45 +114,14 @@ namespace dais
         if (s_WGL.instance)
         {
             FreeLibrary(s_WGL.instance);
+            s_WGL = {};
         }
     }
 
+
     bool WglContext::CreateContextWGL(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
     {
-        HGLRC share = NULL;
-        if (contextConfig->share)
-        {
-            share = ((WglContext*)contextConfig->share->GetContext())->m_Handle;
-        }
-
-        HDC dc = GetDC(window->m_Handle);
-        if (!dc)
-        {
-            DAIS_ERROR("Failed to retrieve DC for window!");
-            return false;
-        }
-
-        ((WglContext*)window->GetContext())->m_DC = dc;
-
-        int32_t pixelFormat = ChoosePixelFormatWGL(window, contextConfig, framebufferConfig);
-        if (!pixelFormat)
-        {
-            return false;
-        }
-
-        PIXELFORMATDESCRIPTOR pfd;
-        if (!DescribePixelFormat(dc, pixelFormat, sizeof(pfd), &pfd))
-        {
-            DAIS_ERROR("Failed to retrieve PFD for selected pixel format!");
-            return false;
-        }
-
-        if (!SetPixelFormat(dc, pixelFormat, &pfd))
-        {
-            DAIS_ERROR("Failed to set selected pixel format!");
-            return false;
-        }
-
+        //check required extensions needed for creating the context
         if (contextConfig->client == DAIS_OPENGL_API)
         {
             if (contextConfig->forward)
@@ -173,12 +153,53 @@ namespace dais
             }
         }
 
-        int32_t mask = 0;
-        int32_t flags = 0;
-        std::vector<int32_t> attribs = {};
+        //cache the sharing context if exists
+        HGLRC share = NULL;
+        if (contextConfig->share)
+        {
+            share = ((WglContext*)contextConfig->share->GetContext())->m_Handle;
+        }
+
+        //set the context dc handle
+        HDC dc = GetDC(window->m_Handle);
+        if (!dc)
+        {
+            DAIS_ERROR("Failed to retrieve DC for window!");
+            return false;
+        }
+
+        ((WglContext*)window->GetContext())->m_DC = dc;
+
+        //get the pixelFormat closest to the desired ContextConfig and FramebufferConfig
+        int32_t pixelFormat = ChoosePixelFormatWGL(window, contextConfig, framebufferConfig);
+        if (!pixelFormat)
+        {
+            return false;
+        }
+
+        //SetPixelFormat requires old PIXELFORMATDESCRIPTOR struct
+        //we can create it from the pixelFormat handle
+        PIXELFORMATDESCRIPTOR pfd;
+        if (!DescribePixelFormat(dc, pixelFormat, sizeof(pfd), &pfd))
+        {
+            DAIS_ERROR("Failed to retrieve PFD for selected pixel format!");
+            return false;
+        }
+
+        //set the chosen pixel format
+        if (!SetPixelFormat(dc, pixelFormat, &pfd))
+        {
+            DAIS_ERROR("Failed to set selected pixel format!");
+            return false;
+        }
 
         if (s_WGL.ARB_CreateContext)
         {
+            //create the context through the "modern" extension with attribs
+            int32_t mask = 0;
+            int32_t flags = 0;
+            std::vector<int32_t> attribs = {};
+
             if (contextConfig->client == DAIS_OPENGL_API)
             {
                 if (contextConfig->forward)
@@ -252,7 +273,7 @@ namespace dais
 
             //NOTE: only request an explicitly versioned context when necessary,
             //as explicitly requesting version 1.0 does not always return the highest
-            //version supported by the driber
+            //version supported by the driver
             if (contextConfig->major != 1
                 || contextConfig->minor != 0)
             {
@@ -320,6 +341,7 @@ namespace dais
         }
         else
         {
+            //create the context the old way
             HGLRC contextHandle = s_WGL.createContext(dc);
             if (!contextHandle)
             {
@@ -339,6 +361,8 @@ namespace dais
             }
         }
 
+        //supply the platform agnostic context with function pointers
+        //TODO: use virtual functions instead
         window->m_Context->m_MakeCurrent = MakeContextCurrentWGL;
         window->m_Context->m_SwapBuffers = SwapBuffersWGL;
         window->m_Context->m_SwapInterval = SwapIntervalWGL;
@@ -375,14 +399,16 @@ namespace dais
 
         if (s_WGL.ARB_PixelFormat)
         {
+            //get native pixel format count through "modern" extension
             const int32_t attrib = WGL_NUMBER_PIXEL_FORMATS_ARB;
 
             if (!s_WGL.getPixelFormatAttribivARB(context->m_DC, 1, 0, 1, &attrib, &nativeCount))
             {
-                DAIS_ERROR("Failed to retrieve pixel format attribute!");
+                DAIS_ERROR("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format count!");
                 return 0;
             }
 
+            //setup an array of relevant attribs
             attribs[attribCount++] = WGL_SUPPORT_OPENGL_ARB;
             attribs[attribCount++] = WGL_DRAW_TO_WINDOW_ARB;
             attribs[attribCount++] = WGL_PIXEL_TYPE_ARB;
@@ -429,14 +455,16 @@ namespace dais
         }
         else
         {
+            //get native pixel format count the old way
             nativeCount = DescribePixelFormat(context->m_DC, 1, sizeof(PIXELFORMATDESCRIPTOR), NULL);
         }
 
         std::vector<FramebufferConfig> usableConfigs = {};
         usableConfigs.reserve(nativeCount);
 
+        //iterate pixel formats, get the values for the attribs array 
+        //and promote some of them as FramebufferConfigs
         int32_t pixelFormat;
-
         for (int32_t i = 0; i < nativeCount; i++)
         {
             pixelFormat = i + 1;
@@ -448,10 +476,11 @@ namespace dais
                 //get pixel format attributes through "modern" extension
                 if (!s_WGL.getPixelFormatAttribivARB(context->m_DC, pixelFormat, 0, attribCount, attribs, values))
                 {
-                    DAIS_ERROR("Failed to retrieve pixel format attributes!");
+                    DAIS_ERROR("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format attributes!");
                     return 0;
                 }
 
+                //first check hard constraints
                 if (!FindPixelFormatAttribValue(attribs, attribCount, values, WGL_SUPPORT_OPENGL_ARB)
                     || !FindPixelFormatAttribValue(attribs, attribCount, values, WGL_DRAW_TO_WINDOW_ARB))
                 {
@@ -468,6 +497,7 @@ namespace dais
                     continue;
                 }
 
+                //setup a FramebufferConfig from attrib values
                 fbc.redBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_RED_BITS_ARB);
                 fbc.greenBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_GREEN_BITS_ARB);
                 fbc.blueBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_BLUE_BITS_ARB);
@@ -519,15 +549,15 @@ namespace dais
             }
             else
             {
-                //get pixel format attributes through legacy PFDs
+                //get pixel format attributes the old way
                 PIXELFORMATDESCRIPTOR pfd;
-
                 if (!DescribePixelFormat(context->m_DC, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd))
                 {
                     DAIS_ERROR("Failed to describe pixel format!");
                     return 0;
                 }
 
+                //first check hard constraints
                 if (!(pfd.dwFlags & PFD_DRAW_TO_WINDOW)
                     || !(pfd.dwFlags & PFD_SUPPORT_OPENGL))
                 {
@@ -545,6 +575,7 @@ namespace dais
                     continue;
                 }
 
+                //setup a FramebufferConfig from the pixel format descriptor
                 fbc.redBits = pfd.cRedBits;
                 fbc.greenBits = pfd.cGreenBits;
                 fbc.blueBits = pfd.cBlueBits;
@@ -579,6 +610,7 @@ namespace dais
             return 0;
         }
 
+        //pick the FramebufferConfig closest to the desired one
         const FramebufferConfig* closest = ChooseFramebufferConfig(framebufferConfig, usableConfigs);
         if (!closest)
         {
@@ -586,11 +618,14 @@ namespace dais
             return 0;
         }
 
+        //we only care about the closest pixel format handle
         pixelFormat = (int32_t)closest->handle;
 
         return pixelFormat;
     }
 
+
+    //TODO: make these virtual overrides
     void WglContext::MakeContextCurrentWGL(Window* window)
     {
         if (window)

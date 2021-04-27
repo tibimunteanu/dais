@@ -58,28 +58,16 @@ int main(int argc, char** argv)
         << window->GetContext()->m_Major << "." << window->GetContext()->m_Minor << "." << window->GetContext()->m_Revision
         << std::endl;
 
-    //const char* glVersion = (const char*)window->GetContext()->GetString(GL_VERSION);
-    //const char* glVendor = (const char*)window->GetContext()->GetString(GL_VENDOR);
-    //const char* glRenderer = (const char*)glGetString(GL_RENDERER);
-    //if (!glVendor)
-    //{
-    //    GLenum err = glGetError();
-    //    switch (err)
-    //    {
-    //        case GL_INVALID_ENUM: std::cout << "GL Invalid enum" << std::endl; break;
-    //        case GL_INVALID_VALUE: std::cout << "GL Invalid value" << std::endl; break;
-    //        case GL_INVALID_OPERATION: std::cout << "GL Invalid operation" << std::endl; break;
-    //        case GL_OUT_OF_MEMORY: std::cout << "GL Out of memory" << std::endl; break;
-    //        case GL_NO_ERROR: std::cout << "GL No error" << std::endl; break;
-    //    }
-    //}
-    //else
-    //{
-    //    std::cout << glVendor << std::endl;
-    //}
+    dais::Context::MakeContextCurrentGL(window);
+    dais::Context::SwapIntervalGL(1);
 
+    //loop
     while (!window->ShouldClose())
     {
+        glClearColor(0.2f, 0.3f, 0.8f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        dais::Context::SwapBuffersGL(window);
         dais::Platform::PollEvents();
     }
 

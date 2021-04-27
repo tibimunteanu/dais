@@ -230,26 +230,28 @@ namespace dais
         Window* previous = GetCurrentContextGL();
         MakeContextCurrentGL(window);
 
-        window->GetContext()->GetIntegerv = (PFNGLGETINTEGERVPROC)window->GetContext()->m_GetProcAddress("glGetIntegerv");
-        window->GetContext()->GetString = (PFNGLGETSTRINGPROC)window->GetContext()->m_GetProcAddress("glGetString");
-        if (!window->GetContext()->GetIntegerv
-            || !window->GetContext()->GetString)
+        Context* context = window->GetContext();
+
+        context->GetIntegerv = (PFNGLGETINTEGERVPROC)context->m_GetProcAddress("glGetIntegerv");
+        context->GetString = (PFNGLGETSTRINGPROC)context->m_GetProcAddress("glGetString");
+        if (!context->GetIntegerv
+            || !context->GetString)
         {
-            DAIS_ERROR("Entry point retrieval is broken!");
+            DAIS_ERROR("OpenGL GetProcAddress failed!");
             MakeContextCurrentGL(previous);
             return false;
         }
 
-        const char* version = (const char*)window->GetContext()->GetString(GL_VERSION);
+        const char* version = (const char*)context->GetString(GL_VERSION);
         if (!version)
         {
             if (contextConfig->client == DAIS_OPENGL_API)
             {
-                DAIS_ERROR("OpenGL version string retrieval is broken!");
+                DAIS_ERROR("OpenGL GetString failed!");
             }
             else
             {
-                DAIS_ERROR("OpenGL ES version string retrieval is broken!");
+                DAIS_ERROR("OpenGL ES GetString failed!");
             }
             MakeContextCurrentGL(previous);
             return false;
@@ -262,17 +264,17 @@ namespace dais
             if (strncmp(version, prefixes[i], length) == 0)
             {
                 version += length;
-                window->GetContext()->m_Client = DAIS_OPENGL_ES_API;
+                context->m_Client = DAIS_OPENGL_ES_API;
                 break;
             }
         }
 
         if (!sscanf(version, "%d.%d.%d",
-            &window->GetContext()->m_Major,
-            &window->GetContext()->m_Minor,
-            &window->GetContext()->m_Revision))
+            &context->m_Major,
+            &context->m_Minor,
+            &context->m_Revision))
         {
-            if (window->GetContext()->m_Client == DAIS_OPENGL_API)
+            if (context->m_Client == DAIS_OPENGL_API)
             {
                 DAIS_ERROR("No version found on OpenGL version string!");
             }
@@ -284,8 +286,8 @@ namespace dais
             return false;
         }
 
-        if (window->GetContext()->m_Major < contextConfig->major
-            || (window->GetContext()->m_Major == contextConfig->major && window->GetContext()->m_Minor < contextConfig->minor))
+        if (context->m_Major < contextConfig->major
+            || (context->m_Major == contextConfig->major && context->m_Minor < contextConfig->minor))
         {
             //the desired OpenGL version is greater than the actual version
             //this only happens if the machine lacks {GLX|WGL}_ARB_create_context
@@ -294,30 +296,30 @@ namespace dais
             //for API consistency, we emulate the behavior of the
             //{GLX|WGL}_ARB_create_context extension and fail here
 
-            if (window->GetContext()->m_Client == DAIS_OPENGL_API)
+            if (context->m_Client == DAIS_OPENGL_API)
             {
                 DAIS_ERROR("Requested OpenGL version %i.%i, got version %i.%i!",
                     contextConfig->major, contextConfig->minor,
-                    window->GetContext()->m_Major, window->GetContext()->m_Minor);
+                    context->m_Major, context->m_Minor);
             }
             else
             {
                 DAIS_ERROR("Requested OpenGL ES version %i.%i, got version %i.%i!",
                     contextConfig->major, contextConfig->minor,
-                    window->GetContext()->m_Major, window->GetContext()->m_Minor);
+                    context->m_Major, context->m_Minor);
             }
             MakeContextCurrentGL(previous);
             return false;
         }
 
-        if (window->GetContext()->m_Major >= 3)
+        if (context->m_Major >= 3)
         {
             //OpenGL 3.0+ uses a different function for extension string retrieval
             //we cache it here instead of in ExtensionSupported mostly to alert
             //users as early as possible that their build may be broken
 
-            window->GetContext()->GetStringi = (PFNGLGETSTRINGIPROC)window->GetContext()->m_GetProcAddress("glGetStringi");
-            if (!window->GetContext()->GetStringi)
+            context->GetStringi = (PFNGLGETSTRINGIPROC)context->m_GetProcAddress("glGetStringi");
+            if (!context->GetStringi)
             {
                 DAIS_ERROR("Entry point retrieval is broken!");
                 MakeContextCurrentGL(previous);
@@ -325,58 +327,58 @@ namespace dais
             }
         }
 
-        if (window->GetContext()->m_Client == DAIS_OPENGL_API)
+        if (context->m_Client == DAIS_OPENGL_API)
         {
             //read back context flags (OpenGL 3.0+)
-            if (window->GetContext()->m_Major >= 3)
+            if (context->m_Major >= 3)
             {
                 GLint flags;
-                window->GetContext()->GetIntegerv(GL_CONTEXT_FLAGS, &flags);
+                context->GetIntegerv(GL_CONTEXT_FLAGS, &flags);
 
                 if (flags & GL_CONTEXT_FLAG_FORWARD_COMPATIBLE_BIT)
                 {
-                    window->GetContext()->m_Forward = true;
+                    context->m_Forward = true;
                 }
 
                 if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
                 {
-                    window->GetContext()->m_Debug = true;
+                    context->m_Debug = true;
                 }
                 else if (ExtensionSupportedGL("GL_ARB_debug_output")
                     && contextConfig->debug)
                 {
                     //HACK: this is a workaround for older drivers (pre KHR_debug)
                     // not setting the debug bit in the context flags for debug contexts
-                    window->GetContext()->m_Debug = true;
+                    context->m_Debug = true;
                 }
 
                 if (flags & GL_CONTEXT_FLAG_NO_ERROR_BIT_KHR)
                 {
-                    window->GetContext()->m_NoError = true;
+                    context->m_NoError = true;
                 }
             }
 
             //read back OpenGL context profile (OpenGL 3.2+)
-            if (window->GetContext()->m_Major >= 4
-                || (window->GetContext()->m_Major == 3 && window->GetContext()->m_Minor >= 2))
+            if (context->m_Major >= 4
+                || (context->m_Major == 3 && context->m_Minor >= 2))
             {
                 GLint mask;
-                window->GetContext()->GetIntegerv(GL_CONTEXT_PROFILE_MASK, &mask);
+                context->GetIntegerv(GL_CONTEXT_PROFILE_MASK, &mask);
 
                 if (mask & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT)
                 {
-                    window->GetContext()->m_Profile = DAIS_OPENGL_COMPAT_PROFILE;
+                    context->m_Profile = DAIS_OPENGL_COMPAT_PROFILE;
                 }
                 else if (mask & GL_CONTEXT_CORE_PROFILE_BIT)
                 {
-                    window->GetContext()->m_Profile = DAIS_OPENGL_CORE_PROFILE;
+                    context->m_Profile = DAIS_OPENGL_CORE_PROFILE;
                 }
                 else if (ExtensionSupportedGL("GL_ARB_compatibility"))
                 {
                     //HACK: this is a workaround for the compatibility profile bit
                     //not being set in the context flags in an OpenGL 3.2+ context
                     //was created without having requested a specific version
-                    window->GetContext()->m_Profile = DAIS_OPENGL_COMPAT_PROFILE;
+                    context->m_Profile = DAIS_OPENGL_COMPAT_PROFILE;
                 }
             }
 
@@ -387,15 +389,15 @@ namespace dais
                 //only present from 3.0 while the extension applies from 1.1
 
                 GLint strategy;
-                window->GetContext()->GetIntegerv(GL_RESET_NOTIFICATION_STRATEGY_ARB, &strategy);
+                context->GetIntegerv(GL_RESET_NOTIFICATION_STRATEGY_ARB, &strategy);
 
                 if (strategy == GL_LOSE_CONTEXT_ON_RESET_ARB)
                 {
-                    window->GetContext()->m_Robustness = DAIS_LOSE_CONTEXT_ON_RESET;
+                    context->m_Robustness = DAIS_LOSE_CONTEXT_ON_RESET;
                 }
                 else if (strategy == GL_NO_RESET_NOTIFICATION_ARB)
                 {
-                    window->GetContext()->m_Robustness = DAIS_NO_RESET_NOTIFICATION;
+                    context->m_Robustness = DAIS_NO_RESET_NOTIFICATION;
                 }
             }
         }
@@ -408,15 +410,15 @@ namespace dais
                 //so we can reuse them here
 
                 GLint strategy;
-                window->GetContext()->GetIntegerv(GL_RESET_NOTIFICATION_STRATEGY_ARB, &strategy);
+                context->GetIntegerv(GL_RESET_NOTIFICATION_STRATEGY_ARB, &strategy);
 
                 if (strategy == GL_LOSE_CONTEXT_ON_RESET_ARB)
                 {
-                    window->GetContext()->m_Robustness = DAIS_LOSE_CONTEXT_ON_RESET;
+                    context->m_Robustness = DAIS_LOSE_CONTEXT_ON_RESET;
                 }
                 else if (strategy == GL_NO_RESET_NOTIFICATION_ARB)
                 {
-                    window->GetContext()->m_Robustness = DAIS_NO_RESET_NOTIFICATION;
+                    context->m_Robustness = DAIS_NO_RESET_NOTIFICATION;
                 }
             }
         }
@@ -424,29 +426,30 @@ namespace dais
         if (ExtensionSupportedGL("GL_KHR_context_flush_control"))
         {
             GLint behavior;
-            window->GetContext()->GetIntegerv(GL_CONTEXT_RELEASE_BEHAVIOR, &behavior);
+            context->GetIntegerv(GL_CONTEXT_RELEASE_BEHAVIOR, &behavior);
 
             if (behavior == GL_NONE)
             {
-                window->GetContext()->m_Release = DAIS_RELEASE_BEHAVIOR_NONE;
+                context->m_Release = DAIS_RELEASE_BEHAVIOR_NONE;
             }
             else if (behavior == GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH)
             {
-                window->GetContext()->m_Release = DAIS_RELEASE_BEHAVIOR_FLUSH;
+                context->m_Release = DAIS_RELEASE_BEHAVIOR_FLUSH;
             }
         }
 
         //clearing the front buffer to black to avoid garbage pixels left over from
         //previous uses of our bit of VRAM
         {
-            PFNGLCLEARPROC glClear = (PFNGLCLEARPROC)window->GetContext()->m_GetProcAddress("glClear");
+            PFNGLCLEARPROC glClear = (PFNGLCLEARPROC)context->m_GetProcAddress("glClear");
             glClear(GL_COLOR_BUFFER_BIT);
-            window->GetContext()->m_SwapBuffers(window);
+            context->m_SwapBuffers(window);
         }
 
         MakeContextCurrentGL(previous);
         return true;
     }
+
 
     void Context::MakeContextCurrentGL(Window* window)
     {

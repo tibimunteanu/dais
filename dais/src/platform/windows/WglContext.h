@@ -12,20 +12,24 @@ namespace dais
         static struct WglLib
         {
             HINSTANCE instance;
-            PFN_wglCreateContext createContext;
-            PFN_wglDeleteContext deleteContext;
-            PFN_wglGetProcAddress getProcAddress;
-            PFN_wglGetCurrentDC getCurrentDC;
-            PFN_wglGetCurrentContext getCurrentContext;
-            PFN_wglMakeCurrent makeCurrent;
-            PFN_wglShareLists shareLists;
 
+            //core wgl function poinnters
+            PFNWGLCREATECONTEXTPROC createContext;
+            PFNWGLDELETECONTEXTPROC deleteContext;
+            PFNWGLGETPROCADDRESSPROC getProcAddress;
+            PFNWGLGETCURRENTDCPROC getCurrentDC;
+            PFNWGLGETCURRENTCONTEXTPROC getCurrentContext;
+            PFNWGLMAKECURRENTPROC makeCurrent;
+            PFNWGLSHARELISTSPROC shareLists;
+
+            //function pointers for common extensions
             PFNWGLSWAPINTERVALEXTPROC swapIntervalEXT;
             PFNWGLGETPIXELFORMATATTRIBIVARBPROC getPixelFormatAttribivARB;
             PFNWGLGETEXTENSIONSSTRINGEXTPROC getExtensionsStringEXT;
             PFNWGLGETEXTENSIONSSTRINGARBPROC getExtensionsStringARB;
             PFNWGLCREATECONTEXTATTRIBSARBPROC createContextAttribsARB;
 
+            //common extensions support
             bool EXT_SwapControl;
             bool EXT_Colorspace;
             bool ARB_Multisample;
@@ -48,9 +52,11 @@ namespace dais
     public: DAIS_INTERNAL_API
         static bool InitWGL();
         static void TerminateWGL();
+
         static bool CreateContextWGL(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);
         static int32_t FindPixelFormatAttribValue(const int32_t* attribs, int32_t attribCount, const int32_t* values, int32_t attrib);
         static int32_t ChoosePixelFormatWGL(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);
+
         static void MakeContextCurrentWGL(Window* window);
         static void SwapBuffersWGL(Window* window);
         static void SwapIntervalWGL(int32_t interval);

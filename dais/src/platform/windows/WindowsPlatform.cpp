@@ -227,6 +227,7 @@ namespace dais
         if (s_Libs.dwmapi.instance) FreeLibrary(s_Libs.dwmapi.instance);
         if (s_Libs.shcore.instance) FreeLibrary(s_Libs.shcore.instance);
         if (s_Libs.ntdll.instance) FreeLibrary(s_Libs.ntdll.instance);
+        s_Libs = {};
     }
 
 

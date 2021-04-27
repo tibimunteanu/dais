@@ -263,19 +263,19 @@ typedef LONG(WINAPI* PFN_RtlVerifyVersionInfo)(OSVERSIONINFOEXW*, ULONG, ULONGLO
 #define ERROR_INVALID_PROFILE_ARB 0x2096
 #define ERROR_INCOMPATIBLE_DEVICE_CONTEXTS_ARB 0x2054
 
-// WGL extension pointer typedefs
-typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC)(int);
-typedef BOOL(WINAPI* PFNWGLGETPIXELFORMATATTRIBIVARBPROC)(HDC, int, int, UINT, const int*, int*);
-typedef const char* (WINAPI* PFNWGLGETEXTENSIONSSTRINGEXTPROC)(void);
-typedef const char* (WINAPI* PFNWGLGETEXTENSIONSSTRINGARBPROC)(HDC);
-typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC)(HDC, HGLRC, const int*);
+// function pointer typedefs from opengl32.dll 
+typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTPROC)(HDC hDc);
+typedef BOOL(WINAPI* PFNWGLDELETECONTEXTPROC)(HGLRC oldContext);
+typedef PROC(WINAPI* PFNWGLGETPROCADDRESSPROC)(LPCSTR lpszProc);
+typedef HDC(WINAPI* PFNWGLGETCURRENTDCPROC)(void);
+typedef HGLRC(WINAPI* PFNWGLGETCURRENTCONTEXTPROC)(void);
+typedef BOOL(WINAPI* PFNWGLMAKECURRENTPROC)(HDC hDc, HGLRC newContext);
+typedef BOOL(WINAPI* PFNWGLSHARELISTSPROC)(HGLRC hrcSrvShare, HGLRC hrcSrvSource);
 
-// opengl32.dll function pointer typedefs
-typedef HGLRC(WINAPI* PFN_wglCreateContext)(HDC);
-typedef BOOL(WINAPI* PFN_wglDeleteContext)(HGLRC);
-typedef PROC(WINAPI* PFN_wglGetProcAddress)(LPCSTR);
-typedef HDC(WINAPI* PFN_wglGetCurrentDC)(void);
-typedef HGLRC(WINAPI* PFN_wglGetCurrentContext)(void);
-typedef BOOL(WINAPI* PFN_wglMakeCurrent)(HDC, HGLRC);
-typedef BOOL(WINAPI* PFN_wglShareLists)(HGLRC, HGLRC);
+// function pointer typedefs for extensions from wglext.h
+typedef BOOL(WINAPI* PFNWGLSWAPINTERVALEXTPROC)(int interval);
+typedef BOOL(WINAPI* PFNWGLGETPIXELFORMATATTRIBIVARBPROC) (HDC hDc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int* piAttributes, int* piValues);
+typedef const char* (WINAPI* PFNWGLGETEXTENSIONSSTRINGEXTPROC)(void);
+typedef const char* (WINAPI* PFNWGLGETEXTENSIONSSTRINGARBPROC)(HDC hDc);
+typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC) (HDC hDc, HGLRC hShareContext, const int* attribList);
 

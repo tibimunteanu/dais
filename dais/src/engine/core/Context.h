@@ -17,10 +17,11 @@ namespace dais
     typedef GLProc(*GetProcAddressFun)(const char*);
     typedef void (*DestroyContextFun)(Window*);
 
-    typedef void (APIENTRY* PFNGLCLEARPROC)(GLbitfield);
-    typedef const GLubyte* (APIENTRY* PFNGLGETSTRINGPROC)(GLenum);
-    typedef void (APIENTRY* PFNGLGETINTEGERVPROC)(GLenum, GLint*);
-    typedef const GLubyte* (APIENTRY* PFNGLGETSTRINGIPROC)(GLenum, GLuint);
+    //function pointer typedefs from glcorearb.h
+    typedef void (APIENTRY* PFNGLCLEARPROC)(GLbitfield mask);
+    typedef const GLubyte* (APIENTRY* PFNGLGETSTRINGPROC)(GLenum name);
+    typedef void (APIENTRY* PFNGLGETINTEGERVPROC)(GLenum pname, GLint* data);
+    typedef const GLubyte* (APIENTRY* PFNGLGETSTRINGIPROC)(GLenum name, GLuint index);
 
     class Context
     {
@@ -52,6 +53,7 @@ namespace dais
         static bool StringInExtensionString(const char* string, const char* extensions);
         static const FramebufferConfig* ChooseFramebufferConfig(const FramebufferConfig* desired, const std::vector<FramebufferConfig>& alternatives);
         static bool RefreshContextAttribs(Window* window, const ContextConfig* contextConfig);
+
         static void MakeContextCurrentGL(Window* window);
         static Window* GetCurrentContextGL();
         static void SwapBuffersGL(Window* window);
