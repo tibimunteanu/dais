@@ -10,6 +10,7 @@ namespace dais
 
     typedef void (*GLProc)(void);
 
+    //TEMP: function pointers for public api
     typedef void (*MakeContextCurrentFun)(Window*);
     typedef void (*SwapBuffersFun)(Window*);
     typedef void (*SwapIntervalFun)(int);
@@ -26,17 +27,17 @@ namespace dais
     class Context
     {
     public:
-        int32_t m_Client;
-        int32_t m_Source;
+        ContextAPI m_API;
+        ContextType m_Type;
         int32_t m_Major;
         int32_t m_Minor;
         int32_t m_Revision;
         bool m_Forward;
         bool m_Debug;
         bool m_NoError;
-        int32_t m_Profile;
-        int32_t m_Robustness;
-        int32_t m_Release;
+        ContextProfile m_Profile;
+        ContextRobustnessMode m_Robustness;
+        ContextReleaseBehavior m_Release;
 
         PFNGLGETSTRINGIPROC GetStringi;
         PFNGLGETINTEGERVPROC GetIntegerv;
@@ -54,8 +55,8 @@ namespace dais
         static const FramebufferConfig* ChooseFramebufferConfig(const FramebufferConfig* desired, const std::vector<FramebufferConfig>& alternatives);
         static bool RefreshContextAttribs(Window* window, const ContextConfig* contextConfig);
 
-        static void MakeContextCurrentGL(Window* window);
         static Window* GetCurrentContextGL();
+        static void MakeContextCurrentGL(Window* window);
         static void SwapBuffersGL(Window* window);
         static void SwapIntervalGL(int32_t interval);
         static bool ExtensionSupportedGL(const char* extension);

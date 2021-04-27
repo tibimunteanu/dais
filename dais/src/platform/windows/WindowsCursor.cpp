@@ -17,22 +17,22 @@ namespace dais
         return cursor;
     }
 
-    Cursor* Cursor::Create(int32_t shape)
+    Cursor* Cursor::Create(CursorShape shape)
     {
         int32_t id = 0;
 
         switch (shape)
         {
-            case DAIS_ARROW_CURSOR: id = OCR_NORMAL; break;
-            case DAIS_IBEAM_CURSOR: id = OCR_IBEAM; break;
-            case DAIS_CROSSHAIR_CURSOR: id = OCR_CROSS; break;
-            case DAIS_POINTING_HAND_CURSOR: id = OCR_HAND; break;
-            case DAIS_RESIZE_EW_CURSOR: id = OCR_SIZEWE; break;
-            case DAIS_RESIZE_NS_CURSOR: id = OCR_SIZENS; break;
-            case DAIS_RESIZE_NWSE_CURSOR: id = OCR_SIZENWSE; break;
-            case DAIS_RESIZE_NESW_CURSOR: id = OCR_SIZENESW; break;
-            case DAIS_RESIZE_ALL_CURSOR: id = OCR_SIZEALL; break;
-            case DAIS_NOT_ALLOWED_CURSOR: id = OCR_NO; break;
+            case CursorShape::Arrow: id = OCR_NORMAL; break;
+            case CursorShape::IBeam: id = OCR_IBEAM; break;
+            case CursorShape::Crosshair: id = OCR_CROSS; break;
+            case CursorShape::PointingHand: id = OCR_HAND; break;
+            case CursorShape::ResizeEW: id = OCR_SIZEWE; break;
+            case CursorShape::ResizeNS: id = OCR_SIZENS; break;
+            case CursorShape::ResizeNWSE: id = OCR_SIZENWSE; break;
+            case CursorShape::ResizeNESW: id = OCR_SIZENESW; break;
+            case CursorShape::ResizeAll: id = OCR_SIZEALL; break;
+            case CursorShape::NotAllowed: id = OCR_NO; break;
 
             default: 
             {

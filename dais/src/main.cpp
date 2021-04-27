@@ -76,8 +76,8 @@ int main(int argc, char** argv)
     dais::Platform::s_Hints.window.centerCursor = true;
     dais::Platform::s_Hints.window.focusOnShow = true;
     dais::Platform::s_Hints.window.scaleToMonitor = true;
-    dais::Platform::s_Hints.context.client = DAIS_OPENGL_API;
-    dais::Platform::s_Hints.context.source = DAIS_NATIVE_CONTEXT_API;
+    dais::Platform::s_Hints.context.api = ContextAPI::OpenGL;
+    dais::Platform::s_Hints.context.type = ContextType::Native;
     dais::Platform::s_Hints.context.major = 1;
     dais::Platform::s_Hints.context.minor = 0;
     dais::Platform::s_Hints.framebuffer.redBits = 8;

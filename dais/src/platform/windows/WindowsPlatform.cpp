@@ -9,7 +9,7 @@ namespace dais
     DWORD WindowsPlatform::s_ForegroundLockTimeout = 0;
     int32_t WindowsPlatform::s_AcquiredMonitorCount = 0;
     char* WindowsPlatform::s_ClipboardString = nullptr;
-    int16_t WindowsPlatform::s_Keycodes[] = {};
+    Key WindowsPlatform::s_Keycodes[] = {};
     int16_t WindowsPlatform::s_Scancodes[] = {};
     char WindowsPlatform::s_KeyNames[][5] = {};
     double WindowsPlatform::s_RestoreCursorPositionX = 0.0;
@@ -123,17 +123,17 @@ namespace dais
     {
         if (scancode < 0
             || scancode > (KF_EXTENDED | 0xff)
-            || WindowsPlatform::s_Keycodes[scancode] == DAIS_KEY_UNKNOWN)
+            || WindowsPlatform::s_Keycodes[scancode] == Key::Unknown)
         {
             DAIS_ERROR("Invalid scancode!");
             return nullptr;
         }
-        return WindowsPlatform::s_KeyNames[WindowsPlatform::s_Keycodes[scancode]];
+        return WindowsPlatform::s_KeyNames[(int32_t)WindowsPlatform::s_Keycodes[scancode]];
     }
 
-    int32_t Platform::PlatformGetKeyScancode(int32_t key)
+    int32_t Platform::PlatformGetKeyScancode(Key key)
     {
-        return WindowsPlatform::s_Scancodes[key];
+        return WindowsPlatform::s_Scancodes[(int32_t)key];
     }
 
 
@@ -238,134 +238,134 @@ namespace dais
         memset(s_Keycodes, -1, sizeof(s_Keycodes));
         memset(s_Scancodes, -1, sizeof(s_Scancodes));
 
-        s_Keycodes[0x00B] = DAIS_KEY_0;
-        s_Keycodes[0x002] = DAIS_KEY_1;
-        s_Keycodes[0x003] = DAIS_KEY_2;
-        s_Keycodes[0x004] = DAIS_KEY_3;
-        s_Keycodes[0x005] = DAIS_KEY_4;
-        s_Keycodes[0x006] = DAIS_KEY_5;
-        s_Keycodes[0x007] = DAIS_KEY_6;
-        s_Keycodes[0x008] = DAIS_KEY_7;
-        s_Keycodes[0x009] = DAIS_KEY_8;
-        s_Keycodes[0x00A] = DAIS_KEY_9;
-        s_Keycodes[0x01E] = DAIS_KEY_A;
-        s_Keycodes[0x030] = DAIS_KEY_B;
-        s_Keycodes[0x02E] = DAIS_KEY_C;
-        s_Keycodes[0x020] = DAIS_KEY_D;
-        s_Keycodes[0x012] = DAIS_KEY_E;
-        s_Keycodes[0x021] = DAIS_KEY_F;
-        s_Keycodes[0x022] = DAIS_KEY_G;
-        s_Keycodes[0x023] = DAIS_KEY_H;
-        s_Keycodes[0x017] = DAIS_KEY_I;
-        s_Keycodes[0x024] = DAIS_KEY_J;
-        s_Keycodes[0x025] = DAIS_KEY_K;
-        s_Keycodes[0x026] = DAIS_KEY_L;
-        s_Keycodes[0x032] = DAIS_KEY_M;
-        s_Keycodes[0x031] = DAIS_KEY_N;
-        s_Keycodes[0x018] = DAIS_KEY_O;
-        s_Keycodes[0x019] = DAIS_KEY_P;
-        s_Keycodes[0x010] = DAIS_KEY_Q;
-        s_Keycodes[0x013] = DAIS_KEY_R;
-        s_Keycodes[0x01F] = DAIS_KEY_S;
-        s_Keycodes[0x014] = DAIS_KEY_T;
-        s_Keycodes[0x016] = DAIS_KEY_U;
-        s_Keycodes[0x02F] = DAIS_KEY_V;
-        s_Keycodes[0x011] = DAIS_KEY_W;
-        s_Keycodes[0x02D] = DAIS_KEY_X;
-        s_Keycodes[0x015] = DAIS_KEY_Y;
-        s_Keycodes[0x02C] = DAIS_KEY_Z;
+        s_Keycodes[0x00B] = Key::NumRow0;
+        s_Keycodes[0x002] = Key::NumRow1;
+        s_Keycodes[0x003] = Key::NumRow2;
+        s_Keycodes[0x004] = Key::NumRow3;
+        s_Keycodes[0x005] = Key::NumRow4;
+        s_Keycodes[0x006] = Key::NumRow5;
+        s_Keycodes[0x007] = Key::NumRow6;
+        s_Keycodes[0x008] = Key::NumRow7;
+        s_Keycodes[0x009] = Key::NumRow8;
+        s_Keycodes[0x00A] = Key::NumRow9;
+        s_Keycodes[0x01E] = Key::A;
+        s_Keycodes[0x030] = Key::B;
+        s_Keycodes[0x02E] = Key::C;
+        s_Keycodes[0x020] = Key::D;
+        s_Keycodes[0x012] = Key::E;
+        s_Keycodes[0x021] = Key::F;
+        s_Keycodes[0x022] = Key::G;
+        s_Keycodes[0x023] = Key::H;
+        s_Keycodes[0x017] = Key::I;
+        s_Keycodes[0x024] = Key::J;
+        s_Keycodes[0x025] = Key::K;
+        s_Keycodes[0x026] = Key::L;
+        s_Keycodes[0x032] = Key::M;
+        s_Keycodes[0x031] = Key::N;
+        s_Keycodes[0x018] = Key::O;
+        s_Keycodes[0x019] = Key::P;
+        s_Keycodes[0x010] = Key::Q;
+        s_Keycodes[0x013] = Key::R;
+        s_Keycodes[0x01F] = Key::S;
+        s_Keycodes[0x014] = Key::T;
+        s_Keycodes[0x016] = Key::U;
+        s_Keycodes[0x02F] = Key::V;
+        s_Keycodes[0x011] = Key::W;
+        s_Keycodes[0x02D] = Key::X;
+        s_Keycodes[0x015] = Key::Y;
+        s_Keycodes[0x02C] = Key::Z;
 
-        s_Keycodes[0x028] = DAIS_KEY_APOSTROPHE;
-        s_Keycodes[0x02B] = DAIS_KEY_BACKSLASH;
-        s_Keycodes[0x033] = DAIS_KEY_COMMA;
-        s_Keycodes[0x00D] = DAIS_KEY_EQUAL;
-        s_Keycodes[0x029] = DAIS_KEY_GRAVE_ACCENT;
-        s_Keycodes[0x01A] = DAIS_KEY_LEFT_BRACKET;
-        s_Keycodes[0x00C] = DAIS_KEY_MINUS;
-        s_Keycodes[0x034] = DAIS_KEY_PERIOD;
-        s_Keycodes[0x01B] = DAIS_KEY_RIGHT_BRACKET;
-        s_Keycodes[0x027] = DAIS_KEY_SEMICOLON;
-        s_Keycodes[0x035] = DAIS_KEY_SLASH;
-        s_Keycodes[0x056] = DAIS_KEY_WORLD_2;
+        s_Keycodes[0x028] = Key::Apostrophe;
+        s_Keycodes[0x02B] = Key::Backslash;
+        s_Keycodes[0x033] = Key::Comma;
+        s_Keycodes[0x00D] = Key::Equal;
+        s_Keycodes[0x029] = Key::GraveAccent;
+        s_Keycodes[0x01A] = Key::LeftBracket;
+        s_Keycodes[0x00C] = Key::Minus;
+        s_Keycodes[0x034] = Key::Period;
+        s_Keycodes[0x01B] = Key::RightBracket;
+        s_Keycodes[0x027] = Key::Semicolon;
+        s_Keycodes[0x035] = Key::Slash;
+        s_Keycodes[0x056] = Key::World2;
 
-        s_Keycodes[0x00E] = DAIS_KEY_BACKSPACE;
-        s_Keycodes[0x153] = DAIS_KEY_DELETE;
-        s_Keycodes[0x14F] = DAIS_KEY_END;
-        s_Keycodes[0x01C] = DAIS_KEY_ENTER;
-        s_Keycodes[0x001] = DAIS_KEY_ESCAPE;
-        s_Keycodes[0x147] = DAIS_KEY_HOME;
-        s_Keycodes[0x152] = DAIS_KEY_INSERT;
-        s_Keycodes[0x15D] = DAIS_KEY_MENU;
-        s_Keycodes[0x151] = DAIS_KEY_PAGE_DOWN;
-        s_Keycodes[0x149] = DAIS_KEY_PAGE_UP;
-        s_Keycodes[0x045] = DAIS_KEY_PAUSE;
-        s_Keycodes[0x146] = DAIS_KEY_PAUSE;
-        s_Keycodes[0x039] = DAIS_KEY_SPACE;
-        s_Keycodes[0x00F] = DAIS_KEY_TAB;
-        s_Keycodes[0x03A] = DAIS_KEY_CAPS_LOCK;
-        s_Keycodes[0x145] = DAIS_KEY_NUM_LOCK;
-        s_Keycodes[0x046] = DAIS_KEY_SCROLL_LOCK;
-        s_Keycodes[0x03B] = DAIS_KEY_F1;
-        s_Keycodes[0x03C] = DAIS_KEY_F2;
-        s_Keycodes[0x03D] = DAIS_KEY_F3;
-        s_Keycodes[0x03E] = DAIS_KEY_F4;
-        s_Keycodes[0x03F] = DAIS_KEY_F5;
-        s_Keycodes[0x040] = DAIS_KEY_F6;
-        s_Keycodes[0x041] = DAIS_KEY_F7;
-        s_Keycodes[0x042] = DAIS_KEY_F8;
-        s_Keycodes[0x043] = DAIS_KEY_F9;
-        s_Keycodes[0x044] = DAIS_KEY_F10;
-        s_Keycodes[0x057] = DAIS_KEY_F11;
-        s_Keycodes[0x058] = DAIS_KEY_F12;
-        s_Keycodes[0x064] = DAIS_KEY_F13;
-        s_Keycodes[0x065] = DAIS_KEY_F14;
-        s_Keycodes[0x066] = DAIS_KEY_F15;
-        s_Keycodes[0x067] = DAIS_KEY_F16;
-        s_Keycodes[0x068] = DAIS_KEY_F17;
-        s_Keycodes[0x069] = DAIS_KEY_F18;
-        s_Keycodes[0x06A] = DAIS_KEY_F19;
-        s_Keycodes[0x06B] = DAIS_KEY_F20;
-        s_Keycodes[0x06C] = DAIS_KEY_F21;
-        s_Keycodes[0x06D] = DAIS_KEY_F22;
-        s_Keycodes[0x06E] = DAIS_KEY_F23;
-        s_Keycodes[0x076] = DAIS_KEY_F24;
-        s_Keycodes[0x038] = DAIS_KEY_LEFT_ALT;
-        s_Keycodes[0x01D] = DAIS_KEY_LEFT_CONTROL;
-        s_Keycodes[0x02A] = DAIS_KEY_LEFT_SHIFT;
-        s_Keycodes[0x15B] = DAIS_KEY_LEFT_SUPER;
-        s_Keycodes[0x137] = DAIS_KEY_PRINT_SCREEN;
-        s_Keycodes[0x138] = DAIS_KEY_RIGHT_ALT;
-        s_Keycodes[0x11D] = DAIS_KEY_RIGHT_CONTROL;
-        s_Keycodes[0x036] = DAIS_KEY_RIGHT_SHIFT;
-        s_Keycodes[0x15C] = DAIS_KEY_RIGHT_SUPER;
-        s_Keycodes[0x150] = DAIS_KEY_DOWN;
-        s_Keycodes[0x14B] = DAIS_KEY_LEFT;
-        s_Keycodes[0x14D] = DAIS_KEY_RIGHT;
-        s_Keycodes[0x148] = DAIS_KEY_UP;
+        s_Keycodes[0x00E] = Key::Backspace;
+        s_Keycodes[0x153] = Key::Delete;
+        s_Keycodes[0x14F] = Key::End;
+        s_Keycodes[0x01C] = Key::Enter;
+        s_Keycodes[0x001] = Key::Escape;
+        s_Keycodes[0x147] = Key::Home;
+        s_Keycodes[0x152] = Key::Insert;
+        s_Keycodes[0x15D] = Key::Menu;
+        s_Keycodes[0x151] = Key::PageDown;
+        s_Keycodes[0x149] = Key::PageUp;
+        s_Keycodes[0x045] = Key::Pause;
+        s_Keycodes[0x146] = Key::Pause;
+        s_Keycodes[0x039] = Key::Space;
+        s_Keycodes[0x00F] = Key::Tab;
+        s_Keycodes[0x03A] = Key::CapsLock;
+        s_Keycodes[0x145] = Key::NumLock;
+        s_Keycodes[0x046] = Key::ScrollLock;
+        s_Keycodes[0x03B] = Key::F1;
+        s_Keycodes[0x03C] = Key::F2;
+        s_Keycodes[0x03D] = Key::F3;
+        s_Keycodes[0x03E] = Key::F4;
+        s_Keycodes[0x03F] = Key::F5;
+        s_Keycodes[0x040] = Key::F6;
+        s_Keycodes[0x041] = Key::F7;
+        s_Keycodes[0x042] = Key::F8;
+        s_Keycodes[0x043] = Key::F9;
+        s_Keycodes[0x044] = Key::F10;
+        s_Keycodes[0x057] = Key::F11;
+        s_Keycodes[0x058] = Key::F12;
+        s_Keycodes[0x064] = Key::F13;
+        s_Keycodes[0x065] = Key::F14;
+        s_Keycodes[0x066] = Key::F15;
+        s_Keycodes[0x067] = Key::F16;
+        s_Keycodes[0x068] = Key::F17;
+        s_Keycodes[0x069] = Key::F18;
+        s_Keycodes[0x06A] = Key::F19;
+        s_Keycodes[0x06B] = Key::F20;
+        s_Keycodes[0x06C] = Key::F21;
+        s_Keycodes[0x06D] = Key::F22;
+        s_Keycodes[0x06E] = Key::F23;
+        s_Keycodes[0x076] = Key::F24;
+        s_Keycodes[0x038] = Key::LeftAlt;
+        s_Keycodes[0x01D] = Key::LeftControl;
+        s_Keycodes[0x02A] = Key::LeftShift;
+        s_Keycodes[0x15B] = Key::LeftSuper;
+        s_Keycodes[0x137] = Key::PrintScreen;
+        s_Keycodes[0x138] = Key::RightAlt;
+        s_Keycodes[0x11D] = Key::RightControl;
+        s_Keycodes[0x036] = Key::RightShift;
+        s_Keycodes[0x15C] = Key::RightSuper;
+        s_Keycodes[0x150] = Key::Down;
+        s_Keycodes[0x14B] = Key::Left;
+        s_Keycodes[0x14D] = Key::Right;
+        s_Keycodes[0x148] = Key::Up;
 
-        s_Keycodes[0x052] = DAIS_KEY_KP_0;
-        s_Keycodes[0x04F] = DAIS_KEY_KP_1;
-        s_Keycodes[0x050] = DAIS_KEY_KP_2;
-        s_Keycodes[0x051] = DAIS_KEY_KP_3;
-        s_Keycodes[0x04B] = DAIS_KEY_KP_4;
-        s_Keycodes[0x04C] = DAIS_KEY_KP_5;
-        s_Keycodes[0x04D] = DAIS_KEY_KP_6;
-        s_Keycodes[0x047] = DAIS_KEY_KP_7;
-        s_Keycodes[0x048] = DAIS_KEY_KP_8;
-        s_Keycodes[0x049] = DAIS_KEY_KP_9;
-        s_Keycodes[0x04E] = DAIS_KEY_KP_ADD;
-        s_Keycodes[0x053] = DAIS_KEY_KP_DECIMAL;
-        s_Keycodes[0x135] = DAIS_KEY_KP_DIVIDE;
-        s_Keycodes[0x11C] = DAIS_KEY_KP_ENTER;
-        s_Keycodes[0x059] = DAIS_KEY_KP_EQUAL;
-        s_Keycodes[0x037] = DAIS_KEY_KP_MULTIPLY;
-        s_Keycodes[0x04A] = DAIS_KEY_KP_SUBTRACT;
+        s_Keycodes[0x052] = Key::KeyPad0;
+        s_Keycodes[0x04F] = Key::KeyPad1;
+        s_Keycodes[0x050] = Key::KeyPad2;
+        s_Keycodes[0x051] = Key::KeyPad3;
+        s_Keycodes[0x04B] = Key::KeyPad4;
+        s_Keycodes[0x04C] = Key::KeyPad5;
+        s_Keycodes[0x04D] = Key::KeyPad6;
+        s_Keycodes[0x047] = Key::KeyPad7;
+        s_Keycodes[0x048] = Key::KeyPad8;
+        s_Keycodes[0x049] = Key::KeyPad9;
+        s_Keycodes[0x04E] = Key::KeyPadAdd;
+        s_Keycodes[0x053] = Key::KeyPadDecimal;
+        s_Keycodes[0x135] = Key::KeyPadDivide;
+        s_Keycodes[0x11C] = Key::KeyPadEnter;
+        s_Keycodes[0x059] = Key::KeyPadEqual;
+        s_Keycodes[0x037] = Key::KeyPadMultiply;
+        s_Keycodes[0x04A] = Key::KeyPadSubtract;
 
         for (scancode = 0; scancode < 512; scancode++)
         {
-            if (s_Keycodes[scancode] > 0)
+            if ((int32_t)s_Keycodes[scancode] > 0)
             {
-                s_Scancodes[s_Keycodes[scancode]] = scancode;
+                s_Scancodes[(int32_t)s_Keycodes[scancode]] = scancode;
             }
         }
     }
@@ -375,7 +375,7 @@ namespace dais
     {
         memset(s_KeyNames, 0, sizeof(s_KeyNames));
 
-        for (int32_t key = DAIS_KEY_SPACE; key <= DAIS_KEY_LAST; key++)
+        for (int32_t key = (int32_t)Key::Space; key < (int32_t)Key::Count; key++)
         {
             int32_t scancode = s_Scancodes[key];
             if (scancode == -1)
@@ -384,8 +384,8 @@ namespace dais
             }
 
             UINT vk;
-            if (key >= DAIS_KEY_KP_0
-                && key <= DAIS_KEY_KP_ADD)
+            if (key >= (int32_t)Key::KeyPad0
+                && key <= (int32_t)Key::KeyPadAdd)
             {
                 const UINT vks[] =
                 {
@@ -395,7 +395,7 @@ namespace dais
                     VK_MULTIPLY, VK_SUBTRACT, VK_ADD
                 };
 
-                vk = vks[key - DAIS_KEY_KP_0];
+                vk = vks[key - (int32_t)Key::KeyPad0];
             }
             else
             {

@@ -224,8 +224,8 @@ namespace dais
             nullptr
         };
 
-        window->GetContext()->m_Source = contextConfig->source;
-        window->GetContext()->m_Client = DAIS_OPENGL_API;
+        window->GetContext()->m_Type = contextConfig->type;
+        window->GetContext()->m_API = ContextAPI::OpenGL;
 
         Window* previous = GetCurrentContextGL();
         MakeContextCurrentGL(window);
@@ -245,7 +245,7 @@ namespace dais
         const char* version = (const char*)context->GetString(GL_VERSION);
         if (!version)
         {
-            if (contextConfig->client == DAIS_OPENGL_API)
+            if (contextConfig->api == ContextAPI::OpenGL)
             {
                 DAIS_ERROR("OpenGL GetString failed!");
             }
@@ -264,7 +264,7 @@ namespace dais
             if (strncmp(version, prefixes[i], length) == 0)
             {
                 version += length;
-                context->m_Client = DAIS_OPENGL_ES_API;
+                context->m_API = ContextAPI::OpenGLES;
                 break;
             }
         }
@@ -274,7 +274,7 @@ namespace dais
             &context->m_Minor,
             &context->m_Revision))
         {
-            if (context->m_Client == DAIS_OPENGL_API)
+            if (context->m_API == ContextAPI::OpenGL)
             {
                 DAIS_ERROR("No version found on OpenGL version string!");
             }
@@ -296,7 +296,7 @@ namespace dais
             //for API consistency, we emulate the behavior of the
             //{GLX|WGL}_ARB_create_context extension and fail here
 
-            if (context->m_Client == DAIS_OPENGL_API)
+            if (context->m_API == ContextAPI::OpenGL)
             {
                 DAIS_ERROR("Requested OpenGL version %i.%i, got version %i.%i!",
                     contextConfig->major, contextConfig->minor,
@@ -327,7 +327,7 @@ namespace dais
             }
         }
 
-        if (context->m_Client == DAIS_OPENGL_API)
+        if (context->m_API == ContextAPI::OpenGL)
         {
             //read back context flags (OpenGL 3.0+)
             if (context->m_Major >= 3)
@@ -367,18 +367,18 @@ namespace dais
 
                 if (mask & GL_CONTEXT_COMPATIBILITY_PROFILE_BIT)
                 {
-                    context->m_Profile = DAIS_OPENGL_COMPAT_PROFILE;
+                    context->m_Profile = ContextProfile::Compatibility;
                 }
                 else if (mask & GL_CONTEXT_CORE_PROFILE_BIT)
                 {
-                    context->m_Profile = DAIS_OPENGL_CORE_PROFILE;
+                    context->m_Profile = ContextProfile::Core;
                 }
                 else if (ExtensionSupportedGL("GL_ARB_compatibility"))
                 {
                     //HACK: this is a workaround for the compatibility profile bit
                     //not being set in the context flags in an OpenGL 3.2+ context
                     //was created without having requested a specific version
-                    context->m_Profile = DAIS_OPENGL_COMPAT_PROFILE;
+                    context->m_Profile = ContextProfile::Compatibility;
                 }
             }
 
@@ -393,11 +393,11 @@ namespace dais
 
                 if (strategy == GL_LOSE_CONTEXT_ON_RESET_ARB)
                 {
-                    context->m_Robustness = DAIS_LOSE_CONTEXT_ON_RESET;
+                    context->m_Robustness = ContextRobustnessMode::LoseContextOnReset;
                 }
                 else if (strategy == GL_NO_RESET_NOTIFICATION_ARB)
                 {
-                    context->m_Robustness = DAIS_NO_RESET_NOTIFICATION;
+                    context->m_Robustness = ContextRobustnessMode::NoResetNotification;
                 }
             }
         }
@@ -414,11 +414,11 @@ namespace dais
 
                 if (strategy == GL_LOSE_CONTEXT_ON_RESET_ARB)
                 {
-                    context->m_Robustness = DAIS_LOSE_CONTEXT_ON_RESET;
+                    context->m_Robustness = ContextRobustnessMode::LoseContextOnReset;
                 }
                 else if (strategy == GL_NO_RESET_NOTIFICATION_ARB)
                 {
-                    context->m_Robustness = DAIS_NO_RESET_NOTIFICATION;
+                    context->m_Robustness = ContextRobustnessMode::NoResetNotification;
                 }
             }
         }
@@ -430,11 +430,11 @@ namespace dais
 
             if (behavior == GL_NONE)
             {
-                context->m_Release = DAIS_RELEASE_BEHAVIOR_NONE;
+                context->m_Release = ContextReleaseBehavior::None;
             }
             else if (behavior == GL_CONTEXT_RELEASE_BEHAVIOR_FLUSH)
             {
-                context->m_Release = DAIS_RELEASE_BEHAVIOR_FLUSH;
+                context->m_Release = ContextReleaseBehavior::Flush;
             }
         }
 
@@ -451,12 +451,17 @@ namespace dais
     }
 
 
+    Window* Context::GetCurrentContextGL()
+    {
+        return (Window*)Platform::s_ContextSlot->Get();
+    }
+
     void Context::MakeContextCurrentGL(Window* window)
     {
         Window* previous = GetCurrentContextGL();
 
         if (window
-            && window->GetContext()->m_Client == DAIS_NO_API)
+            && window->GetContext()->m_API == ContextAPI::None)
         {
             DAIS_ERROR("Cannot make current with a window that has no OpenGL or OpenGL ES context!");
             return;
@@ -465,7 +470,7 @@ namespace dais
         if (previous)
         {
             if (!window
-                || window->GetContext()->m_Source != previous->GetContext()->m_Source)
+                || window->GetContext()->m_Type != previous->GetContext()->m_Type)
             {
                 previous->GetContext()->m_MakeCurrent(nullptr);
             }
@@ -477,14 +482,9 @@ namespace dais
         }
     }
 
-    Window* Context::GetCurrentContextGL()
-    {
-        return (Window*)Platform::s_ContextSlot->Get();
-    }
-
     void Context::SwapBuffersGL(Window* window)
     {
-        if (window->GetContext()->m_Client == DAIS_NO_API)
+        if (window->GetContext()->m_API == ContextAPI::None)
         {
             DAIS_ERROR("Cannot swap buffers of a window that has no OpenGL or OpenGL ES context!");
             return;

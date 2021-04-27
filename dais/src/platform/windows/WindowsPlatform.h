@@ -18,9 +18,9 @@ namespace dais
         static DWORD s_ForegroundLockTimeout;
         static int32_t s_AcquiredMonitorCount;
         static char* s_ClipboardString;
-        static int16_t s_Keycodes[512];
-        static int16_t s_Scancodes[DAIS_KEY_LAST + 1];
-        static char s_KeyNames[DAIS_KEY_LAST + 1][5];
+        static Key s_Keycodes[512];
+        static int16_t s_Scancodes[(int32_t)Key::Count];
+        static char s_KeyNames[(int32_t)Key::Count][5];
         static double s_RestoreCursorPositionX; //where to place the cursor when re-enabled
         static double s_RestoreCursorPositionY;
         static Window* s_DisabledCursorWindow; //the window whose disabled cursor mode is active

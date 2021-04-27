@@ -8,6 +8,6 @@ namespace dais
     {
     public:
         static Cursor* Create(const Image* image, int32_t xHot, int32_t yHot);
-        static Cursor* Create(int32_t shape);
+        static Cursor* Create(CursorShape shape);
     };
 }

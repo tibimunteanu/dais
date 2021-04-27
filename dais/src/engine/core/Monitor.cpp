@@ -120,7 +120,7 @@ namespace dais
 
         GammaRamp* ramp = new GammaRamp(currentRamp->size);
 
-        for (int i = 0; i < currentRamp->size; i++)
+        for (uint32_t i = 0; i < currentRamp->size; i++)
         {
             //calculate intensity
             float value = i / (float)(currentRamp->size - 1);

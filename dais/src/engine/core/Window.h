@@ -15,13 +15,13 @@ namespace dais
     typedef void(*WindowMaximizeCallback)(Window*, bool);
     typedef void(*WindowFramebufferSizeCallback)(Window*, int32_t, int32_t);
     typedef void(*WindowContentScaleCallback)(Window*, float, float);
-    typedef void(*WindowMouseButtonCallback)(Window*, int32_t, int32_t, int32_t);
+    typedef void(*WindowMouseButtonCallback)(Window*, MouseButton, KeyState, KeyMods);
     typedef void(*WindowCursorPositionCallback)(Window*, double, double);
     typedef void(*WindowCursorEnterCallback)(Window*, bool);
     typedef void(*WindowScrollCallback)(Window*, double, double);
-    typedef void(*WindowKeyCallback)(Window*, int32_t, int32_t, int32_t, int32_t);
-    typedef void(*WindowCharCallback)(Window*, uint32_t);
-    typedef void(*WindowCharModsCallback)(Window*, uint32_t, int32_t);
+    typedef void(*WindowKeyCallback)(Window*, Key, int32_t, KeyState, KeyMods);
+    typedef void(*WindowCharCallback)(Window*, int32_t);
+    typedef void(*WindowCharModsCallback)(Window*, uint32_t, KeyMods);
     typedef void(*WindowDropCallback)(Window*, uint32_t, const char**);
 
     struct WindowConfig
@@ -48,16 +48,16 @@ namespace dais
 
     struct ContextConfig
     {
-        int32_t client;
-        int32_t source;
+        ContextAPI api;
+        ContextType type;
         int32_t major;
         int32_t minor;
         bool forward;
         bool debug;
         bool noerror;
-        int32_t profile;
-        int32_t robustness;
-        int32_t release;
+        ContextProfile profile;
+        ContextRobustnessMode robustness;
+        ContextReleaseBehavior release;
         Window* share;
 
     public:
@@ -112,9 +112,9 @@ namespace dais
         int32_t m_Numerator = -1;
         int32_t m_Denominator = -1;
 
-        int32_t m_CursorMode = 0;
-        int8_t m_MouseButtons[DAIS_MOUSE_BUTTON_LAST + 1] = {};
-        int8_t m_Keys[DAIS_KEY_LAST + 1] = {};
+        CursorMode m_CursorMode = CursorMode::Normal;
+        KeyState m_MouseButtons[(int32_t)MouseButton::Count] = {};
+        KeyState m_Keys[(int32_t)Key::Count] = {};
         bool m_StickyKeys = false;
         bool m_StickyMouseButtons = false;
         bool m_LockKeyMods = false;
@@ -182,9 +182,9 @@ namespace dais
         void GetContentScale(float* xScale, float* yScale);
         float GetOpacity();
         const Monitor* GetMonitor() const;
-        int32_t GetInputMode(int32_t mode); //DAIS_CURSOR_NORMAL, etc or true false
-        int32_t GetKey(int32_t key);
-        int32_t GetGetMouseButton(int32_t button);
+        int32_t GetInputMode(InputMode mode);
+        KeyState GetKey(Key key);
+        KeyState GetGetMouseButton(MouseButton button);
         void GetCursorPosition(double* x, double* y);
         Context* GetContext();
         void* GetNativeHandle() const;
@@ -205,7 +205,7 @@ namespace dais
         void SetMousePassThrough(bool value);
         void SetShouldClose(bool value);
         void SetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate);
-        void SetInputMode(int32_t mode, int32_t value);
+        void SetInputMode(InputMode mode, int32_t value);
         void SetCursorPosition(double x, double y);
 
         void Maximize();
@@ -273,7 +273,7 @@ namespace dais
         virtual void PlatformSetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate) = 0;
         virtual void PlatformSetCursor(Cursor* cursor) = 0;
         virtual void PlatformSetCursorPosition(double x, double y) = 0;
-        virtual void PlatformSetCursorMode(int32_t mode) = 0;
+        virtual void PlatformSetCursorMode(CursorMode mode) = 0;
         virtual void PlatformSetRawMouseMotion(bool enabled) = 0;
 
         virtual void PlatformMaximize() = 0;
@@ -294,13 +294,13 @@ namespace dais
         void OnMaximize(bool maximized);
         void OnFramebufferSizeChanged(int32_t width, int32_t height);
         void OnContentScaleChanged(float xScale, float yScale);
-        void OnMouseButton(int32_t button, int32_t action, int32_t mods);
+        void OnMouseButton(MouseButton button, KeyState action, KeyMods mods);
         void OnCursorPositionChanged(double x, double y);
         void OnCursorEnter(bool entered);
         void OnScroll(double xOffset, double yOffset);
-        void OnKey(int32_t key, int32_t scancode, int32_t action, int32_t mods);
-        void OnChar(uint32_t codepoint, int32_t mods, bool plain);
-        void OnCharMods(uint32_t codepoint, int32_t mods);
+        void OnKey(Key key, int32_t scancode, KeyState action, KeyMods mods);
+        void OnChar(uint32_t codepoint, KeyMods mods, bool plain);
+        void OnCharMods(uint32_t codepoint, KeyMods mods);
         void OnDrop(uint32_t count, const char** paths);
     };
 }

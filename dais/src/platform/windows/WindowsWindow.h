@@ -66,7 +66,7 @@ namespace dais
         void PlatformSetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate) override;
         void PlatformSetCursor(Cursor* cursor) override;
         void PlatformSetCursorPosition(double x, double y) override;
-        void PlatformSetCursorMode(int32_t mode) override;
+        void PlatformSetCursorMode(CursorMode mode) override;
         void PlatformSetRawMouseMotion(bool enabled) override;
 
         void PlatformMaximize() override;
@@ -94,6 +94,6 @@ namespace dais
         void UpdateStyles();
         void AdjustRect(RECT* rect) const;
         bool IsCursorInContentArea() const;
-        int32_t GetKeyMods() const;
+        KeyMods GetKeyMods() const;
     };
 }

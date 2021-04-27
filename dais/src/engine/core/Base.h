@@ -59,6 +59,12 @@
 #define DAIS_CORE_ASSERT(...)
 #endif
 
+#define FLAG_OPERATORS(type) \
+constexpr enum type operator |(const enum type a, const enum type b) { return (enum type)(uint32_t(a) | uint32_t(b)); } \
+constexpr enum type operator &(const enum type a, const enum type b) { return (enum type)(uint32_t(a) & uint32_t(b)); } \
+constexpr enum type operator ~(const enum type a) { return (enum type)(~uint32_t(a)); } \
+constexpr enum type operator &=(enum type a, const enum type b) { a = a & b; return a; } \
+constexpr enum type operator |=(enum type a, const enum type b) { a = a | b; return a; }
 
 ///////////////////////////////// PLATFORM DETECTION ///////////////////////////////////
 #ifdef _WIN32
@@ -154,305 +160,328 @@ struct Image
 
 #include "engine/core/Utils.h"
 
-#define DAIS_NO_API                          0
-#define DAIS_OPENGL_API             0x00030001
-#define DAIS_OPENGL_ES_API          0x00030002
+enum class ContextAPI
+{
+    None = 0,
+    OpenGL = 1,
+    OpenGLES = 2
+};
 
-#define DAIS_NO_ROBUSTNESS                   0
-#define DAIS_NO_RESET_NOTIFICATION  0x00031001
-#define DAIS_LOSE_CONTEXT_ON_RESET  0x00031002
+enum class ContextType
+{
+    Native = 0,
+    EGL = 1,
+    OSMESA = 2
+};
 
-#define DAIS_OPENGL_ANY_PROFILE              0
-#define DAIS_OPENGL_CORE_PROFILE    0x00032001
-#define DAIS_OPENGL_COMPAT_PROFILE  0x00032002
+enum class ContextRobustnessMode
+{
+    None = 0,
+    NoResetNotification = 1,
+    LoseContextOnReset = 2
+};
 
-#define DAIS_ANY_RELEASE_BEHAVIOR            0
-#define DAIS_RELEASE_BEHAVIOR_FLUSH 0x00035001
-#define DAIS_RELEASE_BEHAVIOR_NONE  0x00035002
+enum class ContextReleaseBehavior
+{
+    Any = 0,
+    Flush = 1,
+    None = 2
+};
 
-#define DAIS_NATIVE_CONTEXT_API     0x00036001
-#define DAIS_EGL_CONTEXT_API        0x00036002
-#define DAIS_OSMESA_CONTEXT_API     0x00036003
+enum class ContextProfile
+{
+    Any = 0,
+    Core = 1,
+    Compatibility = 2
+};
 
-#define DAIS_POLL_PRESENCE          0
-#define DAIS_POLL_AXES              1
-#define DAIS_POLL_BUTTONS           2
-#define DAIS_POLL_ALL               (DAIS_POLL_AXES | DAIS_POLL_BUTTONS)
+enum class InputMode
+{
+    Cursor = 0,
+    StickyKeys = 1,
+    StickyMouseButtons = 2,
+    LockKeyMods = 3,
+    RawMouseMotion = 4
+};
 
-#define DAIS_RELEASE                0
-#define DAIS_PRESS                  1
-#define DAIS_REPEAT                 2
+enum class CursorMode
+{
+    Normal = 0,
+    Hidden = 1,
+    Disabled = 2
+};
 
-#define DAIS_STICK                  3
-#define DAIS_JOYSTICK_AXIS          1
-#define DAIS_JOYSTICK_BUTTON        2
-#define DAIS_JOYSTICK_HATBIT        3
+enum class CursorShape
+{
+    //The regular arrow cursor shape.
+    Arrow = 0,
 
-#define DAIS_HAT_CENTERED           0
-#define DAIS_HAT_UP                 1
-#define DAIS_HAT_RIGHT              2
-#define DAIS_HAT_DOWN               4
-#define DAIS_HAT_LEFT               8
-#define DAIS_HAT_RIGHT_UP           (DAIS_HAT_RIGHT | DAIS_HAT_UP)
-#define DAIS_HAT_RIGHT_DOWN         (DAIS_HAT_RIGHT | DAIS_HAT_DOWN)
-#define DAIS_HAT_LEFT_UP            (DAIS_HAT_LEFT  | DAIS_HAT_UP)
-#define DAIS_HAT_LEFT_DOWN          (DAIS_HAT_LEFT  | DAIS_HAT_DOWN)
+    //The text input I-beam cursor shape.
+    IBeam = 1,
 
-#define DAIS_KEY_UNKNOWN            -1
+    //The crosshair cursor shape.
+    Crosshair = 2,
 
-/* Printable keys */
-#define DAIS_KEY_SPACE              32
-#define DAIS_KEY_APOSTROPHE         39  /* ' */
-#define DAIS_KEY_COMMA              44  /* , */
-#define DAIS_KEY_MINUS              45  /* - */
-#define DAIS_KEY_PERIOD             46  /* . */
-#define DAIS_KEY_SLASH              47  /* / */
-#define DAIS_KEY_0                  48
-#define DAIS_KEY_1                  49
-#define DAIS_KEY_2                  50
-#define DAIS_KEY_3                  51
-#define DAIS_KEY_4                  52
-#define DAIS_KEY_5                  53
-#define DAIS_KEY_6                  54
-#define DAIS_KEY_7                  55
-#define DAIS_KEY_8                  56
-#define DAIS_KEY_9                  57
-#define DAIS_KEY_SEMICOLON          59  /* ; */
-#define DAIS_KEY_EQUAL              61  /* = */
-#define DAIS_KEY_A                  65
-#define DAIS_KEY_B                  66
-#define DAIS_KEY_C                  67
-#define DAIS_KEY_D                  68
-#define DAIS_KEY_E                  69
-#define DAIS_KEY_F                  70
-#define DAIS_KEY_G                  71
-#define DAIS_KEY_H                  72
-#define DAIS_KEY_I                  73
-#define DAIS_KEY_J                  74
-#define DAIS_KEY_K                  75
-#define DAIS_KEY_L                  76
-#define DAIS_KEY_M                  77
-#define DAIS_KEY_N                  78
-#define DAIS_KEY_O                  79
-#define DAIS_KEY_P                  80
-#define DAIS_KEY_Q                  81
-#define DAIS_KEY_R                  82
-#define DAIS_KEY_S                  83
-#define DAIS_KEY_T                  84
-#define DAIS_KEY_U                  85
-#define DAIS_KEY_V                  86
-#define DAIS_KEY_W                  87
-#define DAIS_KEY_X                  88
-#define DAIS_KEY_Y                  89
-#define DAIS_KEY_Z                  90
-#define DAIS_KEY_LEFT_BRACKET       91  /* [ */
-#define DAIS_KEY_BACKSLASH          92  /* \ */
-#define DAIS_KEY_RIGHT_BRACKET      93  /* ] */
-#define DAIS_KEY_GRAVE_ACCENT       96  /* ` */
-#define DAIS_KEY_WORLD_1            161 /* non-US #1 */
-#define DAIS_KEY_WORLD_2            162 /* non-US #2 */
+    //The pointing hand cursor shape.
+    PointingHand = 3,
 
-/* Function keys */
-#define DAIS_KEY_ESCAPE             256
-#define DAIS_KEY_ENTER              257
-#define DAIS_KEY_TAB                258
-#define DAIS_KEY_BACKSPACE          259
-#define DAIS_KEY_INSERT             260
-#define DAIS_KEY_DELETE             261
-#define DAIS_KEY_RIGHT              262
-#define DAIS_KEY_LEFT               263
-#define DAIS_KEY_DOWN               264
-#define DAIS_KEY_UP                 265
-#define DAIS_KEY_PAGE_UP            266
-#define DAIS_KEY_PAGE_DOWN          267
-#define DAIS_KEY_HOME               268
-#define DAIS_KEY_END                269
-#define DAIS_KEY_CAPS_LOCK          280
-#define DAIS_KEY_SCROLL_LOCK        281
-#define DAIS_KEY_NUM_LOCK           282
-#define DAIS_KEY_PRINT_SCREEN       283
-#define DAIS_KEY_PAUSE              284
-#define DAIS_KEY_F1                 290
-#define DAIS_KEY_F2                 291
-#define DAIS_KEY_F3                 292
-#define DAIS_KEY_F4                 293
-#define DAIS_KEY_F5                 294
-#define DAIS_KEY_F6                 295
-#define DAIS_KEY_F7                 296
-#define DAIS_KEY_F8                 297
-#define DAIS_KEY_F9                 298
-#define DAIS_KEY_F10                299
-#define DAIS_KEY_F11                300
-#define DAIS_KEY_F12                301
-#define DAIS_KEY_F13                302
-#define DAIS_KEY_F14                303
-#define DAIS_KEY_F15                304
-#define DAIS_KEY_F16                305
-#define DAIS_KEY_F17                306
-#define DAIS_KEY_F18                307
-#define DAIS_KEY_F19                308
-#define DAIS_KEY_F20                309
-#define DAIS_KEY_F21                310
-#define DAIS_KEY_F22                311
-#define DAIS_KEY_F23                312
-#define DAIS_KEY_F24                313
-#define DAIS_KEY_F25                314
-#define DAIS_KEY_KP_0               320
-#define DAIS_KEY_KP_1               321
-#define DAIS_KEY_KP_2               322
-#define DAIS_KEY_KP_3               323
-#define DAIS_KEY_KP_4               324
-#define DAIS_KEY_KP_5               325
-#define DAIS_KEY_KP_6               326
-#define DAIS_KEY_KP_7               327
-#define DAIS_KEY_KP_8               328
-#define DAIS_KEY_KP_9               329
-#define DAIS_KEY_KP_DECIMAL         330
-#define DAIS_KEY_KP_DIVIDE          331
-#define DAIS_KEY_KP_MULTIPLY        332
-#define DAIS_KEY_KP_SUBTRACT        333
-#define DAIS_KEY_KP_ADD             334
-#define DAIS_KEY_KP_ENTER           335
-#define DAIS_KEY_KP_EQUAL           336
-#define DAIS_KEY_LEFT_SHIFT         340
-#define DAIS_KEY_LEFT_CONTROL       341
-#define DAIS_KEY_LEFT_ALT           342
-#define DAIS_KEY_LEFT_SUPER         343
-#define DAIS_KEY_RIGHT_SHIFT        344
-#define DAIS_KEY_RIGHT_CONTROL      345
-#define DAIS_KEY_RIGHT_ALT          346
-#define DAIS_KEY_RIGHT_SUPER        347
-#define DAIS_KEY_MENU               348
+    //The horizontal resize/move arrow shape.  This is usually a horizontal double-headed arrow.
+    ResizeEW = 4,
 
-#define DAIS_KEY_LAST               DAIS_KEY_MENU
+    //The vertical resize/move shape.  This is usually a vertical double-headed arrow.
+    ResizeNS = 5,
 
-#define DAIS_MOD_SHIFT           0x0001
-#define DAIS_MOD_CONTROL         0x0002
-#define DAIS_MOD_ALT             0x0004
-#define DAIS_MOD_SUPER           0x0008
-#define DAIS_MOD_CAPS_LOCK       0x0010
-#define DAIS_MOD_NUM_LOCK        0x0020
+    //The top-left to bottom-right diagonal resize/move shape.  This is usually a diagonal double-headed arrow.
+    //NOTE: macos - This shape is provided by a private system API and may fail with ref DAIS_CURSOR_UNAVAILABLE in the future.
+    //NOTE: x11 - This shape is provided by a newer standard not supported by all cursor themes.
+    //NOTE: wayland - This shape is provided by a newer standard not supported by all cursor themes.
+    ResizeNWSE = 6,
 
-#define DAIS_MOUSE_BUTTON_1         0
-#define DAIS_MOUSE_BUTTON_2         1
-#define DAIS_MOUSE_BUTTON_3         2
-#define DAIS_MOUSE_BUTTON_4         3
-#define DAIS_MOUSE_BUTTON_5         4
-#define DAIS_MOUSE_BUTTON_6         5
-#define DAIS_MOUSE_BUTTON_7         6
-#define DAIS_MOUSE_BUTTON_8         7
-#define DAIS_MOUSE_BUTTON_LAST      DAIS_MOUSE_BUTTON_8
-#define DAIS_MOUSE_BUTTON_LEFT      DAIS_MOUSE_BUTTON_1
-#define DAIS_MOUSE_BUTTON_RIGHT     DAIS_MOUSE_BUTTON_2
-#define DAIS_MOUSE_BUTTON_MIDDLE    DAIS_MOUSE_BUTTON_3
+    //The top-right to bottom-left diagonal resize/move shape.  This is usually a diagonal double-headed arrow.
+    //NOTE: macos - This shape is provided by a private system API and may fail with DAIS_CURSOR_UNAVAILABLE in the future.
+    //NOTE: x11 - This shape is provided by a newer standard not supported by all cursor themes.
+    //NOTE: wayland - This shape is provided by a newer standard not supported by all cursor themes.
+    ResizeNESW = 7,
 
-#define DAIS_JOYSTICK_1             0
-#define DAIS_JOYSTICK_2             1
-#define DAIS_JOYSTICK_3             2
-#define DAIS_JOYSTICK_4             3
-#define DAIS_JOYSTICK_5             4
-#define DAIS_JOYSTICK_6             5
-#define DAIS_JOYSTICK_7             6
-#define DAIS_JOYSTICK_8             7
-#define DAIS_JOYSTICK_9             8
-#define DAIS_JOYSTICK_10            9
-#define DAIS_JOYSTICK_11            10
-#define DAIS_JOYSTICK_12            11
-#define DAIS_JOYSTICK_13            12
-#define DAIS_JOYSTICK_14            13
-#define DAIS_JOYSTICK_15            14
-#define DAIS_JOYSTICK_16            15
-#define DAIS_JOYSTICK_LAST          DAIS_JOYSTICK_16
+    //The omni-directional resize cursor/move shape.  This is usually either a
+    //combined horizontal and vertical double-headed arrow or a grabbing hand.
+    ResizeAll = 8,
 
-#define DAIS_GAMEPAD_BUTTON_A               0
-#define DAIS_GAMEPAD_BUTTON_B               1
-#define DAIS_GAMEPAD_BUTTON_X               2
-#define DAIS_GAMEPAD_BUTTON_Y               3
-#define DAIS_GAMEPAD_BUTTON_LEFT_BUMPER     4
-#define DAIS_GAMEPAD_BUTTON_RIGHT_BUMPER    5
-#define DAIS_GAMEPAD_BUTTON_BACK            6
-#define DAIS_GAMEPAD_BUTTON_START           7
-#define DAIS_GAMEPAD_BUTTON_GUIDE           8
-#define DAIS_GAMEPAD_BUTTON_LEFT_THUMB      9
-#define DAIS_GAMEPAD_BUTTON_RIGHT_THUMB     10
-#define DAIS_GAMEPAD_BUTTON_DPAD_UP         11
-#define DAIS_GAMEPAD_BUTTON_DPAD_RIGHT      12
-#define DAIS_GAMEPAD_BUTTON_DPAD_DOWN       13
-#define DAIS_GAMEPAD_BUTTON_DPAD_LEFT       14
-#define DAIS_GAMEPAD_BUTTON_LAST            DAIS_GAMEPAD_BUTTON_DPAD_LEFT
+    //The operation-not-allowed shape.  This is usually a circle with a diagonal line through it.
+    //NOTE: x11 - This shape is provided by a newer standard not supported by all cursor themes.
+    //NOTE: wayland - This shape is provided by a newer standard not supported by all cursor themes.
+    NotAllowed = 9
+};
 
-#define DAIS_GAMEPAD_BUTTON_CROSS       DAIS_GAMEPAD_BUTTON_A
-#define DAIS_GAMEPAD_BUTTON_CIRCLE      DAIS_GAMEPAD_BUTTON_B
-#define DAIS_GAMEPAD_BUTTON_SQUARE      DAIS_GAMEPAD_BUTTON_X
-#define DAIS_GAMEPAD_BUTTON_TRIANGLE    DAIS_GAMEPAD_BUTTON_Y
+enum class JoystickButtonType
+{
+    None = 0,
 
-#define DAIS_GAMEPAD_AXIS_LEFT_X        0
-#define DAIS_GAMEPAD_AXIS_LEFT_Y        1
-#define DAIS_GAMEPAD_AXIS_RIGHT_X       2
-#define DAIS_GAMEPAD_AXIS_RIGHT_Y       3
-#define DAIS_GAMEPAD_AXIS_LEFT_TRIGGER  4
-#define DAIS_GAMEPAD_AXIS_RIGHT_TRIGGER 5
-#define DAIS_GAMEPAD_AXIS_LAST          DAIS_GAMEPAD_AXIS_RIGHT_TRIGGER
+    Axis = 1,
+    Button = 2,
+    HatBit = 3
+};
 
-// These are the standard cursor shapes that can be requested from the window system.
-#define DAIS_ARROW_CURSOR           0x00036001  // The regular arrow cursor shape.
-#define DAIS_IBEAM_CURSOR           0x00036002  // The text input I-beam cursor shape.
-#define DAIS_CROSSHAIR_CURSOR       0x00036003  // The crosshair cursor shape.
-#define DAIS_POINTING_HAND_CURSOR   0x00036004  // The pointing hand cursor shape.
-#define DAIS_RESIZE_EW_CURSOR       0x00036005  // The horizontal resize/move arrow shape.  This is usually a horizontal double-headed arrow.
-#define DAIS_RESIZE_NS_CURSOR       0x00036006  // The vertical resize/move shape.  This is usually a vertical double-headed  arrow.
-#define DAIS_RESIZE_NWSE_CURSOR     0x00036007  // The top-left to bottom-right diagonal resize/move shape.  This is usually a diagonal double-headed arrow.
-#define DAIS_RESIZE_NESW_CURSOR     0x00036008  // The top-right to bottom-left diagonal resize/move shape.  This is usually a diagonal double-headed arrow.
-#define DAIS_RESIZE_ALL_CURSOR      0x00036009  // The omni-directional resize cursor/move shape.  This is usually either a combined horizontal and vertical double-headed arrow or a grabbing hand.
-#define DAIS_NOT_ALLOWED_CURSOR     0x0003600A  // The operation-not-allowed shape.  This is usually a circle with a diagonal line through it.
+enum class KeyState
+{
+    Release = 0,
+    Press = 1,
+    Repeat = 2,
+    Stick = 3
+};
 
-#define DAIS_CURSOR                 0x00033001
-#define DAIS_STICKY_KEYS            0x00033002
-#define DAIS_STICKY_MOUSE_BUTTONS   0x00033003
-#define DAIS_LOCK_KEY_MODS          0x00033004
-#define DAIS_RAW_MOUSE_MOTION       0x00033005
+enum class HatState
+{
+    Centered = 0,
+    Up = 1 << 0,
+    Right = 1 << 1,
+    Down = 1 << 2,
+    Left = 1 << 3,
 
-#define DAIS_CURSOR_NORMAL          0x00034001
-#define DAIS_CURSOR_HIDDEN          0x00034002
-#define DAIS_CURSOR_DISABLED        0x00034003
+    RightUp = (Right | Up),
+    RightDown = (Right | Down),
+    LeftUp = (Left | Up),
+    LeftDown = (Left | Down)
+};
+FLAG_OPERATORS(HatState)
 
-//The regular arrow cursor shape.
-#define DAIS_ARROW_CURSOR           0x00036001
+enum class Key
+{
+    Unknown = -1,
 
-//The text input I-beam cursor shape.
-#define DAIS_IBEAM_CURSOR           0x00036002
+    /* Printable keys */
+    Space = 32,
+    Apostrophe = 39,
+    Comma = 44,
+    Minus = 45,
+    Period = 46,
+    Slash = 47,
+    NumRow0 = 48,
+    NumRow1 = 49,
+    NumRow2 = 50,
+    NumRow3 = 51,
+    NumRow4 = 52,
+    NumRow5 = 53,
+    NumRow6 = 54,
+    NumRow7 = 55,
+    NumRow8 = 56,
+    NumRow9 = 57,
+    Semicolon = 59,
+    Equal = 61,
+    A = 65,
+    B = 66,
+    C = 67,
+    D = 68,
+    E = 69,
+    F = 70,
+    G = 71,
+    H = 72,
+    I = 73,
+    J = 74,
+    K = 75,
+    L = 76,
+    M = 77,
+    N = 78,
+    O = 79,
+    P = 80,
+    Q = 81,
+    R = 82,
+    S = 83,
+    T = 84,
+    U = 85,
+    V = 86,
+    W = 87,
+    X = 88,
+    Y = 89,
+    Z = 90,
+    LeftBracket = 91,
+    Backslash = 92,
+    RightBracket = 93,
+    GraveAccent = 96,
+    World1 = 161,
+    World2 = 162,
 
-//The crosshair cursor shape.
-#define DAIS_CROSSHAIR_CURSOR       0x00036003
+    /* Function keys */
+    Escape = 256,
+    Enter = 257,
+    Tab = 258,
+    Backspace = 259,
+    Insert = 260,
+    Delete = 261,
+    Right = 262,
+    Left = 263,
+    Down = 264,
+    Up = 265,
+    PageUp = 266,
+    PageDown = 267,
+    Home = 268,
+    End = 269,
+    CapsLock = 280,
+    ScrollLock = 281,
+    NumLock = 282,
+    PrintScreen = 283,
+    Pause = 284,
+    F1 = 290,
+    F2 = 291,
+    F3 = 292,
+    F4 = 293,
+    F5 = 294,
+    F6 = 295,
+    F7 = 296,
+    F8 = 297,
+    F9 = 298,
+    F10 = 299,
+    F11 = 300,
+    F12 = 301,
+    F13 = 302,
+    F14 = 303,
+    F15 = 304,
+    F16 = 305,
+    F17 = 306,
+    F18 = 307,
+    F19 = 308,
+    F20 = 309,
+    F21 = 310,
+    F22 = 311,
+    F23 = 312,
+    F24 = 313,
+    F25 = 314,
+    KeyPad0 = 320,
+    KeyPad1 = 321,
+    KeyPad2 = 322,
+    KeyPad3 = 323,
+    KeyPad4 = 324,
+    KeyPad5 = 325,
+    KeyPad6 = 326,
+    KeyPad7 = 327,
+    KeyPad8 = 328,
+    KeyPad9 = 329,
+    KeyPadDecimal = 330,
+    KeyPadDivide = 331,
+    KeyPadMultiply = 332,
+    KeyPadSubtract = 333,
+    KeyPadAdd = 334,
+    KeyPadEnter = 335,
+    KeyPadEqual = 336,
+    LeftShift = 340,
+    LeftControl = 341,
+    LeftAlt = 342,
+    LeftSuper = 343,
+    RightShift = 344,
+    RightControl = 345,
+    RightAlt = 346,
+    RightSuper = 347,
+    Menu = 348,
 
-//The pointing hand cursor shape.
-#define DAIS_POINTING_HAND_CURSOR   0x00036004
+    Count
+};
 
-//The horizontal resize/move arrow shape.  This is usually a horizontal double-headed arrow.
-#define DAIS_RESIZE_EW_CURSOR       0x00036005
+enum class KeyMods
+{
+    None = 0,
 
-//The vertical resize/move shape.  This is usually a vertical double-headed arrow.
-#define DAIS_RESIZE_NS_CURSOR       0x00036006
+    Shift = 1 << 0,
+    Control = 1 << 1,
+    Alt = 1 << 2,
+    Super = 1 << 3,
+    CapsLock = 1 << 4,
+    NumLock = 1 << 5
+};
+FLAG_OPERATORS(KeyMods)
 
-//The top-left to bottom-right diagonal resize/move shape.  This is usually a diagonal double-headed arrow.
-//NOTE: macos - This shape is provided by a private system API and may fail with ref DAIS_CURSOR_UNAVAILABLE in the future.
-//NOTE: x11 - This shape is provided by a newer standard not supported by all cursor themes.
-//NOTE: wayland - This shape is provided by a newer standard not supported by all cursor themes.
-#define DAIS_RESIZE_NWSE_CURSOR     0x00036007
+enum class MouseButton
+{
+    Button1 = 0,
+    Button2 = 1,
+    Button3 = 2,
+    Button4 = 3,
+    Button5 = 4,
+    Button6 = 5,
+    Button7 = 6,
+    Button8 = 7,
 
-//The top-right to bottom-left diagonal resize/move shape.  This is usually a diagonal double-headed arrow.
-//NOTE: macos - This shape is provided by a private system API and may fail with DAIS_CURSOR_UNAVAILABLE in the future.
-//NOTE: x11 - This shape is provided by a newer standard not supported by all cursor themes.
-//NOTE: wayland - This shape is provided by a newer standard not supported by all cursor themes.
-#define DAIS_RESIZE_NESW_CURSOR     0x00036008
+    Count,
 
-//The omni-directional resize cursor/move shape.  This is usually either a
-//combined horizontal and vertical double-headed arrow or a grabbing hand.
-#define DAIS_RESIZE_ALL_CURSOR      0x00036009
+    Left = Button1,
+    Right = Button2,
+    Middle = Button3
+};
 
-//The operation-not-allowed shape.  This is usually a circle with a diagonal line through it.
-//NOTE: x11 - This shape is provided by a newer standard not supported by all cursor themes.
-//NOTE: wayland - This shape is provided by a newer standard not supported by all cursor themes.
-#define DAIS_NOT_ALLOWED_CURSOR     0x0003600A
+enum class GamepadButton
+{
+    A = 0,
+    B = 1,
+    X = 2,
+    Y = 3,
+    LeftBumper = 4,
+    RightBumber = 5,
+    Back = 6,
+    Start = 7,
+    Guide = 8,
+    LeftThumb = 9,
+    RightThumb = 10,
+    DPadUp = 11,
+    DPadRight = 12,
+    DPadDown = 13,
+    DPadLeft = 14,
 
-#define DAIS_JOYSTICK_HAT_BUTTONS   0x00050001
+    Count,
+
+    Cross = A,
+    Circle = B,
+    Square = X,
+    Triangle = Y
+};
+
+enum class GamepadAxis
+{
+    LeftX = 0,
+    LeftY = 1,
+    RightX = 2,
+    RightY = 3,
+    LeftTrigger = 4,
+    RightTrigger = 5,
+
+    Count
+};
+

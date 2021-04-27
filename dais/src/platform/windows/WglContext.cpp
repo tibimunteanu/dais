@@ -122,7 +122,7 @@ namespace dais
     bool WglContext::CreateContextWGL(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
     {
         //check required extensions needed for creating the context
-        if (contextConfig->client == DAIS_OPENGL_API)
+        if (contextConfig->api == ContextAPI::OpenGL)
         {
             if (contextConfig->forward)
             {
@@ -133,7 +133,7 @@ namespace dais
                 }
             }
 
-            if (contextConfig->profile)
+            if (contextConfig->profile != ContextProfile::Any)
             {
                 if (!s_WGL.ARB_CreateContextProfile)
                 {
@@ -200,18 +200,18 @@ namespace dais
             int32_t flags = 0;
             std::vector<int32_t> attribs = {};
 
-            if (contextConfig->client == DAIS_OPENGL_API)
+            if (contextConfig->api == ContextAPI::OpenGL)
             {
                 if (contextConfig->forward)
                 {
                     flags |= WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
                 }
 
-                if (contextConfig->profile == DAIS_OPENGL_CORE_PROFILE)
+                if (contextConfig->profile == ContextProfile::Core)
                 {
                     mask |= WGL_CONTEXT_CORE_PROFILE_BIT_ARB;
                 }
-                else if (contextConfig->profile == DAIS_OPENGL_COMPAT_PROFILE)
+                else if (contextConfig->profile == ContextProfile::Compatibility)
                 {
                     mask |= WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB;
                 }
@@ -226,16 +226,16 @@ namespace dais
                 flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
             }
 
-            if (contextConfig->robustness)
+            if (contextConfig->robustness != ContextRobustnessMode::None)
             {
                 if (s_WGL.ARB_CreateContextRobustness)
                 {
-                    if (contextConfig->robustness == DAIS_NO_RESET_NOTIFICATION)
+                    if (contextConfig->robustness == ContextRobustnessMode::NoResetNotification)
                     {
                         attribs.push_back(WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB);
                         attribs.push_back(WGL_NO_RESET_NOTIFICATION_ARB);
                     }
-                    else if (contextConfig->robustness == DAIS_LOSE_CONTEXT_ON_RESET)
+                    else if (contextConfig->robustness == ContextRobustnessMode::LoseContextOnReset)
                     {
                         attribs.push_back(WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB);
                         attribs.push_back(WGL_LOSE_CONTEXT_ON_RESET_ARB);
@@ -245,16 +245,16 @@ namespace dais
                 }
             }
 
-            if (contextConfig->release)
+            if (contextConfig->release != ContextReleaseBehavior::Any)
             {
                 if (s_WGL.ARB_ContextFlushControl)
                 {
-                    if (contextConfig->release == DAIS_RELEASE_BEHAVIOR_NONE)
+                    if (contextConfig->release == ContextReleaseBehavior::None)
                     {
                         attribs.push_back(WGL_CONTEXT_RELEASE_BEHAVIOR_ARB);
                         attribs.push_back(WGL_CONTEXT_RELEASE_BEHAVIOR_NONE_ARB);
                     }
-                    else if (contextConfig->release == DAIS_RELEASE_BEHAVIOR_FLUSH)
+                    else if (contextConfig->release == ContextReleaseBehavior::Flush)
                     {
                         attribs.push_back(WGL_CONTEXT_RELEASE_BEHAVIOR_ARB);
                         attribs.push_back(WGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_ARB);
@@ -305,7 +305,7 @@ namespace dais
                 const DWORD error = GetLastError();
                 if (error == (0xc0070000 | ERROR_INVALID_VERSION_ARB))
                 {
-                    if (contextConfig->client == DAIS_OPENGL_API)
+                    if (contextConfig->api == ContextAPI::OpenGL)
                     {
                         DAIS_ERROR("Driver does not support OpenGL version %i.%i", contextConfig->major, contextConfig->minor);
                     }
@@ -324,7 +324,7 @@ namespace dais
                 }
                 else
                 {
-                    if (contextConfig->client == DAIS_OPENGL_API)
+                    if (contextConfig->api == ContextAPI::OpenGL)
                     {
                         DAIS_ERROR("Failed to create OpenGL context!");
                     }
@@ -437,7 +437,7 @@ namespace dais
                 attribs[attribCount++] = WGL_SAMPLES_ARB;
             }
 
-            if (contextConfig->client == DAIS_OPENGL_API)
+            if (contextConfig->api == ContextAPI::OpenGL)
             {
                 if (s_WGL.ARB_FramebufferSRGB
                     || s_WGL.EXT_FramebufferSRGB)
@@ -525,7 +525,7 @@ namespace dais
                     fbc.samples = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_SAMPLES_ARB);
                 }
 
-                if (contextConfig->client == DAIS_OPENGL_API)
+                if (contextConfig->api == ContextAPI::OpenGL)
                 {
                     if (s_WGL.ARB_FramebufferSRGB
                         || s_WGL.EXT_FramebufferSRGB)

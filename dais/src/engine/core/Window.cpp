@@ -32,7 +32,7 @@ namespace dais
             return nullptr;
         }
 
-        if (contextConfig->client != DAIS_NO_API)
+        if (contextConfig->api != ContextAPI::None)
         {
             if (!Context::RefreshContextAttribs(window, contextConfig))
             {
@@ -80,7 +80,7 @@ namespace dais
         m_Floating = windowConfig->floating;
         m_Resizable = windowConfig->resizable;
         m_MousePassthrough = windowConfig->mousePassthrough;
-        m_CursorMode = DAIS_CURSOR_NORMAL;
+        m_CursorMode = CursorMode::Normal;
         m_MinWidth = -1;
         m_MinHeight = -1;
         m_MaxWidth = -1;
@@ -235,57 +235,43 @@ namespace dais
         return m_Monitor;
     }
 
-    /// <summary> DAIS_CURSOR_NORMAL, etc or true false </summary>
-    int32_t Window::GetInputMode(int32_t mode)
+    /// <summary> Returns CursorMode if InputMode::Cursor, boolean otherwise </summary>
+    int32_t Window::GetInputMode(InputMode mode)
     {
         switch (mode)
         {
-            case DAIS_CURSOR:           return m_CursorMode;
-            case DAIS_STICKY_KEYS:      return m_StickyKeys;
-            case DAIS_LOCK_KEY_MODS:    return m_StickyMouseButtons;
-            case DAIS_RAW_MOUSE_MOTION: return m_RawMouseMotion;
+            case InputMode::Cursor:         return (int32_t)m_CursorMode;
+            case InputMode::StickyKeys:     return m_StickyKeys;
+            case InputMode::LockKeyMods:    return m_StickyMouseButtons;
+            case InputMode::RawMouseMotion: return m_RawMouseMotion;
         }
 
         DAIS_ERROR("Invalid input mode 0x%08X", mode);
         return false;
     }
 
-    int32_t Window::GetKey(int32_t key)
+    KeyState Window::GetKey(Key key)
     {
-        if (key < DAIS_KEY_SPACE
-            || key > DAIS_KEY_LAST)
-        {
-            DAIS_ERROR("Invalid key %i", key);
-            return DAIS_RELEASE;
-        }
-
-        if (m_Keys[key] == DAIS_STICK)
+        if (m_Keys[(int32_t)key] == KeyState::Stick)
         {
             //sticky mode: release key now
-            m_Keys[key] = DAIS_RELEASE;
-            return DAIS_PRESS;
+            m_Keys[(int32_t)key] = KeyState::Release;
+            return KeyState::Press;
         }
 
-        return (int32_t)m_Keys[key];
+        return m_Keys[(int32_t)key];
     }
 
-    int32_t Window::GetGetMouseButton(int32_t button)
+    KeyState Window::GetGetMouseButton(MouseButton button)
     {
-        if (button < DAIS_MOUSE_BUTTON_1
-            || button > DAIS_MOUSE_BUTTON_LAST)
-        {
-            DAIS_ERROR("Invalid mouse button %i", button);
-            return DAIS_RELEASE;
-        }
-
-        if (m_MouseButtons[button] = DAIS_STICK)
+        if (m_MouseButtons[(int32_t)button] == KeyState::Stick)
         {
             //sticky mode: release mouse button now
-            m_MouseButtons[button] = DAIS_RELEASE;
-            return DAIS_PRESS;
+            m_MouseButtons[(int32_t)button] = KeyState::Release;
+            return KeyState::Press;
         }
 
-        return (int32_t)m_MouseButtons[button];
+        return m_MouseButtons[(int32_t)button];
     }
 
     void Window::GetCursorPosition(double* x, double* y)
@@ -293,7 +279,7 @@ namespace dais
         if (x) *x = 0;
         if (y) *y = 0;
 
-        if (m_CursorMode == DAIS_CURSOR_DISABLED)
+        if (m_CursorMode == CursorMode::Disabled)
         {
             if (x) *x = m_VirtualCursorPositionX;
             if (y) *y = m_VirtualCursorPositionY;
@@ -518,29 +504,29 @@ namespace dais
         PlatformSetMonitor(monitor, x, y, width, height, refreshRate);
     }
 
-    void Window::SetInputMode(int32_t mode, int32_t value)
+    void Window::SetInputMode(InputMode mode, int32_t value)
     {
-        if (mode == DAIS_CURSOR)
+        if (mode == InputMode::Cursor)
         {
-            if (value != DAIS_CURSOR_NORMAL
-                && value != DAIS_CURSOR_HIDDEN
-                && value != DAIS_CURSOR_DISABLED)
+            if (value != (int32_t)CursorMode::Normal
+                && value != (int32_t)CursorMode::Hidden
+                && value != (int32_t)CursorMode::Disabled)
             {
                 DAIS_ERROR("Invalid cursor mode 0x%08X", value);
                 return;
             }
 
-            if (m_CursorMode == value)
+            if (m_CursorMode == (CursorMode)value)
             {
                 return;
             }
 
-            m_CursorMode = value;
+            m_CursorMode = (CursorMode)value;
 
             PlatformGetCursorPosition(&m_VirtualCursorPositionX, &m_VirtualCursorPositionY);
-            PlatformSetCursorMode(value);
+            PlatformSetCursorMode((CursorMode)value);
         }
-        else if (mode == DAIS_STICKY_KEYS)
+        else if (mode == InputMode::StickyKeys)
         {
             value = value ? true : false;
             if (m_StickyKeys == value)
@@ -551,18 +537,18 @@ namespace dais
             if (!value)
             {
                 //release all sticky keys
-                for (int32_t i = 0; i <= DAIS_KEY_LAST; i++)
+                for (int32_t i = 0; i < (int32_t)Key::Count; i++)
                 {
-                    if (m_Keys[i] == DAIS_STICK)
+                    if (m_Keys[i] == KeyState::Stick)
                     {
-                        m_Keys[i] = DAIS_RELEASE;
+                        m_Keys[i] = KeyState::Release;
                     }
                 }
             }
 
             m_StickyKeys = value;
         }
-        else if (mode == DAIS_STICKY_MOUSE_BUTTONS)
+        else if (mode == InputMode::StickyMouseButtons)
         {
             value = value ? true : false;
             if (m_StickyMouseButtons == value)
@@ -573,22 +559,22 @@ namespace dais
             if (!value)
             {
                 //release all sticky mouse buttons
-                for (int32_t i = 0; i <= DAIS_MOUSE_BUTTON_LAST; i++)
+                for (int32_t i = 0; i < (int32_t)MouseButton::Count; i++)
                 {
-                    if (m_MouseButtons[i] == DAIS_STICK)
+                    if (m_MouseButtons[i] == KeyState::Stick)
                     {
-                        m_MouseButtons[i] = DAIS_RELEASE;
+                        m_MouseButtons[i] = KeyState::Release;
                     }
                 }
             }
 
             m_StickyMouseButtons = value;
         }
-        else if (mode == DAIS_LOCK_KEY_MODS)
+        else if (mode == InputMode::LockKeyMods)
         {
             m_LockKeyMods = value ? true : false;
         }
-        else if (mode == DAIS_RAW_MOUSE_MOTION)
+        else if (mode == InputMode::RawMouseMotion)
         {
             if (!Platform::IsRawMouseMotionSupported())
             {
@@ -629,7 +615,7 @@ namespace dais
             return;
         }
 
-        if (m_CursorMode == DAIS_CURSOR_DISABLED)
+        if (m_CursorMode == CursorMode::Disabled)
         {
             //onlyy update the accumulated position if the cursor is disabled
             m_VirtualCursorPositionX = x;
@@ -838,20 +824,21 @@ namespace dais
 
         if (!focused)
         {
-            for (int32_t key = 0; key <= DAIS_KEY_LAST; key++)
+            for (int32_t keyIndex = 0; keyIndex < (int32_t)Key::Count; keyIndex++)
             {
-                if (m_Keys[key] == DAIS_PRESS)
+                Key key = (Key)keyIndex;
+                if (m_Keys[keyIndex] == KeyState::Press)
                 {
                     const int32_t scancode = Platform::GetKeyScancode(key);
-                    OnKey(key, scancode, DAIS_RELEASE, 0);
+                    OnKey(key, scancode, KeyState::Release, KeyMods::None);
                 }
             }
 
-            for (int32_t button = 0; button <= DAIS_MOUSE_BUTTON_LAST; button++)
+            for (int32_t buttonIndex = 0; buttonIndex < (int32_t)MouseButton::Count; buttonIndex++)
             {
-                if (m_MouseButtons[button] = DAIS_PRESS)
+                if (m_MouseButtons[buttonIndex] == KeyState::Press)
                 {
-                    OnMouseButton(button, DAIS_RELEASE, 0);
+                    OnMouseButton((MouseButton)buttonIndex, KeyState::Release, KeyMods::None);
                 }
             }
         }
@@ -889,27 +876,21 @@ namespace dais
         }
     }
 
-    void Window::OnMouseButton(int32_t button, int32_t action, int32_t mods)
+    void Window::OnMouseButton(MouseButton button, KeyState action, KeyMods mods)
     {
-        if (button < 0
-            || button > DAIS_MOUSE_BUTTON_LAST)
-        {
-            return;
-        }
-
         if (!m_LockKeyMods)
         {
-            mods &= ~(DAIS_MOD_CAPS_LOCK | DAIS_MOD_NUM_LOCK);
+            mods &= ~(KeyMods::CapsLock, KeyMods::NumLock);
         }
 
-        if (action == DAIS_RELEASE
+        if (action == KeyState::Release
             && m_StickyMouseButtons)
         {
-            m_MouseButtons[button] = DAIS_STICK;
+            m_MouseButtons[(int32_t)button] = KeyState::Stick;
         }
         else
         {
-            m_MouseButtons[button] = (int8_t)action;
+            m_MouseButtons[(int32_t)button] = action;
         }
 
         if (m_Callbacks.mouseButton)
@@ -951,44 +932,46 @@ namespace dais
         }
     }
 
-    void Window::OnKey(int32_t key, int32_t scancode, int32_t action, int32_t mods)
+    void Window::OnKey(Key key, int32_t scancode, KeyState action, KeyMods mods)
     {
-        if (key >= 0
-            && key <= DAIS_KEY_LAST)
+        int32_t keyIndex = (int32_t)key;
+
+        if (keyIndex >= 0
+            && keyIndex < (int32_t)Key::Count)
         {
             bool repeated = false;
 
-            if (action == DAIS_RELEASE
-                && m_Keys[key] == DAIS_RELEASE)
+            if (action == KeyState::Release
+                && m_Keys[keyIndex] == KeyState::Release)
             {
                 return;
             }
 
-            if (action == DAIS_PRESS
-                && m_Keys[key] == DAIS_PRESS)
+            if (action == KeyState::Press
+                && m_Keys[keyIndex] == KeyState::Press)
             {
                 repeated = true;
             }
 
-            if (action == DAIS_RELEASE
+            if (action == KeyState::Release
                 && m_StickyKeys)
             {
-                m_Keys[key] = DAIS_STICK;
+                m_Keys[keyIndex] = KeyState::Stick;
             }
             else
             {
-                m_Keys[key] = (int8_t)action;
+                m_Keys[keyIndex] = action;
             }
 
             if (repeated)
             {
-                action = DAIS_REPEAT;
+                action = KeyState::Repeat;
             }
         }
 
         if (!m_LockKeyMods)
         {
-            mods &= ~(DAIS_MOD_CAPS_LOCK | DAIS_MOD_NUM_LOCK);
+            mods &= ~(KeyMods::CapsLock | KeyMods::NumLock);
         }
 
         if (m_Callbacks.key)
@@ -997,7 +980,7 @@ namespace dais
         }
     }
 
-    void Window::OnChar(uint32_t codepoint, int32_t mods, bool plain)
+    void Window::OnChar(uint32_t codepoint, KeyMods mods, bool plain)
     {
         if (codepoint < 32
             || (codepoint > 126 && codepoint < 160))
@@ -1007,7 +990,7 @@ namespace dais
 
         if (!m_LockKeyMods)
         {
-            mods &= ~(DAIS_MOD_CAPS_LOCK | DAIS_MOD_NUM_LOCK);
+            mods &= ~(KeyMods::CapsLock | KeyMods::NumLock);
         }
 
         OnCharMods(codepoint, mods);
@@ -1021,7 +1004,7 @@ namespace dais
         }
     }
 
-    void Window::OnCharMods(uint32_t codepoint, int32_t mods)
+    void Window::OnCharMods(uint32_t codepoint, KeyMods mods)
     {
         if (m_Callbacks.characterMods)
         {

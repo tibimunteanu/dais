@@ -55,11 +55,11 @@ namespace dais
         static Monitor* GetPrimaryMonitor();
 
         static bool IsRawMouseMotionSupported();
-        static const char* GetKeyName(int32_t key, int32_t scancode);
-        static int32_t GetKeyScancode(int32_t key);
+        static const char* GetKeyName(Key key, int32_t scancode);
+        static int32_t GetKeyScancode(Key key);
 
         static Cursor* CreateCursor(const Image* image, int32_t xHot, int32_t yHot);
-        static Cursor* CreateStandardCursor(int32_t shape);
+        static Cursor* CreateStandardCursor(CursorShape shape);
 
         static const char* GetClipboardString();
         static void SetClipboardString(const char* string);
@@ -83,6 +83,6 @@ namespace dais
         static void PlatformWaitEventsTimeout(double timeout);
         static bool PlatformIsRawMouseMotionSupported();
         static const char* PlatformGetScancodeName(int32_t scancode);
-        static int32_t PlatformGetKeyScancode(int32_t key);
+        static int32_t PlatformGetKeyScancode(Key key);
     };
 }

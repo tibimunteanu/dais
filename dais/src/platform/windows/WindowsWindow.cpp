@@ -281,9 +281,9 @@ namespace dais
 
         window->PlatformGetSize(&window->m_Width, &window->m_Height);
 
-        if (contextConfig->client != DAIS_NO_API)
+        if (contextConfig->api != ContextAPI::None)
         {
-            if (contextConfig->source == DAIS_NATIVE_CONTEXT_API)
+            if (contextConfig->type == ContextType::Native)
             {
                 if (!WglContext::InitWGL())
                 {
@@ -915,9 +915,9 @@ namespace dais
         SetCursorPos(pos.x, pos.y);
     }
 
-    void WindowsWindow::PlatformSetCursorMode(int32_t mode)
+    void WindowsWindow::PlatformSetCursorMode(CursorMode mode)
     {
-        if (mode == DAIS_CURSOR_DISABLED)
+        if (mode == CursorMode::Disabled)
         {
             if (PlatformIsFocused())
             {
@@ -1030,7 +1030,7 @@ namespace dais
                 if (lParam == 0
                     && m_FrameAction)
                 {
-                    if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                    if (m_CursorMode == CursorMode::Disabled)
                     {
                         SetCursorEnabled(false);
                     }
@@ -1052,7 +1052,7 @@ namespace dais
                     break;
                 }
 
-                if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                if (m_CursorMode == CursorMode::Disabled)
                 {
                     SetCursorEnabled(false);
                 }
@@ -1062,7 +1062,7 @@ namespace dais
 
             case WM_KILLFOCUS:
             {
-                if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                if (m_CursorMode == CursorMode::Disabled)
                 {
                     SetCursorEnabled(false);
                 }
@@ -1183,8 +1183,8 @@ namespace dais
             case WM_KEYUP:
             case WM_SYSKEYUP:
             {
-                const int32_t action = (HIWORD(lParam) & KF_UP) ? DAIS_RELEASE : DAIS_PRESS;
-                const int32_t mods = GetKeyMods();
+                const KeyState action = (HIWORD(lParam) & KF_UP) ? KeyState::Release : KeyState::Press;
+                const KeyMods mods = GetKeyMods();
 
                 int32_t scancode = (HIWORD(lParam) & (KF_EXTENDED | 0xff));
                 if (!scancode)
@@ -1194,7 +1194,7 @@ namespace dais
                     scancode = MapVirtualKeyW((UINT)wParam, MAPVK_VK_TO_VSC);
                 }
 
-                int32_t key = WindowsPlatform::s_Keycodes[scancode];
+                Key key = WindowsPlatform::s_Keycodes[scancode];
 
                 //the ctrl keys require special handling
                 if (wParam == VK_CONTROL)
@@ -1202,7 +1202,7 @@ namespace dais
                     if (HIWORD(lParam) & KF_EXTENDED)
                     {
                         //right side keys have the extended key bit set
-                        key = DAIS_KEY_RIGHT_CONTROL;
+                        key = Key::RightControl;
                     }
                     else
                     {
@@ -1230,7 +1230,7 @@ namespace dais
                         }
 
                         //this is a regular left ctrl message
-                        key = DAIS_KEY_LEFT_CONTROL;
+                        key = Key::LeftControl;
                     }
                 }
                 else if (wParam == VK_PROCESSKEY)
@@ -1240,20 +1240,20 @@ namespace dais
                     break;
                 }
 
-                if (action == DAIS_RELEASE
+                if (action == KeyState::Release
                     && wParam == VK_SHIFT)
                 {
                     //HACK: release both shift keys on shift up event, as when
                     //both are pressed the first release does not exit any event
                     //NOTE: the other half of this is in Platform::PollEvents
-                    OnKey(DAIS_KEY_LEFT_SHIFT, scancode, action, mods);
-                    OnKey(DAIS_KEY_RIGHT_SHIFT, scancode, action, mods);
+                    OnKey(Key::LeftShift, scancode, action, mods);
+                    OnKey(Key::RightShift, scancode, action, mods);
                 }
                 else if (wParam == VK_SNAPSHOT)
                 {
                     //HACK: key down is not reported for the print screen key
-                    OnKey(key, scancode, DAIS_PRESS, mods);
-                    OnKey(key, scancode, DAIS_RELEASE, mods);
+                    OnKey(key, scancode, KeyState::Press, mods);
+                    OnKey(key, scancode, KeyState::Release, mods);
                 }
                 else
                 {
@@ -1272,54 +1272,54 @@ namespace dais
             case WM_MBUTTONUP:
             case WM_XBUTTONUP:
             {
-                int32_t button;
+                MouseButton button;
                 if (uMsg == WM_LBUTTONDOWN
                     || uMsg == WM_LBUTTONUP)
                 {
-                    button = DAIS_MOUSE_BUTTON_LEFT;
+                    button = MouseButton::Left;
                 }
                 else if (uMsg == WM_RBUTTONDOWN
                     || uMsg == WM_RBUTTONUP)
                 {
-                    button = DAIS_MOUSE_BUTTON_RIGHT;
+                    button = MouseButton::Right;
                 }
                 else if (uMsg == WM_MBUTTONDOWN
                     || uMsg == WM_MBUTTONUP)
                 {
-                    button = DAIS_MOUSE_BUTTON_MIDDLE;
+                    button = MouseButton::Middle;
                 }
                 else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
                 {
-                    button = DAIS_MOUSE_BUTTON_4;
+                    button = MouseButton::Button4;
                 }
                 else
                 {
-                    button = DAIS_MOUSE_BUTTON_5;
+                    button = MouseButton::Button5;
                 }
 
-                int32_t action;
+                KeyState action;
                 if (uMsg == WM_LBUTTONDOWN
                     || uMsg == WM_RBUTTONDOWN
                     || uMsg == WM_MBUTTONDOWN
                     || uMsg == WM_XBUTTONDOWN)
                 {
-                    action = DAIS_PRESS;
+                    action = KeyState::Press;
                 }
                 else
                 {
-                    action = DAIS_RELEASE;
+                    action = KeyState::Release;
                 }
 
                 int32_t i;
-                for (i = 0; i <= DAIS_MOUSE_BUTTON_LAST; i++)
+                for (i = 0; i < (int32_t)MouseButton::Count; i++)
                 {
-                    if (m_MouseButtons[i] == DAIS_PRESS)
+                    if (m_MouseButtons[i] == KeyState::Press)
                     {
                         break;
                     }
                 }
 
-                if (i > DAIS_MOUSE_BUTTON_LAST)
+                if (i >= (int32_t)MouseButton::Count)
                 {
                     ReleaseCapture();
                 }
@@ -1351,7 +1351,7 @@ namespace dais
                     OnCursorEnter(true);
                 }
 
-                if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                if (m_CursorMode == CursorMode::Disabled)
                 {
                     const int dx = x - m_LastCursorPositionX;
                     const int dy = y - m_LastCursorPositionY;
@@ -1466,7 +1466,7 @@ namespace dais
 
                 // HACK: enable the cursor while the user is moving
                 // or resizing the window or using the window menu
-                if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                if (m_CursorMode == CursorMode::Disabled)
                 {
                     SetCursorEnabled(true);
                 }
@@ -1484,7 +1484,7 @@ namespace dais
 
                 // HACK: disable the cursor once the user is done moving
                 // or resizing the window or using the window menu
-                if (m_CursorMode == DAIS_CURSOR_DISABLED)
+                if (m_CursorMode == CursorMode::Disabled)
                 {
                     SetCursorEnabled(false);
                 }
@@ -1933,7 +1933,7 @@ namespace dais
 
     void WindowsWindow::UpdateCursorImage()
     {
-        if (m_CursorMode == DAIS_CURSOR_NORMAL)
+        if (m_CursorMode == CursorMode::Normal)
         {
             if (m_Cursor)
             {
@@ -2058,38 +2058,38 @@ namespace dais
         return PtInRect(&rect, position);
     }
 
-    int32_t WindowsWindow::GetKeyMods() const
+    KeyMods WindowsWindow::GetKeyMods() const
     {
-        int32_t mods = 0;
+        KeyMods mods = KeyMods::None;
 
         if (GetKeyState(VK_SHIFT) & 0x8000)
         {
-            mods |= DAIS_MOD_SHIFT;
+            mods |= KeyMods::Shift;
         }
 
         if (GetKeyState(VK_CONTROL) & 0x8000)
         {
-            mods |= DAIS_MOD_CONTROL;
+            mods |= KeyMods::Control;
         }
 
         if (GetKeyState(VK_MENU) & 0x8000)
         {
-            mods |= DAIS_MOD_ALT;
+            mods |= KeyMods::Alt;
         }
 
         if ((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000)
         {
-            mods |= DAIS_MOD_SUPER;
+            mods |= KeyMods::Super;
         }
 
         if (GetKeyState(VK_CAPITAL) & 1)
         {
-            mods |= DAIS_MOD_CAPS_LOCK;
+            mods |= KeyMods::CapsLock;
         }
 
         if (GetKeyState(VK_NUMLOCK) & 1)
         {
-            mods |= DAIS_MOD_NUM_LOCK;
+            mods |= KeyMods::NumLock;
         }
 
         return mods;

@@ -84,8 +84,8 @@ namespace dais
         s_Hints.window.centerCursor = true;
         s_Hints.window.focusOnShow = true;
         s_Hints.window.scaleToMonitor = true;
-        s_Hints.context.client = DAIS_OPENGL_API;
-        s_Hints.context.source = DAIS_NATIVE_CONTEXT_API;
+        s_Hints.context.api = ContextAPI::OpenGL;
+        s_Hints.context.type = ContextType::Native;
         s_Hints.context.major = 1;
         s_Hints.context.minor = 0;
         s_Hints.framebuffer.redBits = 8;
@@ -145,13 +145,13 @@ namespace dais
             : nullptr;
     }
 
-    const char* Platform::GetKeyName(int32_t key, int32_t scancode)
+    const char* Platform::GetKeyName(Key key, int32_t scancode)
     {
-        if (key != DAIS_KEY_UNKNOWN)
+        if (key != Key::Unknown)
         {
-            if (key != DAIS_KEY_KP_EQUAL
-                && (key < DAIS_KEY_KP_0 || key > DAIS_KEY_KP_ADD)
-                && (key < DAIS_KEY_APOSTROPHE || key > DAIS_KEY_WORLD_2))
+            if (key != Key::KeyPadEqual
+                && (key < Key::KeyPad0 || key > Key::KeyPadAdd)
+                && (key < Key::Apostrophe || key > Key::World2))
             {
                 return nullptr;
             }
@@ -162,15 +162,8 @@ namespace dais
         return PlatformGetScancodeName(scancode);
     }
 
-    int32_t Platform::GetKeyScancode(int32_t key)
+    int32_t Platform::GetKeyScancode(Key key)
     {
-        if (key < DAIS_KEY_SPACE
-            || key > DAIS_KEY_LAST)
-        {
-            DAIS_ERROR("Invalid key %i", key);
-            return DAIS_RELEASE;
-        }
-
         return PlatformGetKeyScancode(key);
     }
 
@@ -184,23 +177,8 @@ namespace dais
         return cursor;
     }
 
-    Cursor* Platform::CreateStandardCursor(int32_t shape)
+    Cursor* Platform::CreateStandardCursor(CursorShape shape)
     {
-        if (shape != DAIS_ARROW_CURSOR
-            && shape != DAIS_IBEAM_CURSOR
-            && shape != DAIS_CROSSHAIR_CURSOR
-            && shape != DAIS_POINTING_HAND_CURSOR
-            && shape != DAIS_RESIZE_EW_CURSOR
-            && shape != DAIS_RESIZE_NS_CURSOR
-            && shape != DAIS_RESIZE_NWSE_CURSOR
-            && shape != DAIS_RESIZE_NESW_CURSOR
-            && shape != DAIS_RESIZE_ALL_CURSOR
-            && shape != DAIS_NOT_ALLOWED_CURSOR)
-        {
-            DAIS_ERROR("Invlid standard cursor 0x%08X", shape);
-            return nullptr;
-        }
-
         Cursor* cursor = Cursor::Create(shape);
         if (cursor)
         {
