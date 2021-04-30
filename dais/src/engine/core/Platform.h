@@ -45,8 +45,9 @@ namespace dais
         static bool Init();
         static void Terminate();
 
-        static Window* OpenWindow(Monitor* monitor);
-        static Window* OpenWindow(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
+        static Window* OpenWindow(const std::string& title, int32_t width, int32_t height, Monitor* monitor);
+        static Window* OpenWindow(const std::string& title, int32_t width, int32_t height, 
+                                  const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
 
         static const std::vector<Window*>& GetWindows();
         static Window* GetPrimaryWindow();

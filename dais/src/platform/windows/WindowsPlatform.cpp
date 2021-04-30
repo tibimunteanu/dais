@@ -68,7 +68,7 @@ namespace dais
         WindowsPlatform::UnregisterWindowClass();
         WindowsPlatform::RestoreForegroundLockTimeout();
 
-        WglContext::TerminateWGL();
+        WglContext::Terminate();
 
         WindowsPlatform::FreeLibraries();
     }

@@ -105,14 +105,15 @@ namespace dais
     }
 
 
-    Window* Platform::OpenWindow(Monitor* monitor)
+    Window* Platform::OpenWindow(const std::string& title, int32_t width, int32_t height, Monitor* monitor)
     {
-        return OpenWindow(&s_Hints.window, &s_Hints.context, &s_Hints.framebuffer, monitor);
+        return OpenWindow(title, width, height, &s_Hints.window, &s_Hints.context, &s_Hints.framebuffer, monitor);
     }
 
-    Window* Platform::OpenWindow(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+    Window* Platform::OpenWindow(const std::string& title, int32_t width, int32_t height,
+                                 const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
     {
-        Window* window = Window::Create(windowConfig, contextConfig, framebufferConfig, monitor);
+        Window* window = Window::Create(title, width, height, windowConfig, contextConfig, framebufferConfig, monitor);
         if (window)
         {
             s_Windows.push_back(window);

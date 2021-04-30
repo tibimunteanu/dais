@@ -10,7 +10,7 @@ namespace dais
 
     ///////////////////////////////////// INTERNAL API ////////////////////////////////////////
 
-    bool WglContext::InitWGL()
+    bool WglContext::Init()
     {
         if (s_WGL.instance)
         {
@@ -89,18 +89,18 @@ namespace dais
         s_WGL.getPixelFormatAttribivARB = (PFNWGLGETPIXELFORMATATTRIBIVARBPROC)s_WGL.getProcAddress("wglGetPixelFormatAttribivARB");
 
         //cache some common extension support
-        s_WGL.ARB_Multisample = WglContext::ExtensionSupportedWGL("WGL_ARB_multisample");
-        s_WGL.ARB_FramebufferSRGB = WglContext::ExtensionSupportedWGL("WGL_ARB_framebuffer_sRGB");
-        s_WGL.EXT_FramebufferSRGB = WglContext::ExtensionSupportedWGL("WGL_EXT_framebuffer_sRGB");
-        s_WGL.ARB_CreateContext = WglContext::ExtensionSupportedWGL("WGL_ARB_create_context");
-        s_WGL.ARB_CreateContextProfile = WglContext::ExtensionSupportedWGL("WGL_ARB_create_context_pprofile");
-        s_WGL.EXT_CreateContextES2Profile = WglContext::ExtensionSupportedWGL("WGL_EXT_create_context_es2_profile");
-        s_WGL.ARB_CreateContextRobustness = WglContext::ExtensionSupportedWGL("WGL_ARB_create_context_robustness");
-        s_WGL.ARB_CreateContextNoError = WglContext::ExtensionSupportedWGL("WGL_ARB_create_context_no_error");
-        s_WGL.EXT_SwapControl = WglContext::ExtensionSupportedWGL("WGL_EXT_swap_control");
-        s_WGL.EXT_Colorspace = WglContext::ExtensionSupportedWGL("WGL_EXT_colorspace");
-        s_WGL.ARB_PixelFormat = WglContext::ExtensionSupportedWGL("WGL_ARB_pixel_format");
-        s_WGL.ARB_ContextFlushControl = WglContext::ExtensionSupportedWGL("WGL_ARB_context_flush_control");
+        s_WGL.ARB_Multisample = PlatformExtensionSupported("WGL_ARB_multisample");
+        s_WGL.ARB_FramebufferSRGB = PlatformExtensionSupported("WGL_ARB_framebuffer_sRGB");
+        s_WGL.EXT_FramebufferSRGB = PlatformExtensionSupported("WGL_EXT_framebuffer_sRGB");
+        s_WGL.ARB_CreateContext = PlatformExtensionSupported("WGL_ARB_create_context");
+        s_WGL.ARB_CreateContextProfile = PlatformExtensionSupported("WGL_ARB_create_context_pprofile");
+        s_WGL.EXT_CreateContextES2Profile = PlatformExtensionSupported("WGL_EXT_create_context_es2_profile");
+        s_WGL.ARB_CreateContextRobustness = PlatformExtensionSupported("WGL_ARB_create_context_robustness");
+        s_WGL.ARB_CreateContextNoError = PlatformExtensionSupported("WGL_ARB_create_context_no_error");
+        s_WGL.EXT_SwapControl = PlatformExtensionSupported("WGL_EXT_swap_control");
+        s_WGL.EXT_Colorspace = PlatformExtensionSupported("WGL_EXT_colorspace");
+        s_WGL.ARB_PixelFormat = PlatformExtensionSupported("WGL_ARB_pixel_format");
+        s_WGL.ARB_ContextFlushControl = PlatformExtensionSupported("WGL_ARB_context_flush_control");
 
         //restore previous context and delete dummy context
         s_WGL.makeCurrent(prevDC, prevRC);
@@ -109,7 +109,7 @@ namespace dais
         return true;
     }
 
-    void WglContext::TerminateWGL()
+    void WglContext::Terminate()
     {
         if (s_WGL.instance)
         {
@@ -119,7 +119,7 @@ namespace dais
     }
 
 
-    bool WglContext::CreateContextWGL(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
+    bool WglContext::CreateContext(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
     {
         //check required extensions needed for creating the context
         if (contextConfig->api == ContextAPI::OpenGL)
@@ -171,7 +171,7 @@ namespace dais
         ((WglContext*)window->GetContext())->m_DC = dc;
 
         //get the pixelFormat closest to the desired ContextConfig and FramebufferConfig
-        int32_t pixelFormat = ChoosePixelFormatWGL(window, contextConfig, framebufferConfig);
+        int32_t pixelFormat = GetClosestPixelFormat(window, contextConfig, framebufferConfig);
         if (!pixelFormat)
         {
             return false;
@@ -361,17 +361,12 @@ namespace dais
             }
         }
 
-        //supply the platform agnostic context with function pointers
-        //TODO: use virtual functions instead
-        window->m_Context->m_MakeCurrent = MakeContextCurrentWGL;
-        window->m_Context->m_SwapBuffers = SwapBuffersWGL;
-        window->m_Context->m_SwapInterval = SwapIntervalWGL;
-        window->m_Context->m_ExtensionSupported = ExtensionSupportedWGL;
-        window->m_Context->m_GetProcAddress = GetProcAddressWGL;
-        window->m_Context->m_Destroy = DestroyContextWGL;
-
         return true;
     }
+
+
+
+    ///////////////////////////////////////// UTILS ///////////////////////////////////////////
 
     int32_t WglContext::FindPixelFormatAttribValue(const int32_t* attribs, int32_t attribCount, const int32_t* values, int32_t attrib)
     {
@@ -387,7 +382,7 @@ namespace dais
         return 0;
     }
 
-    int32_t WglContext::ChoosePixelFormatWGL(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
+    int32_t WglContext::GetClosestPixelFormat(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
     {
         int32_t nativeCount;
         int32_t usableCount = 0;
@@ -625,13 +620,15 @@ namespace dais
     }
 
 
-    //TODO: make these virtual overrides
-    void WglContext::MakeContextCurrentWGL(Window* window)
+
+    ///////////////////////////////////// PLATFORM API ////////////////////////////////////////
+
+    void Context::PlatformMakeContextCurrent(Window* window)
     {
         if (window)
         {
             WglContext* context = (WglContext*)window->GetContext();
-            if (s_WGL.makeCurrent(context->m_DC, context->m_Handle))
+            if (WglContext::s_WGL.makeCurrent(context->m_DC, context->m_Handle))
             {
                 Platform::s_ContextSlot->Set(window);
             }
@@ -643,7 +640,7 @@ namespace dais
         }
         else
         {
-            if (!s_WGL.makeCurrent(NULL, NULL))
+            if (!WglContext::s_WGL.makeCurrent(NULL, NULL))
             {
                 DAIS_ERROR("Failed to clear current context!");
             }
@@ -652,7 +649,7 @@ namespace dais
         }
     }
 
-    void WglContext::SwapBuffersWGL(Window* window)
+    void Context::PlatformSwapBuffers(Window* window)
     {
         WglContext* context = (WglContext*)window->GetContext();
 
@@ -676,10 +673,10 @@ namespace dais
             }
         }
 
-        SwapBuffers(context->m_DC);
+        ::SwapBuffers(context->m_DC);
     }
 
-    void WglContext::SwapIntervalWGL(int32_t interval)
+    void Context::PlatformSwapInterval(int32_t interval)
     {
         Window* window = (Window*)WindowsPlatform::s_ContextSlot->Get();
         WglContext* context = (WglContext*)window->GetContext();
@@ -702,23 +699,23 @@ namespace dais
             }
         }
 
-        if (s_WGL.EXT_SwapControl)
+        if (WglContext::s_WGL.EXT_SwapControl)
         {
-            s_WGL.swapIntervalEXT(interval);
+            WglContext::s_WGL.swapIntervalEXT(interval);
         }
     }
 
-    bool WglContext::ExtensionSupportedWGL(const char* extension)
+    bool Context::PlatformExtensionSupported(const char* extension)
     {
         const char* extensions = nullptr;
 
-        if (s_WGL.getExtensionsStringARB)
+        if (WglContext::s_WGL.getExtensionsStringARB)
         {
-            extensions = s_WGL.getExtensionsStringARB(s_WGL.getCurrentDC());
+            extensions = WglContext::s_WGL.getExtensionsStringARB(WglContext::s_WGL.getCurrentDC());
         }
-        else if (s_WGL.getExtensionsStringEXT)
+        else if (WglContext::s_WGL.getExtensionsStringEXT)
         {
-            extensions = s_WGL.getExtensionsStringEXT();
+            extensions = WglContext::s_WGL.getExtensionsStringEXT();
         }
 
         if (!extensions)
@@ -729,24 +726,24 @@ namespace dais
         return Context::StringInExtensionString(extension, extensions);
     }
 
-    GLProc WglContext::GetProcAddressWGL(const char* procedureName)
+    GLProc Context::PlatformGetGLProcAddress(const char* procedureName)
     {
-        const GLProc proc = (GLProc)s_WGL.getProcAddress(procedureName);
+        const GLProc proc = (GLProc)WglContext::s_WGL.getProcAddress(procedureName);
         if (proc)
         {
             return proc;
         }
 
-        return (GLProc)GetProcAddress(s_WGL.instance, procedureName);
+        return (GLProc)GetProcAddress(WglContext::s_WGL.instance, procedureName);
     }
 
-    void WglContext::DestroyContextWGL(Window* window)
+    void Context::PlatformDestroyContext(Window* window)
     {
         WglContext* context = (WglContext*)window->GetContext();
 
         if (context->m_Handle)
         {
-            s_WGL.deleteContext(context->m_Handle);
+            WglContext::s_WGL.deleteContext(context->m_Handle);
             context->m_Handle = NULL;
         }
     }

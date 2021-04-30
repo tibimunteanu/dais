@@ -4,6 +4,11 @@ namespace dais
 {
     ///////////////////////////////////// PUBLIC STATIC API ///////////////////////////////////////
 
+    Window* Context::GetCurrentContext()
+    {
+        return (Window*)Platform::s_ContextSlot->Get();
+    }
+
     bool Context::StringInExtensionString(const char* string, const char* extensions)
     {
         const char* start = extensions;
@@ -227,18 +232,18 @@ namespace dais
         window->GetContext()->m_Type = contextConfig->type;
         window->GetContext()->m_API = ContextAPI::OpenGL;
 
-        Window* previous = GetCurrentContextGL();
-        MakeContextCurrentGL(window);
+        Window* previous = GetCurrentContext();
+        MakeContextCurrent(window);
 
         Context* context = window->GetContext();
 
-        context->GetIntegerv = (PFNGLGETINTEGERVPROC)context->m_GetProcAddress("glGetIntegerv");
-        context->GetString = (PFNGLGETSTRINGPROC)context->m_GetProcAddress("glGetString");
+        context->GetIntegerv = (PFNGLGETINTEGERVPROC)PlatformGetGLProcAddress("glGetIntegerv");
+        context->GetString = (PFNGLGETSTRINGPROC)PlatformGetGLProcAddress("glGetString");
         if (!context->GetIntegerv
             || !context->GetString)
         {
             DAIS_ERROR("OpenGL GetProcAddress failed!");
-            MakeContextCurrentGL(previous);
+            MakeContextCurrent(previous);
             return false;
         }
 
@@ -253,7 +258,7 @@ namespace dais
             {
                 DAIS_ERROR("OpenGL ES GetString failed!");
             }
-            MakeContextCurrentGL(previous);
+            MakeContextCurrent(previous);
             return false;
         }
 
@@ -282,7 +287,7 @@ namespace dais
             {
                 DAIS_ERROR("No version found on OpenGL ES version string!");
             }
-            MakeContextCurrentGL(previous);
+            MakeContextCurrent(previous);
             return false;
         }
 
@@ -308,7 +313,7 @@ namespace dais
                     contextConfig->major, contextConfig->minor,
                     context->m_Major, context->m_Minor);
             }
-            MakeContextCurrentGL(previous);
+            MakeContextCurrent(previous);
             return false;
         }
 
@@ -318,11 +323,11 @@ namespace dais
             //we cache it here instead of in ExtensionSupported mostly to alert
             //users as early as possible that their build may be broken
 
-            context->GetStringi = (PFNGLGETSTRINGIPROC)context->m_GetProcAddress("glGetStringi");
+            context->GetStringi = (PFNGLGETSTRINGIPROC)PlatformGetGLProcAddress("glGetStringi");
             if (!context->GetStringi)
             {
                 DAIS_ERROR("Entry point retrieval is broken!");
-                MakeContextCurrentGL(previous);
+                MakeContextCurrent(previous);
                 return false;
             }
         }
@@ -344,7 +349,7 @@ namespace dais
                 {
                     context->m_Debug = true;
                 }
-                else if (ExtensionSupportedGL("GL_ARB_debug_output")
+                else if (ExtensionSupported("GL_ARB_debug_output")
                     && contextConfig->debug)
                 {
                     //HACK: this is a workaround for older drivers (pre KHR_debug)
@@ -373,7 +378,7 @@ namespace dais
                 {
                     context->m_Profile = ContextProfile::Core;
                 }
-                else if (ExtensionSupportedGL("GL_ARB_compatibility"))
+                else if (ExtensionSupported("GL_ARB_compatibility"))
                 {
                     //HACK: this is a workaround for the compatibility profile bit
                     //not being set in the context flags in an OpenGL 3.2+ context
@@ -383,7 +388,7 @@ namespace dais
             }
 
             //read back robustness strategy
-            if (ExtensionSupportedGL("GL_ARB_robustness"))
+            if (ExtensionSupported("GL_ARB_robustness"))
             {
                 //NOTE: we avoid using the context flags for detection, as they are
                 //only present from 3.0 while the extension applies from 1.1
@@ -404,7 +409,7 @@ namespace dais
         else
         {
             //read back robustness strategy
-            if (ExtensionSupportedGL("GL_EXT_robustness"))
+            if (ExtensionSupported("GL_EXT_robustness"))
             {
                 //NOTE: the values of these constants match those of the OpenGL ARB one,
                 //so we can reuse them here
@@ -423,7 +428,7 @@ namespace dais
             }
         }
 
-        if (ExtensionSupportedGL("GL_KHR_context_flush_control"))
+        if (ExtensionSupported("GL_KHR_context_flush_control"))
         {
             GLint behavior;
             context->GetIntegerv(GL_CONTEXT_RELEASE_BEHAVIOR, &behavior);
@@ -441,24 +446,19 @@ namespace dais
         //clearing the front buffer to black to avoid garbage pixels left over from
         //previous uses of our bit of VRAM
         {
-            PFNGLCLEARPROC glClear = (PFNGLCLEARPROC)context->m_GetProcAddress("glClear");
+            PFNGLCLEARPROC glClear = (PFNGLCLEARPROC)PlatformGetGLProcAddress("glClear");
             glClear(GL_COLOR_BUFFER_BIT);
-            context->m_SwapBuffers(window);
+            PlatformSwapBuffers(window);
         }
 
-        MakeContextCurrentGL(previous);
+        MakeContextCurrent(previous);
         return true;
     }
 
 
-    Window* Context::GetCurrentContextGL()
+    void Context::MakeContextCurrent(Window* window)
     {
-        return (Window*)Platform::s_ContextSlot->Get();
-    }
-
-    void Context::MakeContextCurrentGL(Window* window)
-    {
-        Window* previous = GetCurrentContextGL();
+        Window* previous = GetCurrentContext();
 
         if (window
             && window->GetContext()->m_API == ContextAPI::None)
@@ -472,17 +472,17 @@ namespace dais
             if (!window
                 || window->GetContext()->m_Type != previous->GetContext()->m_Type)
             {
-                previous->GetContext()->m_MakeCurrent(nullptr);
+                PlatformMakeContextCurrent(nullptr);
             }
         }
 
         if (window)
         {
-            window->GetContext()->m_MakeCurrent(window);
+            PlatformMakeContextCurrent(window);
         }
     }
 
-    void Context::SwapBuffersGL(Window* window)
+    void Context::SwapBuffers(Window* window)
     {
         if (window->GetContext()->m_API == ContextAPI::None)
         {
@@ -490,24 +490,24 @@ namespace dais
             return;
         }
 
-        window->GetContext()->m_SwapBuffers(window);
+        PlatformSwapBuffers(window);
     }
 
-    void Context::SwapIntervalGL(int32_t interval)
+    void Context::SwapInterval(int32_t interval)
     {
-        Window* window = GetCurrentContextGL();
+        Window* window = GetCurrentContext();
         if (!window)
         {
             DAIS_ERROR("Cannot set swap interval without a current OpenGL or OpenGL ES context!");
             return;
         }
 
-        window->GetContext()->m_SwapInterval(interval);
+        PlatformSwapInterval(interval);
     }
 
-    bool Context::ExtensionSupportedGL(const char* extension)
+    bool Context::ExtensionSupported(const char* extension)
     {
-        Window* window = GetCurrentContextGL();
+        Window* window = GetCurrentContext();
         if (!window)
         {
             DAIS_ERROR("Cannot query extension without a current OpenGL or OpenGL ES context!");
@@ -558,18 +558,29 @@ namespace dais
         }
 
         //check if extension is in the platform-specific string
-        return window->GetContext()->m_ExtensionSupported(extension);
+        return PlatformExtensionSupported(extension);
     }
 
-    GLProc Context::GetProcAddressGL(const char* procedureName)
+    GLProc Context::GetGLProcAddress(const char* procedureName)
     {
-        Window* window = GetCurrentContextGL();
+        Window* window = GetCurrentContext();
         if (!window)
         {
             DAIS_ERROR("Cannot query entry point without a current OpenGL or OpenGL ES context!");
             return nullptr;
         }
 
-        return window->GetContext()->m_GetProcAddress(procedureName);
+        return PlatformGetGLProcAddress(procedureName);
+    }
+
+    void Context::DestroyContext(Window* window)
+    {
+        if (window->GetContext()->m_API == ContextAPI::None)
+        {
+            DAIS_ERROR("Cannot destroy context of a window that has no OpenGL or OpenGL ES context!");
+            return;
+        }
+
+        PlatformSwapBuffers(window);
     }
 }

@@ -50,18 +50,13 @@ namespace dais
         int32_t m_Interval;
 
     public: DAIS_INTERNAL_API
-        static bool InitWGL();
-        static void TerminateWGL();
+        static bool Init();
+        static void Terminate();
 
-        static bool CreateContextWGL(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);
+        static bool CreateContext(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);
+
+    private: DAIS_UTILS
         static int32_t FindPixelFormatAttribValue(const int32_t* attribs, int32_t attribCount, const int32_t* values, int32_t attrib);
-        static int32_t ChoosePixelFormatWGL(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);
-
-        static void MakeContextCurrentWGL(Window* window);
-        static void SwapBuffersWGL(Window* window);
-        static void SwapIntervalWGL(int32_t interval);
-        static bool ExtensionSupportedWGL(const char* extension);
-        static GLProc GetProcAddressWGL(const char* procedureName);
-        static void DestroyContextWGL(Window* window);
+        static int32_t GetClosestPixelFormat(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);
     };
 }

@@ -27,7 +27,9 @@ namespace dais
         static HICON CreateIcon(const Image* image, int32_t xHot, int32_t yHot, bool icon);
 
     public:
-        WindowsWindow(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
+        WindowsWindow(const std::string& title, int32_t width, int32_t height,
+                      const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
+
         virtual ~WindowsWindow();
         friend class Window;
         friend class WglContext;

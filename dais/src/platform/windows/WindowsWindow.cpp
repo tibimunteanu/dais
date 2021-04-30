@@ -175,9 +175,10 @@ namespace dais
 
     ///////////////////////////////////// STATIC CREATE ///////////////////////////////////////
 
-    Window* Window::PlatformCreate(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+    Window* Window::PlatformCreate(const std::string& title, int32_t width, int32_t height,
+                                   const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
     {
-        WindowsWindow* window = new WindowsWindow(windowConfig, contextConfig, framebufferConfig, monitor);
+        WindowsWindow* window = new WindowsWindow(title, width, height, windowConfig, contextConfig, framebufferConfig, monitor);
 
         DWORD style = window->GetStyle();
         DWORD styleEx = window->GetStyleEx();
@@ -205,15 +206,15 @@ namespace dais
             }
 
             WindowsWindow::GetFullSize(style, styleEx,
-                windowConfig->width, windowConfig->height,
+                width, height,
                 &fullWidth, &fullHeight,
                 USER_DEFAULT_SCREEN_DPI);
         }
 
-        WCHAR* wideTitle = WindowsPlatform::UTF8ToWideString(windowConfig->title.c_str());
+        WCHAR* wideTitle = WindowsPlatform::UTF8ToWideString(title.c_str());
         if (!wideTitle)
         {
-            DAIS_ERROR("Failed to create window with invalid title '%s'!", windowConfig->title.c_str());
+            DAIS_ERROR("Failed to create window with invalid title '%s'!", title.c_str());
 
             delete window;
             return nullptr;
@@ -234,7 +235,7 @@ namespace dais
 
         if (!windowHandle)
         {
-            DAIS_ERROR("Failed to create window '%s'!", windowConfig->title.c_str());
+            DAIS_ERROR("Failed to create window '%s'!", title.c_str());
 
             delete window;
             return nullptr;
@@ -247,7 +248,7 @@ namespace dais
         // this cannot be done until we know what monitor the window was placed on
         if (!monitor)
         {
-            RECT rect = { 0, 0, windowConfig->width, windowConfig->height };
+            RECT rect = { 0, 0, width, height };
 
             if (windowConfig->scaleToMonitor)
             {
@@ -285,14 +286,14 @@ namespace dais
         {
             if (contextConfig->type == ContextType::Native)
             {
-                if (!WglContext::InitWGL())
+                if (!WglContext::Init())
                 {
                     DAIS_ERROR("Failed to init WGL!");
                     delete window;
                     return nullptr;
                 }
 
-                if (!WglContext::CreateContextWGL(window, contextConfig, framebufferConfig))
+                if (!WglContext::CreateContext(window, contextConfig, framebufferConfig))
                 {
                     DAIS_ERROR("Failed to create WGL context!");
                     delete window;
@@ -322,8 +323,9 @@ namespace dais
 
     ////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
 
-    WindowsWindow::WindowsWindow(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
-        : Window(windowConfig, contextConfig, framebufferConfig, monitor)
+    WindowsWindow::WindowsWindow(const std::string& title, int32_t width, int32_t height,
+                                 const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+        : Window(title, width, height, windowConfig, contextConfig, framebufferConfig, monitor)
     {
         m_Maximized = windowConfig->maximized;
         m_ScaleToMonitor = windowConfig->scaleToMonitor;
@@ -339,11 +341,8 @@ namespace dais
             ReleaseMonitor();
         }
 
-        if (m_Context->m_Destroy)
-        {
-            m_Context->m_Destroy(this);
-            delete m_Context;
-        }
+        Context::DestroyContext(this);
+        delete m_Context;
 
         if (WindowsPlatform::s_DisabledCursorWindow == this)
         {

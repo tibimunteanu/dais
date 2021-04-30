@@ -4,18 +4,19 @@ namespace dais
 {
     ////////////////////////////////////// STATIC ////////////////////////////////////////
 
-    Window* Window::Create(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+    Window* Window::Create(const std::string& title, int32_t width, int32_t height,
+                           const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
     {
-        if (windowConfig->title.empty())
+        if (title.empty())
         {
             DAIS_ERROR("Window title cannot be empty!");
             return nullptr;
         }
 
-        if (windowConfig->width <= 0
-            || windowConfig->height <= 0)
+        if (width <= 0
+            || height <= 0)
         {
-            DAIS_ERROR("Invalid window size %i x %i", windowConfig->width, windowConfig->height);
+            DAIS_ERROR("Invalid window size %i x %i", width, height);
             return nullptr;
         }
 
@@ -25,7 +26,7 @@ namespace dais
             return nullptr;
         }
 
-        Window* window = PlatformCreate(windowConfig, contextConfig, framebufferConfig, monitor);
+        Window* window = PlatformCreate(title, width, height, windowConfig, contextConfig, framebufferConfig, monitor);
 
         if (!window)
         {
@@ -69,11 +70,12 @@ namespace dais
 
     ////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
 
-    Window::Window(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+    Window::Window(const std::string& title, int32_t width, int32_t height, 
+                   const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
     {
-        m_Title = windowConfig->title;
-        m_Width = windowConfig->width;
-        m_Height = windowConfig->height;
+        m_Title = title;
+        m_Width = width;
+        m_Height = height;
         m_Decorated = windowConfig->decorated;
         m_FocusOnShow = windowConfig->focusOnShow;
         m_AutoMinimize = windowConfig->autoMinimize;
@@ -89,8 +91,8 @@ namespace dais
         m_Denominator = -1;
 
         m_VideoMode = {};
-        m_VideoMode.width = windowConfig->width;
-        m_VideoMode.height = windowConfig->height;
+        m_VideoMode.width = width;
+        m_VideoMode.height = height;
         m_VideoMode.redBits = framebufferConfig->redBits;
         m_VideoMode.greenBits = framebufferConfig->greenBits;
         m_VideoMode.blueBits = framebufferConfig->blueBits;
@@ -104,7 +106,7 @@ namespace dais
         //the window's context must not be current on another thread when the window is destroyed
         if (Platform::s_ContextSlot->Get() == this)
         {
-            Context::MakeContextCurrentGL(nullptr);
+            Context::MakeContextCurrent(nullptr);
         }
     }
 

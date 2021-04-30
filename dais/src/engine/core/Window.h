@@ -26,9 +26,6 @@ namespace dais
 
     struct WindowConfig
     {
-        std::string title;
-        int32_t width;
-        int32_t height;
         bool decorated;
         bool visible;
         bool focused;
@@ -149,11 +146,15 @@ namespace dais
         } m_Callbacks = {};
 
     protected:
-        Window(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
+        Window(const std::string& title, int32_t width, int32_t height, const WindowConfig* windowConfig, 
+               const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
 
     public: DAIS_PUBLIC_API
-        static Window* Create(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
-        static Window* PlatformCreate(const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
+        static Window* Create(const std::string& title, int32_t width, int32_t height, 
+                              const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
+
+        static Window* PlatformCreate(const std::string& title, int32_t width, int32_t height, 
+                                      const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor);
 
     public:
         virtual ~Window();
