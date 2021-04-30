@@ -47,7 +47,7 @@
 
 #ifdef DAIS_ENABLE_ASSERTS
 #define DAIS_ASSERT_NO_MESSAGE(condition) { if(!(condition)) { DAIS_ERROR("Assertion Failed"); __debugbreak(); } }
-#define DAIS_ASSERT_MESSAGE(condition, ...) { if(!(condition)) { DAIS_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+#define DAIS_ASSERT_MESSAGE(condition, ...) { if(!(condition)) { DAIS_ERROR("Assertion Failed: %s", __VA_ARGS__); __debugbreak(); } }
 
 #define DAIS_ASSERT_RESOLVE(arg1, arg2, macro, ...) macro
 #define DAIS_GET_ASSERT_MACRO(...) DAIS_EXPAND_VARGS(DAIS_ASSERT_RESOLVE(__VA_ARGS__, DAIS_ASSERT_MESSAGE, DAIS_ASSERT_NO_MESSAGE))

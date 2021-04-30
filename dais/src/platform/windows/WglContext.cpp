@@ -168,7 +168,7 @@ namespace dais
             return false;
         }
 
-        ((WglContext*)window->GetContext())->m_DC = dc;
+        ((WglContext*)window->m_Context)->m_DC = dc;
 
         //get the pixelFormat closest to the desired ContextConfig and FramebufferConfig
         int32_t pixelFormat = GetClosestPixelFormat(window, contextConfig, framebufferConfig);
@@ -366,261 +366,6 @@ namespace dais
 
 
 
-    ///////////////////////////////////////// UTILS ///////////////////////////////////////////
-
-    int32_t WglContext::FindPixelFormatAttribValue(const int32_t* attribs, int32_t attribCount, const int32_t* values, int32_t attrib)
-    {
-        for (int32_t i = 0; i < attribCount; i++)
-        {
-            if (attribs[i] == attrib)
-            {
-                return values[i];
-            }
-        }
-
-        DAIS_ERROR("Unknown pixel format attribute requested!");
-        return 0;
-    }
-
-    int32_t WglContext::GetClosestPixelFormat(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
-    {
-        int32_t nativeCount;
-        int32_t usableCount = 0;
-        int32_t attribCount = 0;
-        int32_t attribs[40]; // we know we don't use more than 40 attribs
-        int32_t values[40];
-
-        WglContext* context = (WglContext*)window->GetContext();
-
-        if (s_WGL.ARB_PixelFormat)
-        {
-            //get native pixel format count through "modern" extension
-            const int32_t attrib = WGL_NUMBER_PIXEL_FORMATS_ARB;
-
-            if (!s_WGL.getPixelFormatAttribivARB(context->m_DC, 1, 0, 1, &attrib, &nativeCount))
-            {
-                DAIS_ERROR("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format count!");
-                return 0;
-            }
-
-            //setup an array of relevant attribs
-            attribs[attribCount++] = WGL_SUPPORT_OPENGL_ARB;
-            attribs[attribCount++] = WGL_DRAW_TO_WINDOW_ARB;
-            attribs[attribCount++] = WGL_PIXEL_TYPE_ARB;
-            attribs[attribCount++] = WGL_ACCELERATION_ARB;
-            attribs[attribCount++] = WGL_RED_BITS_ARB;
-            attribs[attribCount++] = WGL_RED_SHIFT_ARB;
-            attribs[attribCount++] = WGL_GREEN_BITS_ARB;
-            attribs[attribCount++] = WGL_GREEN_SHIFT_ARB;
-            attribs[attribCount++] = WGL_BLUE_BITS_ARB;
-            attribs[attribCount++] = WGL_BLUE_SHIFT_ARB;
-            attribs[attribCount++] = WGL_ALPHA_BITS_ARB;
-            attribs[attribCount++] = WGL_ALPHA_SHIFT_ARB;
-            attribs[attribCount++] = WGL_DEPTH_BITS_ARB;
-            attribs[attribCount++] = WGL_STENCIL_BITS_ARB;
-            attribs[attribCount++] = WGL_ACCUM_BITS_ARB;
-            attribs[attribCount++] = WGL_ACCUM_RED_BITS_ARB;
-            attribs[attribCount++] = WGL_ACCUM_GREEN_BITS_ARB;
-            attribs[attribCount++] = WGL_ACCUM_BLUE_BITS_ARB;
-            attribs[attribCount++] = WGL_ACCUM_ALPHA_BITS_ARB;
-            attribs[attribCount++] = WGL_AUX_BUFFERS_ARB;
-            attribs[attribCount++] = WGL_STEREO_ARB;
-            attribs[attribCount++] = WGL_DOUBLE_BUFFER_ARB;
-
-            if (s_WGL.ARB_Multisample)
-            {
-                attribs[attribCount++] = WGL_SAMPLES_ARB;
-            }
-
-            if (contextConfig->api == ContextAPI::OpenGL)
-            {
-                if (s_WGL.ARB_FramebufferSRGB
-                    || s_WGL.EXT_FramebufferSRGB)
-                {
-                    attribs[attribCount++] = WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB;
-                }
-            }
-            else
-            {
-                if (s_WGL.EXT_Colorspace)
-                {
-                    attribs[attribCount++] = WGL_COLORSPACE_EXT;
-                }
-            }
-        }
-        else
-        {
-            //get native pixel format count the old way
-            nativeCount = DescribePixelFormat(context->m_DC, 1, sizeof(PIXELFORMATDESCRIPTOR), NULL);
-        }
-
-        std::vector<FramebufferConfig> usableConfigs = {};
-        usableConfigs.reserve(nativeCount);
-
-        //iterate pixel formats, get the values for the attribs array 
-        //and promote some of them as FramebufferConfigs
-        int32_t pixelFormat;
-        for (int32_t i = 0; i < nativeCount; i++)
-        {
-            pixelFormat = i + 1;
-
-            FramebufferConfig fbc = {};
-
-            if (s_WGL.ARB_PixelFormat)
-            {
-                //get pixel format attributes through "modern" extension
-                if (!s_WGL.getPixelFormatAttribivARB(context->m_DC, pixelFormat, 0, attribCount, attribs, values))
-                {
-                    DAIS_ERROR("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format attributes!");
-                    return 0;
-                }
-
-                //first check hard constraints
-                if (!FindPixelFormatAttribValue(attribs, attribCount, values, WGL_SUPPORT_OPENGL_ARB)
-                    || !FindPixelFormatAttribValue(attribs, attribCount, values, WGL_DRAW_TO_WINDOW_ARB))
-                {
-                    continue;
-                }
-
-                if (FindPixelFormatAttribValue(attribs, attribCount, values, WGL_PIXEL_TYPE_ARB) != WGL_TYPE_RGBA_ARB)
-                {
-                    continue;
-                }
-
-                if (FindPixelFormatAttribValue(attribs, attribCount, values, WGL_ACCELERATION_ARB) == WGL_NO_ACCELERATION_ARB)
-                {
-                    continue;
-                }
-
-                //setup a FramebufferConfig from attrib values
-                fbc.redBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_RED_BITS_ARB);
-                fbc.greenBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_GREEN_BITS_ARB);
-                fbc.blueBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_BLUE_BITS_ARB);
-                fbc.alphaBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_ALPHA_BITS_ARB);
-                fbc.depthBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_DEPTH_BITS_ARB);
-                fbc.stencilBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_STENCIL_BITS_ARB);
-                fbc.accumRedBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_ACCUM_RED_BITS_ARB);
-                fbc.accumGreenBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_ACCUM_GREEN_BITS_ARB);
-                fbc.accumBlueBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_ACCUM_BLUE_BITS_ARB);
-                fbc.accumAlphaBits = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_ACCUM_ALPHA_BITS_ARB);
-                fbc.auxBuffers = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_AUX_BUFFERS_ARB);
-
-                if (FindPixelFormatAttribValue(attribs, attribCount, values, WGL_STEREO_ARB))
-                {
-                    fbc.stereo = true;
-                }
-
-                if (FindPixelFormatAttribValue(attribs, attribCount, values, WGL_DOUBLE_BUFFER_ARB))
-                {
-                    fbc.doubleBuffer = true;
-                }
-
-                if (s_WGL.ARB_Multisample)
-                {
-                    fbc.samples = FindPixelFormatAttribValue(attribs, attribCount, values, WGL_SAMPLES_ARB);
-                }
-
-                if (contextConfig->api == ContextAPI::OpenGL)
-                {
-                    if (s_WGL.ARB_FramebufferSRGB
-                        || s_WGL.EXT_FramebufferSRGB)
-                    {
-                        if (FindPixelFormatAttribValue(attribs, attribCount, values, WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB))
-                        {
-                            fbc.sRGB = true;
-                        }
-                    }
-                }
-                else
-                {
-                    if (s_WGL.EXT_Colorspace)
-                    {
-                        if (FindPixelFormatAttribValue(attribs, attribCount, values, WGL_COLORSPACE_EXT) == WGL_COLORSPACE_SRGB_EXT)
-                        {
-                            fbc.sRGB = true;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                //get pixel format attributes the old way
-                PIXELFORMATDESCRIPTOR pfd;
-                if (!DescribePixelFormat(context->m_DC, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd))
-                {
-                    DAIS_ERROR("Failed to describe pixel format!");
-                    return 0;
-                }
-
-                //first check hard constraints
-                if (!(pfd.dwFlags & PFD_DRAW_TO_WINDOW)
-                    || !(pfd.dwFlags & PFD_SUPPORT_OPENGL))
-                {
-                    continue;
-                }
-
-                if (!(pfd.dwFlags & PFD_GENERIC_ACCELERATED)
-                    && (pfd.dwFlags & PFD_GENERIC_FORMAT))
-                {
-                    continue;
-                }
-
-                if (pfd.iPixelType != PFD_TYPE_RGBA)
-                {
-                    continue;
-                }
-
-                //setup a FramebufferConfig from the pixel format descriptor
-                fbc.redBits = pfd.cRedBits;
-                fbc.greenBits = pfd.cGreenBits;
-                fbc.blueBits = pfd.cBlueBits;
-                fbc.alphaBits = pfd.cAlphaBits;
-                fbc.depthBits = pfd.cDepthBits;
-                fbc.stencilBits = pfd.cStencilBits;
-                fbc.accumRedBits = pfd.cAccumRedBits;
-                fbc.accumGreenBits = pfd.cAccumGreenBits;
-                fbc.accumBlueBits = pfd.cAccumBlueBits;
-                fbc.accumAlphaBits = pfd.cAccumAlphaBits;
-                fbc.auxBuffers = pfd.cAuxBuffers;
-
-                if (pfd.dwFlags & PFD_STEREO)
-                {
-                    fbc.stereo = true;
-                }
-
-                if (pfd.dwFlags & PFD_DOUBLEBUFFER)
-                {
-                    fbc.doubleBuffer = true;
-                }
-
-            }
-
-            fbc.handle = pixelFormat;
-            usableConfigs.push_back(fbc);
-        }
-
-        if (!usableConfigs.size())
-        {
-            DAIS_ERROR("The driver does not appear to support OpenGL!");
-            return 0;
-        }
-
-        //pick the FramebufferConfig closest to the desired one
-        const FramebufferConfig* closest = ChooseFramebufferConfig(framebufferConfig, usableConfigs);
-        if (!closest)
-        {
-            DAIS_ERROR("Failed to find a suitable pixel format!");
-            return 0;
-        }
-
-        //we only care about the closest pixel format handle
-        pixelFormat = (int32_t)closest->handle;
-
-        return pixelFormat;
-    }
-
-
-
     ///////////////////////////////////// PLATFORM API ////////////////////////////////////////
 
     void Context::PlatformMakeContextCurrent(Window* window)
@@ -746,5 +491,248 @@ namespace dais
             WglContext::s_WGL.deleteContext(context->m_Handle);
             context->m_Handle = NULL;
         }
+    }
+
+
+
+    ///////////////////////////////////////// UTILS ///////////////////////////////////////////
+
+    int32_t WglContext::GetClosestPixelFormat(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
+    {
+        int32_t nativeCount;
+        int32_t usableCount = 0;
+        std::vector<int32_t> attribs = {};
+
+        WglContext* context = (WglContext*)window->GetContext();
+
+        if (s_WGL.ARB_PixelFormat)
+        {
+            //get native pixel format count through "modern" extension
+            const int32_t attrib = WGL_NUMBER_PIXEL_FORMATS_ARB;
+
+            if (!s_WGL.getPixelFormatAttribivARB(context->m_DC, 1, 0, 1, &attrib, &nativeCount))
+            {
+                DAIS_ERROR("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format count!");
+                return 0;
+            }
+
+            //setup an array of relevant attribs
+            attribs.push_back(WGL_SUPPORT_OPENGL_ARB);
+            attribs.push_back(WGL_DRAW_TO_WINDOW_ARB);
+            attribs.push_back(WGL_PIXEL_TYPE_ARB);
+            attribs.push_back(WGL_ACCELERATION_ARB);
+            attribs.push_back(WGL_RED_BITS_ARB);
+            attribs.push_back(WGL_RED_SHIFT_ARB);
+            attribs.push_back(WGL_GREEN_BITS_ARB);
+            attribs.push_back(WGL_GREEN_SHIFT_ARB);
+            attribs.push_back(WGL_BLUE_BITS_ARB);
+            attribs.push_back(WGL_BLUE_SHIFT_ARB);
+            attribs.push_back(WGL_ALPHA_BITS_ARB);
+            attribs.push_back(WGL_ALPHA_SHIFT_ARB);
+            attribs.push_back(WGL_DEPTH_BITS_ARB);
+            attribs.push_back(WGL_STENCIL_BITS_ARB);
+            attribs.push_back(WGL_ACCUM_BITS_ARB);
+            attribs.push_back(WGL_ACCUM_RED_BITS_ARB);
+            attribs.push_back(WGL_ACCUM_GREEN_BITS_ARB);
+            attribs.push_back(WGL_ACCUM_BLUE_BITS_ARB);
+            attribs.push_back(WGL_ACCUM_ALPHA_BITS_ARB);
+            attribs.push_back(WGL_AUX_BUFFERS_ARB);
+            attribs.push_back(WGL_STEREO_ARB);
+            attribs.push_back(WGL_DOUBLE_BUFFER_ARB);
+
+            if (s_WGL.ARB_Multisample)
+            {
+                attribs.push_back(WGL_SAMPLES_ARB);
+            }
+
+            if (contextConfig->api == ContextAPI::OpenGL)
+            {
+                if (s_WGL.ARB_FramebufferSRGB
+                    || s_WGL.EXT_FramebufferSRGB)
+                {
+                    attribs.push_back(WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB);
+                }
+            }
+            else
+            {
+                if (s_WGL.EXT_Colorspace)
+                {
+                    attribs.push_back(WGL_COLORSPACE_EXT);
+                }
+            }
+        }
+        else
+        {
+            //get native pixel format count the old way
+            nativeCount = DescribePixelFormat(context->m_DC, 1, sizeof(PIXELFORMATDESCRIPTOR), NULL);
+        }
+
+        std::vector<FramebufferConfig> usableConfigs = {};
+        usableConfigs.reserve(nativeCount);
+
+        //iterate pixel formats, get the values for the attribs array 
+        //and promote some of them as FramebufferConfigs
+        int32_t pixelFormat;
+        for (int32_t i = 0; i < nativeCount; i++)
+        {
+            pixelFormat = i + 1;
+
+            FramebufferConfig fbc = {};
+
+            if (s_WGL.ARB_PixelFormat)
+            {
+                //get pixel format attributes through "modern" extension
+
+                int32_t values[64];
+                DAIS_ASSERT(attribs.size() <= 64, "Cannot get more than 64 attribs!");
+
+                if (!s_WGL.getPixelFormatAttribivARB(context->m_DC, pixelFormat, 0, attribs.size(), attribs.data(), values))
+                {
+                    DAIS_ERROR("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format attributes!");
+                    return 0;
+                }
+
+                //first check hard constraints
+                if (!values[Utils::indexOf(attribs, WGL_SUPPORT_OPENGL_ARB)]
+                    || !values[Utils::indexOf(attribs, WGL_DRAW_TO_WINDOW_ARB)])
+                {
+                    continue;
+                }
+
+                if (values[Utils::indexOf(attribs, WGL_PIXEL_TYPE_ARB)] != WGL_TYPE_RGBA_ARB)
+                {
+                    continue;
+                }
+
+                if (values[Utils::indexOf(attribs, WGL_ACCELERATION_ARB)] == WGL_NO_ACCELERATION_ARB)
+                {
+                    continue;
+                }
+
+                //setup a FramebufferConfig from attrib values
+                fbc.redBits = values[Utils::indexOf(attribs, WGL_RED_BITS_ARB)];
+                fbc.greenBits = values[Utils::indexOf(attribs, WGL_GREEN_BITS_ARB)];
+                fbc.blueBits = values[Utils::indexOf(attribs, WGL_BLUE_BITS_ARB)];
+                fbc.alphaBits = values[Utils::indexOf(attribs, WGL_ALPHA_BITS_ARB)];
+                fbc.depthBits = values[Utils::indexOf(attribs, WGL_DEPTH_BITS_ARB)];
+                fbc.stencilBits = values[Utils::indexOf(attribs, WGL_STENCIL_BITS_ARB)];
+                fbc.accumRedBits = values[Utils::indexOf(attribs, WGL_ACCUM_RED_BITS_ARB)];
+                fbc.accumGreenBits = values[Utils::indexOf(attribs, WGL_ACCUM_GREEN_BITS_ARB)];
+                fbc.accumBlueBits = values[Utils::indexOf(attribs, WGL_ACCUM_BLUE_BITS_ARB)];
+                fbc.accumAlphaBits = values[Utils::indexOf(attribs, WGL_ACCUM_ALPHA_BITS_ARB)];
+                fbc.auxBuffers = values[Utils::indexOf(attribs, WGL_AUX_BUFFERS_ARB)];
+
+                if (values[Utils::indexOf(attribs, WGL_STEREO_ARB)])
+                {
+                    fbc.stereo = true;
+                }
+
+                if (values[Utils::indexOf(attribs, WGL_DOUBLE_BUFFER_ARB)])
+                {
+                    fbc.doubleBuffer = true;
+                }
+
+                if (s_WGL.ARB_Multisample)
+                {
+                    fbc.samples = values[Utils::indexOf(attribs, WGL_SAMPLES_ARB)];
+                }
+
+                if (contextConfig->api == ContextAPI::OpenGL)
+                {
+                    if (s_WGL.ARB_FramebufferSRGB
+                        || s_WGL.EXT_FramebufferSRGB)
+                    {
+                        if (values[Utils::indexOf(attribs, WGL_FRAMEBUFFER_SRGB_CAPABLE_ARB)])
+                        {
+                            fbc.sRGB = true;
+                        }
+                    }
+                }
+                else
+                {
+                    if (s_WGL.EXT_Colorspace)
+                    {
+                        if (values[Utils::indexOf(attribs, WGL_COLORSPACE_EXT)] == WGL_COLORSPACE_SRGB_EXT)
+                        {
+                            fbc.sRGB = true;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                //get pixel format attributes the old way
+                PIXELFORMATDESCRIPTOR pfd;
+                if (!DescribePixelFormat(context->m_DC, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd))
+                {
+                    DAIS_ERROR("Failed to describe pixel format!");
+                    return 0;
+                }
+
+                //first check hard constraints
+                if (!(pfd.dwFlags & PFD_DRAW_TO_WINDOW)
+                    || !(pfd.dwFlags & PFD_SUPPORT_OPENGL))
+                {
+                    continue;
+                }
+
+                if (!(pfd.dwFlags & PFD_GENERIC_ACCELERATED)
+                    && (pfd.dwFlags & PFD_GENERIC_FORMAT))
+                {
+                    continue;
+                }
+
+                if (pfd.iPixelType != PFD_TYPE_RGBA)
+                {
+                    continue;
+                }
+
+                //setup a FramebufferConfig from the pixel format descriptor
+                fbc.redBits = pfd.cRedBits;
+                fbc.greenBits = pfd.cGreenBits;
+                fbc.blueBits = pfd.cBlueBits;
+                fbc.alphaBits = pfd.cAlphaBits;
+                fbc.depthBits = pfd.cDepthBits;
+                fbc.stencilBits = pfd.cStencilBits;
+                fbc.accumRedBits = pfd.cAccumRedBits;
+                fbc.accumGreenBits = pfd.cAccumGreenBits;
+                fbc.accumBlueBits = pfd.cAccumBlueBits;
+                fbc.accumAlphaBits = pfd.cAccumAlphaBits;
+                fbc.auxBuffers = pfd.cAuxBuffers;
+
+                if (pfd.dwFlags & PFD_STEREO)
+                {
+                    fbc.stereo = true;
+                }
+
+                if (pfd.dwFlags & PFD_DOUBLEBUFFER)
+                {
+                    fbc.doubleBuffer = true;
+                }
+
+            }
+
+            fbc.handle = pixelFormat;
+            usableConfigs.push_back(fbc);
+        }
+
+        if (!usableConfigs.size())
+        {
+            DAIS_ERROR("The driver does not appear to support OpenGL!");
+            return 0;
+        }
+
+        //pick the FramebufferConfig closest to the desired one
+        const FramebufferConfig* closest = ChooseFramebufferConfig(framebufferConfig, usableConfigs);
+        if (!closest)
+        {
+            DAIS_ERROR("Failed to find a suitable pixel format!");
+            return 0;
+        }
+
+        //we only care about the closest pixel format handle
+        pixelFormat = (int32_t)closest->handle;
+
+        return pixelFormat;
     }
 }

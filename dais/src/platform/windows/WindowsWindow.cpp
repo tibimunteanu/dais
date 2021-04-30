@@ -220,7 +220,8 @@ namespace dais
             return nullptr;
         }
 
-        HWND windowHandle = CreateWindowExW(styleEx,
+        HWND windowHandle = CreateWindowExW(
+            styleEx,
             DAIS_WINDOW_CLASS,
             wideTitle,
             style,
@@ -229,7 +230,7 @@ namespace dais
             NULL, //no parent window
             NULL, //no window menu
             GetModuleHandleW(NULL),
-            window);
+            window); //pointer to window object for the window proc
 
         free(wideTitle);
 
