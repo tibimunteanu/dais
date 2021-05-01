@@ -8,14 +8,6 @@ namespace dais
     struct FramebufferConfig;
     struct ContextConfig;
 
-    typedef void (*GLProc)(void);
-
-    //function pointer typedefs from glcorearb.h
-    typedef void (APIENTRY* PFNGLCLEARPROC)(GLbitfield mask);
-    typedef const GLubyte* (APIENTRY* PFNGLGETSTRINGPROC)(GLenum name);
-    typedef void (APIENTRY* PFNGLGETINTEGERVPROC)(GLenum pname, GLint* data);
-    typedef const GLubyte* (APIENTRY* PFNGLGETSTRINGIPROC)(GLenum name, GLuint index);
-
     class Context
     {
     public:
@@ -31,6 +23,7 @@ namespace dais
         ContextRobustnessMode m_Robustness;
         ContextReleaseBehavior m_Release;
 
+        //common OpenGL function pointers
         PFNGLGETSTRINGIPROC GetStringi;
         PFNGLGETINTEGERVPROC GetIntegerv;
         PFNGLGETSTRINGPROC GetString;

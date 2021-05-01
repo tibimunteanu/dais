@@ -3,6 +3,7 @@
 #include "engine/core/Base.h"
 #include "engine/core/ThreadLocalStorage.h"
 #include "engine/core/Context.h"
+#include "engine/core/EglContext.h"
 #include "engine/core/Input.h"
 #include "engine/core/Cursor.h"
 #include "engine/core/Monitor.h"
@@ -58,6 +59,12 @@ namespace dais
         static bool IsRawMouseMotionSupported();
         static const char* GetKeyName(Key key, int32_t scancode);
         static int32_t GetKeyScancode(Key key);
+
+        static const std::vector<std::string>& GetEglLibNames();
+
+        static void* OpenLibrary(const std::string& libName);
+        static bool CloseLibrary(void* handle);
+        static void* GetLibraryProcAddress(void* handle, const std::string& procName);
 
         static Cursor* CreateCursor(const Image* image, int32_t xHot, int32_t yHot);
         static Cursor* CreateStandardCursor(CursorShape shape);

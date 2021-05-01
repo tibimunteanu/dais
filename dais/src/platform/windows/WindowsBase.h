@@ -211,7 +211,7 @@ typedef HRESULT(WINAPI* PFN_GetDpiForMonitor)(HMONITOR, MONITOR_DPI_TYPE, UINT*,
 // ntdll.dll function pointer typedefs
 typedef LONG(WINAPI* PFN_RtlVerifyVersionInfo)(OSVERSIONINFOEXW*, ULONG, ULONGLONG);
 
-
+//wgl defines
 #define WGL_NUMBER_PIXEL_FORMATS_ARB 0x2000
 #define WGL_SUPPORT_OPENGL_ARB 0x2010
 #define WGL_DRAW_TO_WINDOW_ARB 0x2001

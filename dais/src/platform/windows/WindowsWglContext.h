@@ -6,7 +6,7 @@ namespace dais
 {
     class WindowsWindow;
 
-    class WglContext : public Context
+    class WindowsWglContext : public Context
     {
     public:
         static struct WglLib

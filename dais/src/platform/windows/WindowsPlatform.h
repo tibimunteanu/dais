@@ -3,7 +3,7 @@
 #include "engine/core/Platform.h"
 #include "platform/windows/WindowsBase.h"
 #include "platform/windows/WindowsThreadLocalStorage.h"
-#include "platform/windows/WglContext.h"
+#include "platform/windows/WindowsWglContext.h"
 #include "platform/windows/WindowsCursor.h"
 #include "platform/windows/WindowsMonitor.h"
 #include "platform/windows/WindowsWindow.h"
@@ -27,6 +27,7 @@ namespace dais
         static RAWINPUT* s_RawInput;
         static int32_t s_RawInputSize;
         static UINT s_MouseTrailSize;
+        static std::vector<std::string> s_EglLibNames;
 
         static struct WindowsLibs
         {

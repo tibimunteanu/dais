@@ -4,13 +4,13 @@ namespace dais
 {
     ////////////////////////////////////// STATIC INIT ////////////////////////////////////////
 
-    WglContext::WglLib WglContext::s_WGL = {};
+    WindowsWglContext::WglLib WindowsWglContext::s_WGL = {};
 
 
 
     ///////////////////////////////////// INTERNAL API ////////////////////////////////////////
 
-    bool WglContext::Init()
+    bool WindowsWglContext::Init()
     {
         if (s_WGL.instance)
         {
@@ -109,7 +109,7 @@ namespace dais
         return true;
     }
 
-    void WglContext::Terminate()
+    void WindowsWglContext::Terminate()
     {
         if (s_WGL.instance)
         {
@@ -119,7 +119,7 @@ namespace dais
     }
 
 
-    bool WglContext::CreateContext(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
+    bool WindowsWglContext::CreateContext(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
     {
         //check required extensions needed for creating the context
         if (contextConfig->api == ContextAPI::OpenGL)
@@ -157,7 +157,7 @@ namespace dais
         HGLRC share = NULL;
         if (contextConfig->share)
         {
-            share = ((WglContext*)contextConfig->share->GetContext())->m_Handle;
+            share = ((WindowsWglContext*)contextConfig->share->GetContext())->m_Handle;
         }
 
         //set the context dc handle
@@ -168,7 +168,7 @@ namespace dais
             return false;
         }
 
-        ((WglContext*)window->m_Context)->m_DC = dc;
+        ((WindowsWglContext*)window->m_Context)->m_DC = dc;
 
         //get the pixelFormat closest to the desired ContextConfig and FramebufferConfig
         int32_t pixelFormat = GetClosestPixelFormat(window, contextConfig, framebufferConfig);
@@ -337,7 +337,7 @@ namespace dais
                 return false;
             }
 
-            ((WglContext*)window->m_Context)->m_Handle = contextHandle;
+            ((WindowsWglContext*)window->m_Context)->m_Handle = contextHandle;
         }
         else
         {
@@ -349,7 +349,7 @@ namespace dais
                 return false;
             }
 
-            ((WglContext*)window->m_Context)->m_Handle = contextHandle;
+            ((WindowsWglContext*)window->m_Context)->m_Handle = contextHandle;
 
             if (share)
             {
@@ -372,8 +372,8 @@ namespace dais
     {
         if (window)
         {
-            WglContext* context = (WglContext*)window->GetContext();
-            if (WglContext::s_WGL.makeCurrent(context->m_DC, context->m_Handle))
+            WindowsWglContext* context = (WindowsWglContext*)window->GetContext();
+            if (WindowsWglContext::s_WGL.makeCurrent(context->m_DC, context->m_Handle))
             {
                 Platform::s_ContextSlot->Set(window);
             }
@@ -385,7 +385,7 @@ namespace dais
         }
         else
         {
-            if (!WglContext::s_WGL.makeCurrent(NULL, NULL))
+            if (!WindowsWglContext::s_WGL.makeCurrent(NULL, NULL))
             {
                 DAIS_ERROR("Failed to clear current context!");
             }
@@ -396,7 +396,7 @@ namespace dais
 
     void Context::PlatformSwapBuffers(Window* window)
     {
-        WglContext* context = (WglContext*)window->GetContext();
+        WindowsWglContext* context = (WindowsWglContext*)window->GetContext();
 
         if (!window->GetMonitor())
         {
@@ -424,7 +424,7 @@ namespace dais
     void Context::PlatformSwapInterval(int32_t interval)
     {
         Window* window = (Window*)WindowsPlatform::s_ContextSlot->Get();
-        WglContext* context = (WglContext*)window->GetContext();
+        WindowsWglContext* context = (WindowsWglContext*)window->GetContext();
 
         context->m_Interval = interval;
 
@@ -444,9 +444,9 @@ namespace dais
             }
         }
 
-        if (WglContext::s_WGL.EXT_SwapControl)
+        if (WindowsWglContext::s_WGL.EXT_SwapControl)
         {
-            WglContext::s_WGL.swapIntervalEXT(interval);
+            WindowsWglContext::s_WGL.swapIntervalEXT(interval);
         }
     }
 
@@ -454,13 +454,13 @@ namespace dais
     {
         const char* extensions = nullptr;
 
-        if (WglContext::s_WGL.getExtensionsStringARB)
+        if (WindowsWglContext::s_WGL.getExtensionsStringARB)
         {
-            extensions = WglContext::s_WGL.getExtensionsStringARB(WglContext::s_WGL.getCurrentDC());
+            extensions = WindowsWglContext::s_WGL.getExtensionsStringARB(WindowsWglContext::s_WGL.getCurrentDC());
         }
-        else if (WglContext::s_WGL.getExtensionsStringEXT)
+        else if (WindowsWglContext::s_WGL.getExtensionsStringEXT)
         {
-            extensions = WglContext::s_WGL.getExtensionsStringEXT();
+            extensions = WindowsWglContext::s_WGL.getExtensionsStringEXT();
         }
 
         if (!extensions)
@@ -473,22 +473,22 @@ namespace dais
 
     GLProc Context::PlatformGetGLProcAddress(const char* procedureName)
     {
-        const GLProc proc = (GLProc)WglContext::s_WGL.getProcAddress(procedureName);
+        const GLProc proc = (GLProc)WindowsWglContext::s_WGL.getProcAddress(procedureName);
         if (proc)
         {
             return proc;
         }
 
-        return (GLProc)GetProcAddress(WglContext::s_WGL.instance, procedureName);
+        return (GLProc)GetProcAddress(WindowsWglContext::s_WGL.instance, procedureName);
     }
 
     void Context::PlatformDestroyContext(Window* window)
     {
-        WglContext* context = (WglContext*)window->GetContext();
+        WindowsWglContext* context = (WindowsWglContext*)window->GetContext();
 
         if (context->m_Handle)
         {
-            WglContext::s_WGL.deleteContext(context->m_Handle);
+            WindowsWglContext::s_WGL.deleteContext(context->m_Handle);
             context->m_Handle = NULL;
         }
     }
@@ -497,13 +497,13 @@ namespace dais
 
     ///////////////////////////////////////// UTILS ///////////////////////////////////////////
 
-    int32_t WglContext::GetClosestPixelFormat(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
+    int32_t WindowsWglContext::GetClosestPixelFormat(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
     {
         int32_t nativeCount;
         int32_t usableCount = 0;
         std::vector<int32_t> attribs = {};
 
-        WglContext* context = (WglContext*)window->GetContext();
+        WindowsWglContext* context = (WindowsWglContext*)window->GetContext();
 
         if (s_WGL.ARB_PixelFormat)
         {

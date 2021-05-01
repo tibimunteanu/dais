@@ -287,14 +287,14 @@ namespace dais
         {
             if (contextConfig->type == ContextType::Native)
             {
-                if (!WglContext::Init())
+                if (!WindowsWglContext::Init())
                 {
                     DAIS_ERROR("Failed to init WGL!");
                     delete window;
                     return nullptr;
                 }
 
-                if (!WglContext::CreateContext(window, contextConfig, framebufferConfig))
+                if (!WindowsWglContext::CreateContext(window, contextConfig, framebufferConfig))
                 {
                     DAIS_ERROR("Failed to create WGL context!");
                     delete window;
@@ -332,7 +332,7 @@ namespace dais
         m_ScaleToMonitor = windowConfig->scaleToMonitor;
         m_KeyMenu = windowConfig->keyMenu;
 
-        m_Context = new WglContext();
+        m_Context = new WindowsWglContext();
     }
 
     WindowsWindow::~WindowsWindow()

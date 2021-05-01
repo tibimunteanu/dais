@@ -19,6 +19,11 @@ namespace dais
     int32_t WindowsPlatform::s_RawInputSize = 0;
     UINT WindowsPlatform::s_MouseTrailSize = 0;
     WindowsPlatform::WindowsLibs WindowsPlatform::s_Libs = {};
+    std::vector<std::string> WindowsPlatform::s_EglLibNames =
+    {
+        "libEGL.dll",
+        "EGL.dll"
+    };
 
 
 
@@ -68,7 +73,7 @@ namespace dais
         WindowsPlatform::UnregisterWindowClass();
         WindowsPlatform::RestoreForegroundLockTimeout();
 
-        WglContext::Terminate();
+        WindowsWglContext::Terminate();
 
         WindowsPlatform::FreeLibraries();
     }
@@ -122,7 +127,7 @@ namespace dais
     const char* Platform::PlatformGetScancodeName(int32_t scancode)
     {
         if (scancode < 0
-            || scancode > (KF_EXTENDED | 0xff)
+            || scancode >(KF_EXTENDED | 0xff)
             || WindowsPlatform::s_Keycodes[scancode] == Key::Unknown)
         {
             DAIS_ERROR("Invalid scancode!");
@@ -134,6 +139,26 @@ namespace dais
     int32_t Platform::PlatformGetKeyScancode(Key key)
     {
         return WindowsPlatform::s_Scancodes[(int32_t)key];
+    }
+
+    const std::vector<std::string>& Platform::GetEglLibNames()
+    {
+        return WindowsPlatform::s_EglLibNames;
+    }
+
+    void* Platform::OpenLibrary(const std::string& libName)
+    {
+        return LoadLibraryA(libName.c_str());
+    }
+
+    bool Platform::CloseLibrary(void* handle)
+    {
+        return FreeLibrary((HMODULE)handle);
+    }
+
+    void* Platform::GetLibraryProcAddress(void* handle, const std::string& procName)
+    {
+        return GetProcAddress((HMODULE)handle, procName.c_str());
     }
 
 

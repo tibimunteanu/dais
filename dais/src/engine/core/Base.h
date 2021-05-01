@@ -126,6 +126,8 @@ constexpr enum type operator |=(enum type a, const enum type b) { a = a | b; ret
 #define CALLBACK __stdcall
 #endif
 
+typedef void (*GLProc)(void);
+
 #define GL_VERSION 0x1f02
 #define GL_NONE 0
 #define GL_COLOR_BUFFER_BIT 0x00004000
@@ -151,6 +153,123 @@ typedef unsigned int GLenum;
 typedef unsigned int GLbitfield;
 typedef unsigned char GLubyte;
 
+//function pointer typedefs from glcorearb.h
+typedef void (APIENTRY* PFNGLCLEARPROC)(GLbitfield mask);
+typedef const GLubyte* (APIENTRY* PFNGLGETSTRINGPROC)(GLenum name);
+typedef void (APIENTRY* PFNGLGETINTEGERVPROC)(GLenum pname, GLint* data);
+typedef const GLubyte* (APIENTRY* PFNGLGETSTRINGIPROC)(GLenum name, GLuint index);
+
+
+#if defined(_WIN32)
+ #define EGLAPIENTRY __stdcall
+#else
+ #define EGLAPIENTRY
+#endif
+
+#define EGL_SUCCESS 0x3000
+#define EGL_NOT_INITIALIZED 0x3001
+#define EGL_BAD_ACCESS 0x3002
+#define EGL_BAD_ALLOC 0x3003
+#define EGL_BAD_ATTRIBUTE 0x3004
+#define EGL_BAD_CONFIG 0x3005
+#define EGL_BAD_CONTEXT 0x3006
+#define EGL_BAD_CURRENT_SURFACE 0x3007
+#define EGL_BAD_DISPLAY 0x3008
+#define EGL_BAD_MATCH 0x3009
+#define EGL_BAD_NATIVE_PIXMAP 0x300a
+#define EGL_BAD_NATIVE_WINDOW 0x300b
+#define EGL_BAD_PARAMETER 0x300c
+#define EGL_BAD_SURFACE 0x300d
+#define EGL_CONTEXT_LOST 0x300e
+#define EGL_COLOR_BUFFER_TYPE 0x303f
+#define EGL_RGB_BUFFER 0x308e
+#define EGL_SURFACE_TYPE 0x3033
+#define EGL_WINDOW_BIT 0x0004
+#define EGL_RENDERABLE_TYPE 0x3040
+#define EGL_OPENGL_ES_BIT 0x0001
+#define EGL_OPENGL_ES2_BIT 0x0004
+#define EGL_OPENGL_BIT 0x0008
+#define EGL_ALPHA_SIZE 0x3021
+#define EGL_BLUE_SIZE 0x3022
+#define EGL_GREEN_SIZE 0x3023
+#define EGL_RED_SIZE 0x3024
+#define EGL_DEPTH_SIZE 0x3025
+#define EGL_STENCIL_SIZE 0x3026
+#define EGL_SAMPLES 0x3031
+#define EGL_OPENGL_ES_API 0x30a0
+#define EGL_OPENGL_API 0x30a2
+#define EGL_NONE 0x3038
+#define EGL_EXTENSIONS 0x3055
+#define EGL_CONTEXT_CLIENT_VERSION 0x3098
+#define EGL_NATIVE_VISUAL_ID 0x302e
+#define EGL_NO_SURFACE ((EGLSurface) 0)
+#define EGL_NO_DISPLAY ((EGLDisplay) 0)
+#define EGL_NO_CONTEXT ((EGLContext) 0)
+#define EGL_DEFAULT_DISPLAY ((EGLNativeDisplayType) 0)
+
+#define EGL_CONTEXT_OPENGL_FORWARD_COMPATIBLE_BIT_KHR 0x00000002
+#define EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT_KHR 0x00000001
+#define EGL_CONTEXT_OPENGL_COMPATIBILITY_PROFILE_BIT_KHR 0x00000002
+#define EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR 0x00000001
+#define EGL_CONTEXT_OPENGL_RESET_NOTIFICATION_STRATEGY_KHR 0x31bd
+#define EGL_NO_RESET_NOTIFICATION_KHR 0x31be
+#define EGL_LOSE_CONTEXT_ON_RESET_KHR 0x31bf
+#define EGL_CONTEXT_OPENGL_ROBUST_ACCESS_BIT_KHR 0x00000004
+#define EGL_CONTEXT_MAJOR_VERSION_KHR 0x3098
+#define EGL_CONTEXT_MINOR_VERSION_KHR 0x30fb
+#define EGL_CONTEXT_OPENGL_PROFILE_MASK_KHR 0x30fd
+#define EGL_CONTEXT_FLAGS_KHR 0x30fc
+#define EGL_CONTEXT_OPENGL_NO_ERROR_KHR 0x31b3
+#define EGL_GL_COLORSPACE_KHR 0x309d
+#define EGL_GL_COLORSPACE_SRGB_KHR 0x3089
+#define EGL_CONTEXT_RELEASE_BEHAVIOR_KHR 0x2097
+#define EGL_CONTEXT_RELEASE_BEHAVIOR_NONE_KHR 0
+#define EGL_CONTEXT_RELEASE_BEHAVIOR_FLUSH_KHR 0x2098
+#define EGL_PLATFORM_X11_EXT 0x31d5
+#define EGL_PLATFORM_WAYLAND_EXT 0x31d8
+#define EGL_PLATFORM_ANGLE_ANGLE 0x3202
+#define EGL_PLATFORM_ANGLE_TYPE_ANGLE 0x3203
+#define EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE 0x320d
+#define EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE 0x320e
+#define EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE 0x3207
+#define EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE 0x3208
+#define EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE 0x3450
+#define EGL_PLATFORM_ANGLE_TYPE_METAL_ANGLE 0x3489
+#define EGL_PLATFORM_ANGLE_NATIVE_PLATFORM_TYPE_ANGLE 0x348f
+
+typedef int EGLint;
+typedef unsigned int EGLBoolean;
+typedef unsigned int EGLenum;
+typedef void* EGLConfig;
+typedef void* EGLContext;
+typedef void* EGLDisplay;
+typedef void* EGLSurface;
+
+typedef void* EGLNativeDisplayType;
+typedef void* EGLNativeWindowType;
+
+// EGL function pointer typedefs
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglGetConfigAttrib)(EGLDisplay,EGLConfig,EGLint,EGLint*);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglGetConfigs)(EGLDisplay,EGLConfig*,EGLint,EGLint*);
+typedef EGLDisplay (EGLAPIENTRY * PFN_eglGetDisplay)(EGLNativeDisplayType);
+typedef EGLint (EGLAPIENTRY * PFN_eglGetError)(void);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglInitialize)(EGLDisplay,EGLint*,EGLint*);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglTerminate)(EGLDisplay);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglBindAPI)(EGLenum);
+typedef EGLContext (EGLAPIENTRY * PFN_eglCreateContext)(EGLDisplay,EGLConfig,EGLContext,const EGLint*);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglDestroySurface)(EGLDisplay,EGLSurface);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglDestroyContext)(EGLDisplay,EGLContext);
+typedef EGLSurface (EGLAPIENTRY * PFN_eglCreateWindowSurface)(EGLDisplay,EGLConfig,EGLNativeWindowType,const EGLint*);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglMakeCurrent)(EGLDisplay,EGLSurface,EGLSurface,EGLContext);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglSwapBuffers)(EGLDisplay,EGLSurface);
+typedef EGLBoolean (EGLAPIENTRY * PFN_eglSwapInterval)(EGLDisplay,EGLint);
+typedef const char* (EGLAPIENTRY * PFN_eglQueryString)(EGLDisplay,EGLint);
+typedef GLProc (EGLAPIENTRY * PFN_eglGetProcAddress)(const char*);
+
+typedef EGLDisplay (EGLAPIENTRY * PFNEGLGETPLATFORMDISPLAYEXTPROC)(EGLenum,void*,const EGLint*);
+typedef EGLSurface (EGLAPIENTRY * PFNEGLCREATEPLATFORMWINDOWSURFACEEXTPROC)(EGLDisplay,EGLConfig,void*,const EGLint*);
+
+
 struct Image
 {
     int32_t width;
@@ -160,6 +279,7 @@ struct Image
 
 #include "engine/core/Utils.h"
 
+//enums
 enum class ContextAPI
 {
     None = 0,

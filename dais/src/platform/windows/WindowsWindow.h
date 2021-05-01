@@ -32,7 +32,7 @@ namespace dais
 
         virtual ~WindowsWindow();
         friend class Window;
-        friend class WglContext;
+        friend class WindowsWglContext;
 
     private: DAIS_PLATFORM_API
         bool PlatformIsMaximized() const override;
