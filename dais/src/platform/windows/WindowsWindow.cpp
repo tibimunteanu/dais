@@ -301,9 +301,25 @@ namespace dais
                     return nullptr;
                 }
             }
+            else if (contextConfig->type == ContextType::EGL)
+            {
+                if (!EglContext::Init())
+                {
+                    DAIS_ERROR("Failed to init EGL!");
+                    delete window;
+                    return nullptr;
+                }
+
+                if (!EglContext::CreateContext(window, contextConfig, framebufferConfig))
+                {
+                    DAIS_ERROR("Failed to create EGL context!");
+                    delete window;
+                    return nullptr;
+                }
+            }
             else
             {
-                DAIS_ERROR("We only support DAIS_NATOVE_CONTEXT_API for now!");
+                DAIS_ERROR("Dais only supports ContextType::Native and ContextType::EGL for now!");
                 delete window;
                 return nullptr;
             }
@@ -332,7 +348,14 @@ namespace dais
         m_ScaleToMonitor = windowConfig->scaleToMonitor;
         m_KeyMenu = windowConfig->keyMenu;
 
-        m_Context = new WindowsWglContext();
+        if (contextConfig->type == ContextType::Native)
+        {
+            m_Context = new WindowsWglContext();
+        }
+        else if (contextConfig->type == ContextType::EGL)
+        {
+            m_Context = new EglContext();
+        }
     }
 
     WindowsWindow::~WindowsWindow()

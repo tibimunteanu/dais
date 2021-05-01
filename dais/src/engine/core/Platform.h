@@ -14,12 +14,18 @@ namespace dais
     typedef void(*MonitorCallback)(Monitor*);
     typedef void(*JoystickCallback)(int32_t, int32_t);
 
+    struct InitConfig
+    {
+        AnglePlatformType angleType;
+    };
+
     class Platform
     {
     public:
         //TODO: why are we persisting these hints?
         static struct Hints
         {
+            InitConfig init;
             FramebufferConfig framebuffer;
             WindowConfig window;
             ContextConfig context;
@@ -61,6 +67,13 @@ namespace dais
         static int32_t GetKeyScancode(Key key);
 
         static const std::vector<std::string>& GetEglLibNames();
+        static const std::vector<std::string>& GetGLES1LibNames();
+        static const std::vector<std::string>& GetGLES2LibNames();
+        static const std::vector<std::string>& GetGLSLibNames();
+
+        static EGLenum GetEglPlatform(EGLint** attribs);
+        static EGLNativeDisplayType GetEglNativeDisplay();
+        static EGLNativeWindowType GetEglNativeWindow(Window* window);
 
         static void* OpenLibrary(const std::string& libName);
         static bool CloseLibrary(void* handle);
@@ -86,11 +99,23 @@ namespace dais
     private: DAIS_PLATFORM_API
         static bool PlatformInit();
         static void PlatformTerminate();
+
         static void PlatformPollEvents();
         static void PlatformWaitEvents();
         static void PlatformWaitEventsTimeout(double timeout);
+
         static bool PlatformIsRawMouseMotionSupported();
+
         static const char* PlatformGetScancodeName(int32_t scancode);
         static int32_t PlatformGetKeyScancode(Key key);
+
+        static const std::vector<std::string>& PlatformGetEglLibNames();
+        static const std::vector<std::string>& PlatformGetGLES1LibNames();
+        static const std::vector<std::string>& PlatformGetGLES2LibNames();
+        static const std::vector<std::string>& PlatformGetGLSLibNames();
+
+        static EGLenum PlatformGetEglPlatform(EGLint** attribs);
+        static EGLNativeDisplayType PlatformGetEglNativeDisplay();
+        static EGLNativeWindowType PlatformGetEglNativeWindow(Window* window);
     };
 }

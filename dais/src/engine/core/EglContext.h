@@ -64,5 +64,16 @@ namespace dais
         static void Terminate();
 
         static bool CreateContext(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);
+
+        static void EGLMakeContextCurrent(Window* window);
+        static void EGLSwapBuffers(Window* window);
+        static void EGLSwapInterval(int32_t interval);
+        static bool EGLExtensionSupported(const char* extension);
+        static GLProc EGLGetGLProcAddress(const char* procedureName);
+        static void EGLDestroyContext(Window* window);
+
+    private: DAIS_UTILS
+        static const char* GetErrorString(EGLint error);
+        static bool GetClosestEGLConfig(const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, EGLConfig* result);
     };
 }

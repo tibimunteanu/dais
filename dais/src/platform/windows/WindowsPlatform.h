@@ -28,6 +28,9 @@ namespace dais
         static int32_t s_RawInputSize;
         static UINT s_MouseTrailSize;
         static std::vector<std::string> s_EglLibNames;
+        static std::vector<std::string> s_GLES1LibNames;
+        static std::vector<std::string> s_GLES2LibNames;
+        static std::vector<std::string> s_GLSLibNames;
 
         static struct WindowsLibs
         {

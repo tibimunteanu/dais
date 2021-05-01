@@ -17,6 +17,9 @@ int main(int argc, char** argv)
     dais::Platform::SetMonitorConnectedCallback(OnMonitorConnected);
     dais::Platform::SetMonitorDisconnectedCallback(OnMonitorDisconnected);
 
+    dais::Platform::s_Hints = {};
+    dais::Platform::s_Hints.init.angleType = dais::AnglePlatformType::None;
+
     dais::Platform::Init();
 
     //test monitor api
@@ -63,7 +66,6 @@ int main(int argc, char** argv)
     }
 
     //test window api
-    dais::Platform::s_Hints = {};
     dais::Platform::s_Hints.refreshRate = -1;
     dais::Platform::s_Hints.window.resizable = true;
     dais::Platform::s_Hints.window.visible = true;
@@ -73,8 +75,8 @@ int main(int argc, char** argv)
     dais::Platform::s_Hints.window.centerCursor = true;
     dais::Platform::s_Hints.window.focusOnShow = true;
     dais::Platform::s_Hints.window.scaleToMonitor = true;
-    dais::Platform::s_Hints.context.api = ContextAPI::OpenGL;
-    dais::Platform::s_Hints.context.type = ContextType::Native;
+    dais::Platform::s_Hints.context.api = dais::ContextAPI::OpenGL;
+    dais::Platform::s_Hints.context.type = dais::ContextType::Native;
     dais::Platform::s_Hints.context.major = 1;
     dais::Platform::s_Hints.context.minor = 0;
     dais::Platform::s_Hints.framebuffer.redBits = 8;

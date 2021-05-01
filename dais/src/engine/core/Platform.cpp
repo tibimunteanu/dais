@@ -111,7 +111,7 @@ namespace dais
     }
 
     Window* Platform::OpenWindow(const std::string& title, int32_t width, int32_t height,
-                                 const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+        const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
     {
         Window* window = Window::Create(title, width, height, windowConfig, contextConfig, framebufferConfig, monitor);
         if (window)
@@ -134,6 +134,7 @@ namespace dais
             : nullptr;
     }
 
+
     const std::vector<Monitor*>& Platform::GetMonitors()
     {
         return s_Monitors;
@@ -145,6 +146,7 @@ namespace dais
             ? s_Monitors[0]
             : nullptr;
     }
+
 
     const char* Platform::GetKeyName(Key key, int32_t scancode)
     {
@@ -168,6 +170,44 @@ namespace dais
         return PlatformGetKeyScancode(key);
     }
 
+
+    const std::vector<std::string>& Platform::GetEglLibNames()
+    {
+        return PlatformGetEglLibNames();
+    }
+
+    const std::vector<std::string>& Platform::GetGLES1LibNames()
+    {
+        return PlatformGetGLES1LibNames();
+    }
+
+    const std::vector<std::string>& Platform::GetGLES2LibNames()
+    {
+        return PlatformGetGLES2LibNames();
+    }
+
+    const std::vector<std::string>& Platform::GetGLSLibNames()
+    {
+        return PlatformGetGLSLibNames();
+    }
+
+
+    EGLenum Platform::GetEglPlatform(EGLint** attribs)
+    {
+        return PlatformGetEglPlatform(attribs);
+    }
+
+    EGLNativeDisplayType Platform::GetEglNativeDisplay()
+    {
+        return PlatformGetEglNativeDisplay();
+    }
+
+    EGLNativeWindowType Platform::GetEglNativeWindow(Window* window)
+    {
+        return PlatformGetEglNativeWindow(window);
+    }
+
+
     Cursor* Platform::CreateCursor(const Image* image, int32_t xHot, int32_t yHot)
     {
         Cursor* cursor = Cursor::Create(image, xHot, yHot);
@@ -187,6 +227,7 @@ namespace dais
         }
         return cursor;
     }
+
 
     void Platform::SetMonitorConnectedCallback(MonitorCallback callback)
     {

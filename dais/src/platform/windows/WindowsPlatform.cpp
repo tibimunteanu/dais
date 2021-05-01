@@ -19,11 +19,10 @@ namespace dais
     int32_t WindowsPlatform::s_RawInputSize = 0;
     UINT WindowsPlatform::s_MouseTrailSize = 0;
     WindowsPlatform::WindowsLibs WindowsPlatform::s_Libs = {};
-    std::vector<std::string> WindowsPlatform::s_EglLibNames =
-    {
-        "libEGL.dll",
-        "EGL.dll"
-    };
+    std::vector<std::string> WindowsPlatform::s_EglLibNames = { "libEGL.dll", "EGL.dll" };
+    std::vector<std::string> WindowsPlatform::s_GLES1LibNames = { "GLESv1_CM.dll", "libGLES_CM.dll" };
+    std::vector<std::string> WindowsPlatform::s_GLES2LibNames = { "GLESv2.dll", "libGLESv2.dll" };
+    std::vector<std::string> WindowsPlatform::s_GLSLibNames = { };
 
 
 
@@ -141,10 +140,91 @@ namespace dais
         return WindowsPlatform::s_Scancodes[(int32_t)key];
     }
 
-    const std::vector<std::string>& Platform::GetEglLibNames()
+
+    const std::vector<std::string>& Platform::PlatformGetEglLibNames()
     {
         return WindowsPlatform::s_EglLibNames;
     }
+
+    const std::vector<std::string>& Platform::PlatformGetGLES1LibNames()
+    {
+        return WindowsPlatform::s_GLES1LibNames;
+    }
+
+    const std::vector<std::string>& Platform::PlatformGetGLES2LibNames()
+    {
+        return WindowsPlatform::s_GLES2LibNames;
+    }
+
+    const std::vector<std::string>& Platform::PlatformGetGLSLibNames()
+    {
+        return WindowsPlatform::s_GLSLibNames;
+    }
+
+
+    EGLenum Platform::PlatformGetEglPlatform(EGLint** attribs)
+    {
+        if (EglContext::s_EGL.ANGLE_PlatformAngle)
+        {
+            int type = 0;
+
+            if (EglContext::s_EGL.ANGLE_PlatformAngleOpenGL)
+            {
+                if (s_Hints.init.angleType == AnglePlatformType::OpenGL)
+                {
+                    type = EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE;
+                }
+                else if (s_Hints.init.angleType == AnglePlatformType::OpenGLES)
+                {
+                    type = EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE;
+                }
+            }
+
+            if (EglContext::s_EGL.ANGLE_PlatformAngleD3D)
+            {
+                if (s_Hints.init.angleType == AnglePlatformType::D3D9)
+                {
+                    type = EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE;
+                }
+                else if (s_Hints.init.angleType == AnglePlatformType::D3D11)
+                {
+                    type = EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE;
+                }
+            }
+
+            if (EglContext::s_EGL.ANGLE_PlatformAngleVulkan)
+            {
+                if (s_Hints.init.angleType == AnglePlatformType::Vulkan)
+                {
+                    type = EGL_PLATFORM_ANGLE_TYPE_VULKAN_ANGLE;
+                }
+            }
+
+            if (type)
+            {
+                *attribs = (EGLint*)calloc(3, sizeof(EGLint));
+                (*attribs)[0] = EGL_PLATFORM_ANGLE_TYPE_ANGLE;
+                (*attribs)[1] = type;
+                (*attribs)[2] = EGL_NONE;
+
+                return EGL_PLATFORM_ANGLE_ANGLE;
+            }
+        }
+
+        return 0;
+    }
+
+    EGLNativeDisplayType Platform::PlatformGetEglNativeDisplay()
+    {
+        return GetDC(WindowsPlatform::s_HelperWindowHandle);
+    }
+
+    EGLNativeWindowType Platform::PlatformGetEglNativeWindow(Window* window)
+    {
+        return window->GetNativeHandle();
+    }
+
+
 
     void* Platform::OpenLibrary(const std::string& libName)
     {

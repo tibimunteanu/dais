@@ -229,13 +229,13 @@ namespace dais
             nullptr
         };
 
-        window->GetContext()->m_Type = contextConfig->type;
-        window->GetContext()->m_API = ContextAPI::OpenGL;
+        window->m_Context->m_Type = contextConfig->type;
+        window->m_Context->m_API = ContextAPI::OpenGL;
 
         Window* previous = GetCurrentContext();
         MakeContextCurrent(window);
 
-        Context* context = window->GetContext();
+        Context* context = window->m_Context;
 
         context->GetIntegerv = (PFNGLGETINTEGERVPROC)PlatformGetGLProcAddress("glGetIntegerv");
         context->GetString = (PFNGLGETSTRINGPROC)PlatformGetGLProcAddress("glGetString");
@@ -461,7 +461,7 @@ namespace dais
         Window* previous = GetCurrentContext();
 
         if (window
-            && window->GetContext()->m_API == ContextAPI::None)
+            && window->m_Context->m_API == ContextAPI::None)
         {
             DAIS_ERROR("Cannot make current with a window that has no OpenGL or OpenGL ES context!");
             return;
@@ -470,27 +470,48 @@ namespace dais
         if (previous)
         {
             if (!window
-                || window->GetContext()->m_Type != previous->GetContext()->m_Type)
+                || window->m_Context->m_Type != previous->m_Context->m_Type)
             {
-                PlatformMakeContextCurrent(nullptr);
+                if (previous->m_Context->m_Type == ContextType::Native)
+                {
+                    PlatformMakeContextCurrent(nullptr);
+                }
+                else if (previous->m_Context->m_Type == ContextType::EGL)
+                {
+                    EglContext::EGLMakeContextCurrent(nullptr);
+                }
             }
         }
 
         if (window)
         {
-            PlatformMakeContextCurrent(window);
+            if (window->m_Context->m_Type == ContextType::Native)
+            {
+                PlatformMakeContextCurrent(window);
+            }
+            else if (window->m_Context->m_Type == ContextType::EGL)
+            {
+                EglContext::EGLMakeContextCurrent(window);
+            }
         }
     }
 
     void Context::SwapBuffers(Window* window)
     {
-        if (window->GetContext()->m_API == ContextAPI::None)
+        if (window->m_Context->m_API == ContextAPI::None)
         {
             DAIS_ERROR("Cannot swap buffers of a window that has no OpenGL or OpenGL ES context!");
             return;
         }
 
-        PlatformSwapBuffers(window);
+        if (window->m_Context->m_Type == ContextType::Native)
+        {
+            PlatformSwapBuffers(window);
+        }
+        else if (window->m_Context->m_Type == ContextType::EGL)
+        {
+            EglContext::EGLSwapBuffers(window);
+        }
     }
 
     void Context::SwapInterval(int32_t interval)
@@ -502,7 +523,14 @@ namespace dais
             return;
         }
 
-        PlatformSwapInterval(interval);
+        if (window->m_Context->m_Type == ContextType::Native)
+        {
+            PlatformSwapInterval(interval);
+        }
+        else if (window->m_Context->m_Type == ContextType::EGL)
+        {
+            EglContext::EGLSwapInterval(interval);
+        }
     }
 
     bool Context::ExtensionSupported(const char* extension)
@@ -514,51 +542,58 @@ namespace dais
             return false;
         }
 
-        if (*extension == '\0')
+        if (window->m_Context->m_Type == ContextType::Native)
         {
-            DAIS_ERROR("Extension name cannot be empty!");
-            return false;
-        }
-
-        if (window->GetContext()->m_Major >= 3)
-        {
-            //check if extension is in the modern OpenGL extensions string list
-            GLint count;
-            window->GetContext()->GetIntegerv(GL_NUM_EXTENSIONS, &count);
-
-            for (int32_t i = 0; i < count; i++)
+            if (*extension == '\0')
             {
-                const char* en = (const char*)window->GetContext()->GetStringi(GL_EXTENSIONS, i);
-                if (!en)
+                DAIS_ERROR("Extension name cannot be empty!");
+                return false;
+            }
+
+            if (window->GetContext()->m_Major >= 3)
+            {
+                //check if extension is in the modern OpenGL extensions string list
+                GLint count;
+                window->GetContext()->GetIntegerv(GL_NUM_EXTENSIONS, &count);
+
+                for (int32_t i = 0; i < count; i++)
+                {
+                    const char* en = (const char*)window->GetContext()->GetStringi(GL_EXTENSIONS, i);
+                    if (!en)
+                    {
+                        DAIS_ERROR("Extension string retrieval is broken!");
+                        return false;
+                    }
+
+                    if (strcmp(en, extension) == 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            else
+            {
+                //check if extension is in the old style OpenGL extension string
+                const char* extensions = (const char*)window->GetContext()->GetString(GL_EXTENSIONS);
+                if (!extensions)
                 {
                     DAIS_ERROR("Extension string retrieval is broken!");
                     return false;
                 }
 
-                if (strcmp(en, extension) == 0)
+                if (StringInExtensionString(extension, extensions))
                 {
                     return true;
                 }
             }
+
+            //check if extension is in the platform-specific string
+            return PlatformExtensionSupported(extension);
         }
-        else
+        else if (window->m_Context->m_Type == ContextType::EGL)
         {
-            //check if extension is in the old style OpenGL extension string
-            const char* extensions = (const char*)window->GetContext()->GetString(GL_EXTENSIONS);
-            if (!extensions)
-            {
-                DAIS_ERROR("Extension string retrieval is broken!");
-                return false;
-            }
-
-            if (StringInExtensionString(extension, extensions))
-            {
-                return true;
-            }
+            return EglContext::EGLExtensionSupported(extension);
         }
-
-        //check if extension is in the platform-specific string
-        return PlatformExtensionSupported(extension);
     }
 
     GLProc Context::GetGLProcAddress(const char* procedureName)
@@ -570,7 +605,14 @@ namespace dais
             return nullptr;
         }
 
-        return PlatformGetGLProcAddress(procedureName);
+        if (window->m_Context->m_Type == ContextType::Native)
+        {
+            return PlatformGetGLProcAddress(procedureName);
+        }
+        else if (window->m_Context->m_Type == ContextType::EGL)
+        {
+            return EglContext::EGLGetGLProcAddress(procedureName);
+        }
     }
 
     void Context::DestroyContext(Window* window)
@@ -581,6 +623,13 @@ namespace dais
             return;
         }
 
-        PlatformSwapBuffers(window);
+        if (window->m_Context->m_Type == ContextType::Native)
+        {
+            PlatformDestroyContext(window);
+        }
+        else if (window->m_Context->m_Type == ContextType::EGL)
+        {
+            EglContext::DestroyContext(window);
+        }
     }
 }
