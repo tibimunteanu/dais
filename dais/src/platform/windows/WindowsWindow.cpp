@@ -289,14 +289,12 @@ namespace dais
             {
                 if (!WindowsWglContext::Init())
                 {
-                    DAIS_ERROR("Failed to init WGL!");
                     delete window;
                     return nullptr;
                 }
 
                 if (!WindowsWglContext::CreateContext(window, contextConfig, framebufferConfig))
                 {
-                    DAIS_ERROR("Failed to create WGL context!");
                     delete window;
                     return nullptr;
                 }
@@ -305,14 +303,12 @@ namespace dais
             {
                 if (!EglContext::Init())
                 {
-                    DAIS_ERROR("Failed to init EGL!");
                     delete window;
                     return nullptr;
                 }
 
                 if (!EglContext::CreateContext(window, contextConfig, framebufferConfig))
                 {
-                    DAIS_ERROR("Failed to create EGL context!");
                     delete window;
                     return nullptr;
                 }
@@ -365,7 +361,10 @@ namespace dais
             ReleaseMonitor();
         }
 
-        Context::DestroyContext(this);
+        if (m_Context->m_API != ContextAPI::None)
+        {
+            Context::DestroyContext(this);
+        }
         delete m_Context;
 
         if (WindowsPlatform::s_DisabledCursorWindow == this)

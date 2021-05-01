@@ -341,6 +341,7 @@ namespace dais
         //load the appropriate client library
         if (!s_EGL.KHR_GetAllProcAddresses)
         {
+            //LEARN C++: is this how you store const ref returned from the functions?
             std::vector<std::string> libNames;
 
             if (contextConfig->api == ContextAPI::OpenGLES)
@@ -484,6 +485,7 @@ namespace dais
     }
 
 
+
     ///////////////////////////////////////// UTILS ///////////////////////////////////////////
 
     const char* EglContext::GetErrorString(EGLint error)
@@ -511,6 +513,102 @@ namespace dais
 
     bool EglContext::GetClosestEGLConfig(const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, EGLConfig* result)
     {
-        return false;
+        int nativeCount;
+
+        s_EGL.getConfigs(s_EGL.display, nullptr, 0, &nativeCount);
+        if (!nativeCount)
+        {
+            DAIS_ERROR("No EGLConfigs found!");
+            return false;
+        }
+
+        std::vector<FramebufferConfig> usableConfigs = {};
+        usableConfigs.reserve(nativeCount);
+
+        std::vector<EGLConfig> nativeConfigs = {};
+        nativeConfigs.reserve(nativeCount);
+
+        s_EGL.getConfigs(s_EGL.display, nativeConfigs.data(), nativeCount, &nativeCount);
+
+        for (int32_t i = 0; i < nativeCount; i++)
+        {
+            const EGLConfig n = nativeConfigs[i];
+
+            int attribValue = 0;
+
+            //only consider RGB(A) EGLConfigs
+            s_EGL.getConfigAttrib(s_EGL.display, n, EGL_COLOR_BUFFER_TYPE, &attribValue);
+            if (attribValue != EGL_RGB_BUFFER)
+            {
+                continue;
+            }
+
+            //only consider window EGLConfigs
+            s_EGL.getConfigAttrib(s_EGL.display, n, EGL_SURFACE_TYPE, &attribValue);
+            if (!(attribValue & EGL_WINDOW_BIT))
+            {
+                continue;
+            }
+
+            //TODO: handle X11 XVisualInfo?
+
+            s_EGL.getConfigAttrib(s_EGL.display, n, EGL_RENDERABLE_TYPE, &attribValue);
+            if (contextConfig->api == ContextAPI::OpenGLES)
+            {
+                if (contextConfig->major == 1)
+                {
+                    if (!(attribValue & EGL_OPENGL_ES_BIT))
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (!(attribValue & EGL_OPENGL_ES2_BIT))
+                    {
+                        continue;
+                    }
+                }
+            }
+            else if (contextConfig->api == ContextAPI::OpenGL)
+            {
+                if (!(attribValue & EGL_OPENGL_BIT))
+                {
+                    continue;
+                }
+            }
+
+            FramebufferConfig fbc = {};
+            s_EGL.getConfigAttrib(s_EGL.display, n, EGL_RED_SIZE, &fbc.redBits);
+            s_EGL.getConfigAttrib(s_EGL.display, n, EGL_GREEN_SIZE, &fbc.greenBits);
+            s_EGL.getConfigAttrib(s_EGL.display, n, EGL_BLUE_SIZE, &fbc.blueBits);
+            s_EGL.getConfigAttrib(s_EGL.display, n, EGL_ALPHA_SIZE, &fbc.alphaBits);
+            s_EGL.getConfigAttrib(s_EGL.display, n, EGL_DEPTH_SIZE, &fbc.depthBits);
+            s_EGL.getConfigAttrib(s_EGL.display, n, EGL_STENCIL_SIZE, &fbc.stencilBits);
+            s_EGL.getConfigAttrib(s_EGL.display, n, EGL_SAMPLES, &fbc.samples);
+            fbc.doubleBuffer = true;
+            fbc.handle = (uintptr_t)n;
+
+            usableConfigs.push_back(fbc);
+        }
+
+        if (!usableConfigs.size())
+        {
+            DAIS_ERROR("The driver does not appear to support OpenGL through EGL!");
+            return false;
+        }
+
+        //pick the FramebufferConfig closest to the desired one
+        const FramebufferConfig* closest = ChooseFramebufferConfig(framebufferConfig, usableConfigs);
+        if (!closest)
+        {
+            DAIS_ERROR("Failed to find a suitable pixel format!");
+            return false;
+        }
+
+        //we only care about the closest EGLConfig handle
+        *result = (EGLConfig)closest->handle;
+
+        return true;
     }
 }

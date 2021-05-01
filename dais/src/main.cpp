@@ -75,8 +75,12 @@ int main(int argc, char** argv)
     dais::Platform::s_Hints.window.centerCursor = true;
     dais::Platform::s_Hints.window.focusOnShow = true;
     dais::Platform::s_Hints.window.scaleToMonitor = true;
-    dais::Platform::s_Hints.context.api = dais::ContextAPI::OpenGL;
+    dais::Platform::s_Hints.context.api = dais::ContextAPI::OpenGLES;
     dais::Platform::s_Hints.context.type = dais::ContextType::Native;
+    dais::Platform::s_Hints.context.robustness = dais::ContextRobustnessMode::None;
+    dais::Platform::s_Hints.context.debug = false;
+    dais::Platform::s_Hints.context.noerror = false;
+    dais::Platform::s_Hints.context.forward = false;
     dais::Platform::s_Hints.context.major = 1;
     dais::Platform::s_Hints.context.minor = 0;
     dais::Platform::s_Hints.framebuffer.redBits = 8;
@@ -91,7 +95,8 @@ int main(int argc, char** argv)
     dais::Window* window = dais::Platform::OpenWindow("Dais", 960, 540, nullptr);
     if (!window)
     {
-        throw std::runtime_error("Could not open window!");
+        std::cout << "Could not open window!" << std::endl;
+        return 1;
     }
 
     std::cout 
@@ -103,7 +108,8 @@ int main(int argc, char** argv)
 
     if (!gladLoadGLLoader((GLADloadproc)dais::Context::GetGLProcAddress))
     {
-        throw std::runtime_error("Could not initialize OpenGL loader!");
+        std::cout << "Could not initialize OpenGL loader!" << std::endl;
+        return 1;
     }
 
     dais::Context::SwapInterval(1);
