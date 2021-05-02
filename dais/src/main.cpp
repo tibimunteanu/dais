@@ -104,28 +104,36 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    std::cout 
-        << "Current context: OpenGL "
-        << window->GetContext()->m_Major << "." << window->GetContext()->m_Minor << "." << window->GetContext()->m_Revision
-        << std::endl;
-
-    dais::Context::MakeContextCurrent(window);
-
-    if (!gladLoadGLLoader((GLADloadproc)dais::Context::GetGLProcAddress))
+    bool hasContext = dais::Platform::s_Hints.context.api != dais::ContextAPI::None;
+    if (hasContext)
     {
-        std::cout << "Could not initialize OpenGL loader!" << std::endl;
-        return 1;
-    }
+        std::cout
+            << "Current context: OpenGL "
+            << window->GetContext()->m_Major << "." << window->GetContext()->m_Minor << "." << window->GetContext()->m_Revision
+            << std::endl;
 
-    dais::Context::SwapInterval(1);
+        dais::Context::MakeContextCurrent(window);
+
+        if (!gladLoadGLLoader((GLADloadproc)dais::Context::GetGLProcAddress))
+        {
+            std::cout << "Could not initialize OpenGL loader!" << std::endl;
+            return 1;
+        }
+
+        dais::Context::SwapInterval(1);
+    }
 
     //loop
     while (!window->ShouldClose())
     {
-        glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        if (hasContext)
+        {
+            glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
 
-        dais::Context::SwapBuffers(window);
+            dais::Context::SwapBuffers(window);
+        }
+
         dais::Platform::PollEvents();
     }
 

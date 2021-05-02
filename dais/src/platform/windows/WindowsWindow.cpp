@@ -283,39 +283,20 @@ namespace dais
 
         window->PlatformGetSize(&window->m_Width, &window->m_Height);
 
-        if (contextConfig->api != ContextAPI::None)
+        if (contextConfig->type == ContextType::Native)
         {
-            if (contextConfig->type == ContextType::Native)
+            if (!WindowsWglContext::Init()
+                || !WindowsWglContext::CreateContext(window, contextConfig, framebufferConfig))
             {
-                if (!WindowsWglContext::Init())
-                {
-                    delete window;
-                    return nullptr;
-                }
-
-                if (!WindowsWglContext::CreateContext(window, contextConfig, framebufferConfig))
-                {
-                    delete window;
-                    return nullptr;
-                }
+                delete window;
+                return nullptr;
             }
-            else if (contextConfig->type == ContextType::EGL)
+        }
+        else if (contextConfig->type == ContextType::EGL)
+        {
+            if (!EglContext::Init()
+                || !EglContext::CreateContext(window, contextConfig, framebufferConfig))
             {
-                if (!EglContext::Init())
-                {
-                    delete window;
-                    return nullptr;
-                }
-
-                if (!EglContext::CreateContext(window, contextConfig, framebufferConfig))
-                {
-                    delete window;
-                    return nullptr;
-                }
-            }
-            else
-            {
-                DAIS_ERROR("Dais only supports ContextType::Native and ContextType::EGL for now!");
                 delete window;
                 return nullptr;
             }
