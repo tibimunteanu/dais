@@ -20,7 +20,7 @@ namespace dais
     typedef void(*WindowCursorEnterCallback)(Window*, bool);
     typedef void(*WindowScrollCallback)(Window*, double, double);
     typedef void(*WindowKeyCallback)(Window*, Key, int32_t, KeyState, KeyMods);
-    typedef void(*WindowCharCallback)(Window*, int32_t);
+    typedef void(*WindowCharCallback)(Window*, uint32_t);
     typedef void(*WindowCharModsCallback)(Window*, uint32_t, KeyMods);
     typedef void(*WindowDropCallback)(Window*, uint32_t, const char**);
 

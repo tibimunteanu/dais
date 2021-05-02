@@ -882,7 +882,7 @@ namespace dais
     {
         if (!m_LockKeyMods)
         {
-            mods &= ~(KeyMods::CapsLock, KeyMods::NumLock);
+            mods = mods & ~(KeyMods::CapsLock | KeyMods::NumLock);
         }
 
         if (action == KeyState::Release
@@ -973,7 +973,7 @@ namespace dais
 
         if (!m_LockKeyMods)
         {
-            mods &= ~(KeyMods::CapsLock | KeyMods::NumLock);
+            mods = mods & ~(KeyMods::CapsLock | KeyMods::NumLock);
         }
 
         if (m_Callbacks.key)
@@ -992,7 +992,7 @@ namespace dais
 
         if (!m_LockKeyMods)
         {
-            mods &= ~(KeyMods::CapsLock | KeyMods::NumLock);
+            mods = mods & ~(KeyMods::CapsLock | KeyMods::NumLock);
         }
 
         OnCharMods(codepoint, mods);

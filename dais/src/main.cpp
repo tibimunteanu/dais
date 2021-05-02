@@ -6,10 +6,91 @@ static void OnMonitorConnected(dais::Monitor* monitor)
 {
     std::cout << "[MAIN] OnMonitorConnected: " << monitor->GetName() << std::endl;
 }
-
 static void OnMonitorDisconnected(dais::Monitor* monitor)
 {
     std::cout << "[MAIN] OnMonitorDisconnected: " << monitor->GetName() << std::endl;
+}
+static void OnWindowPositionChanged(dais::Window* window, int32_t x, int32_t y)
+{
+    std::cout << "[MAIN] OnWindowPosition: " << x << ", " << y << std::endl;
+}
+static void OnWindowSizeChanged(dais::Window* window, int32_t width, int32_t height)
+{
+    std::cout << "[MAIN] OnWindowSize: " << width << ", " << height << std::endl;
+}
+static void OnWindowClose(dais::Window* window)
+{
+    std::cout << "[MAIN] OnWindowClose" << std::endl;
+}
+static void OnWindowRefreshNeeded(dais::Window* window)
+{
+    std::cout << "[MAIN] OnWindowRefresh" << std::endl;
+}
+static void OnWindowFocus(dais::Window* window, bool focused)
+{
+    std::cout << "[MAIN] OnWindowFocus: " << focused << std::endl;
+}
+static void OnWindowMinimize(dais::Window* window, bool minimized)
+{
+    std::cout << "[MAIN] OnWindowMinimize: " << minimized << std::endl;
+}
+static void OnWindowMaximize(dais::Window* window, bool maximized)
+{
+    std::cout << "[MAIN] OnWindowMaximize: " << maximized << std::endl;
+}
+static void OnWindowFramebufferSizeChanged(dais::Window* window, int32_t width, int32_t height)
+{
+    std::cout << "[MAIN] OnWindowFramebufferSize: " << width << ", " << height << std::endl;
+}
+static void OnWindowContentScaleChanged(dais::Window* window, float xScale, float yScale)
+{
+    std::cout << "[MAIN] OnWindowContentScale: " << xScale << ", " << yScale << std::endl;
+}
+static void OnWindowMouseButton(dais::Window* window, dais::MouseButton button, dais::KeyState state, dais::KeyMods mods)
+{
+    std::cout 
+        << "[MAIN] OnWindowMouseButton: " 
+        << (int32_t)button 
+        << ", " 
+        << (state == dais::KeyState::Press ? "Press" : state == dais::KeyState::Release ? "Release" : "Repeat") 
+        << ((mods & dais::KeyMods::Alt) == dais::KeyMods::Alt ? ":Alt:" : "")
+        << ((mods & dais::KeyMods::Shift) == dais::KeyMods::Shift ? ":Shift:" : "")
+        << ((mods & dais::KeyMods::Control) == dais::KeyMods::Control ? ":Ctrl:" : "")
+        << ((mods & dais::KeyMods::Super) == dais::KeyMods::Super ? ":Super:" : "")
+        << ((mods & dais::KeyMods::CapsLock) == dais::KeyMods::CapsLock ? ":CapsLock:" : "")
+        << ((mods & dais::KeyMods::NumLock) == dais::KeyMods::NumLock ? ":NumLock:" : "")
+        << std::endl;
+}
+static void OnCursorPositionChanged(dais::Window* window, double x, double y)
+{
+    std::cout << "[MAIN] OnCursorPositionChanged: " << x << ", " << y << std::endl;
+}
+static void OnWindowCursorEnter(dais::Window* window, bool entered)
+{
+    std::cout << "[MAIN] OnWindowCursorEnter: " << entered << std::endl;
+}
+static void OnWindowScroll(dais::Window* window, double xOffset, double yOffset)
+{
+    std::cout << "[MAIN] OnWindowScroll: " << xOffset << ", " << yOffset << std::endl;
+}
+static void OnWindowKey(dais::Window* window, dais::Key key, int32_t scancode, dais::KeyState state, dais::KeyMods mods)
+{
+    std::cout 
+        << "[MAIN] OnWindowKey: " 
+        << (int32_t)key 
+        << ", " 
+        << (state == dais::KeyState::Press ? "Press" : state == dais::KeyState::Release ? "Release" : "Repeat") 
+        << ((mods & dais::KeyMods::Alt) == dais::KeyMods::Alt ? ":Alt:" : "")
+        << ((mods & dais::KeyMods::Shift) == dais::KeyMods::Shift ? ":Shift:" : "")
+        << ((mods & dais::KeyMods::Control) == dais::KeyMods::Control ? ":Ctrl:" : "")
+        << ((mods & dais::KeyMods::Super) == dais::KeyMods::Super ? ":Super:" : "")
+        << ((mods & dais::KeyMods::CapsLock) == dais::KeyMods::CapsLock ? ":CapsLock:" : "")
+        << ((mods & dais::KeyMods::NumLock) == dais::KeyMods::NumLock ? ":NumLock:" : "")
+        << std::endl;
+}
+static void OnWindowChar(dais::Window* window, uint32_t codepoint)
+{
+    std::cout << "[MAIN] OnWindowChar: " << (char)codepoint << std::endl;
 }
 
 int main(int argc, char** argv)
@@ -122,6 +203,21 @@ int main(int argc, char** argv)
 
         dais::Context::SwapInterval(1);
     }
+
+    window->SetCharCallback(OnWindowChar);
+    window->SetKeyCallback(OnWindowKey);
+    //window->SetCursorPositionCallback(OnCursorPositionChanged);
+    window->SetCloseCallback(OnWindowClose);
+    window->SetContentScaleCallback(OnWindowContentScaleChanged);
+    window->SetCursorEnterCallback(OnWindowCursorEnter);
+    window->SetFocusCallback(OnWindowFocus);
+    window->SetFramebufferSizeCallback(OnWindowFramebufferSizeChanged);
+    window->SetMaximizeCallback(OnWindowMaximize);
+    window->SetMinimizeCallback(OnWindowMinimize);
+    window->SetMouseButtonCallback(OnWindowMouseButton);
+    window->SetPositionCallback(OnWindowPositionChanged);
+    window->SetScrollCallback(OnWindowScroll);
+    window->SetSizeCallback(OnWindowSizeChanged);
 
     //loop
     while (!window->ShouldClose())

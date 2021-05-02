@@ -351,6 +351,16 @@ namespace dais
             DestroyWindow(m_Handle);
             m_Handle = nullptr;
         }
+
+        if (m_BigIcon)
+        {
+            DestroyIcon(m_BigIcon);
+        }
+
+        if (m_SmallIcon)
+        {
+            DestroyIcon(m_SmallIcon);
+        }
     }
 
 
@@ -1316,6 +1326,21 @@ namespace dais
 
                 if (i >= (int32_t)MouseButton::Count)
                 {
+                    SetCapture(m_Handle);
+                }
+
+                OnMouseButton(button, action, GetKeyMods());
+
+                for (i = 0; i < (int32_t)MouseButton::Count; i++)
+                {
+                    if (m_MouseButtons[i] == KeyState::Press)
+                    {
+                        break;
+                    }
+                }
+
+                if (i >= (int32_t)MouseButton::Count)
+                {
                     ReleaseCapture();
                 }
 
@@ -1333,7 +1358,7 @@ namespace dais
                 const int x = GET_X_LPARAM(lParam);
                 const int y = GET_Y_LPARAM(lParam);
 
-                if (m_CursorTracked)
+                if (!m_CursorTracked)
                 {
                     TRACKMOUSEEVENT tme = {};
                     tme.cbSize = sizeof(tme);
@@ -2059,32 +2084,32 @@ namespace dais
 
         if (GetKeyState(VK_SHIFT) & 0x8000)
         {
-            mods |= KeyMods::Shift;
+            mods = mods | KeyMods::Shift;
         }
 
         if (GetKeyState(VK_CONTROL) & 0x8000)
         {
-            mods |= KeyMods::Control;
+            mods = mods | KeyMods::Control;
         }
 
         if (GetKeyState(VK_MENU) & 0x8000)
         {
-            mods |= KeyMods::Alt;
+            mods = mods | KeyMods::Alt;
         }
 
         if ((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000)
         {
-            mods |= KeyMods::Super;
+            mods = mods | KeyMods::Super;
         }
 
         if (GetKeyState(VK_CAPITAL) & 1)
         {
-            mods |= KeyMods::CapsLock;
+            mods = mods | KeyMods::CapsLock;
         }
 
         if (GetKeyState(VK_NUMLOCK) & 1)
         {
-            mods |= KeyMods::NumLock;
+            mods = mods | KeyMods::NumLock;
         }
 
         return mods;

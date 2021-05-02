@@ -59,12 +59,10 @@
 #define DAIS_CORE_ASSERT(...)
 #endif
 
-#define FLAG_OPERATORS(type) \
-constexpr enum type operator |(const enum type a, const enum type b) { return (enum type)(uint32_t(a) | uint32_t(b)); } \
-constexpr enum type operator &(const enum type a, const enum type b) { return (enum type)(uint32_t(a) & uint32_t(b)); } \
-constexpr enum type operator ~(const enum type a) { return (enum type)(~uint32_t(a)); } \
-constexpr enum type operator &=(enum type a, const enum type b) { a = a & b; return a; } \
-constexpr enum type operator |=(enum type a, const enum type b) { a = a | b; return a; }
+#define FLAG_OPERATORS(type, member) \
+constexpr enum type operator |(const enum type a, const enum type b) { return (enum type)(static_cast<uint32_t>(a) | static_cast<uint32_t>(b)); } \
+constexpr enum type operator &(const enum type a, const enum type b) { return (enum type)(static_cast<uint32_t>(a) & static_cast<uint32_t>(b)); } \
+constexpr enum type operator ~(const enum type a) { return (enum type)(~static_cast<uint32_t>(a)); } \
 
 ///////////////////////////////// PLATFORM DETECTION ///////////////////////////////////
 #ifdef _WIN32

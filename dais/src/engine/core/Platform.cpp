@@ -52,9 +52,19 @@ namespace dais
             }
         }
 
+        if (s_Cursors.size() > 0)
+        {
+            for (size_t i = 0; i < s_Cursors.size(); i++)
+            {
+                delete s_Cursors[i];
+            }
+        }
+
         delete s_ContextSlot;
 
         Platform::PlatformTerminate();
+
+        EglContext::Terminate();
     }
 
     void Platform::PollEvents()
