@@ -56,6 +56,6 @@ namespace dais
         static bool CreateContext(WindowsWindow* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);
 
     private: DAIS_UTILS
-        static int32_t GetClosestPixelFormat(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);
+        static int32_t GetClosestPixelFormat(HDC dc, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig);
     };
 }

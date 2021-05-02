@@ -293,15 +293,13 @@ namespace dais
         attribs.push_back(EGL_NONE);
         attribs.push_back(EGL_NONE);
 
-        EglContext* eglContext = ((EglContext*)window->GetContext());
-        eglContext->m_Handle = s_EGL.createContext(s_EGL.display, config, share, attribs.data());
+        EGLContext contextHandle = s_EGL.createContext(s_EGL.display, config, share, attribs.data());
 
-        if (eglContext->m_Handle == EGL_NO_CONTEXT)
+        if (contextHandle == EGL_NO_CONTEXT)
         {
             DAIS_ERROR("Failed to create EGL context: %s", GetErrorString(s_EGL.getError()));
             return false;
         }
-
 
         //setup attributes for surface creation
         attribs.clear();
@@ -320,25 +318,25 @@ namespace dais
 
         EGLNativeWindowType native = Platform::GetEglNativeWindow(window);
         //HACK: ANGLE does not implement eglCratePlatformWindowSurfaceEXT despite reporting EGL_EXT_platform_base
+        EGLSurface surface = EGL_NO_SURFACE;
         if (s_EGL.platform
             && s_EGL.platform != EGL_PLATFORM_ANGLE_ANGLE)
         {
-            eglContext->m_Surface = s_EGL.createPlatformWindowSurfaceEXT(s_EGL.display, config, native, attribs.data());
+            surface = s_EGL.createPlatformWindowSurfaceEXT(s_EGL.display, config, native, attribs.data());
         }
         else
         {
-            eglContext->m_Surface = s_EGL.createWindowSurface(s_EGL.display, config, native, attribs.data());
+            surface = s_EGL.createWindowSurface(s_EGL.display, config, native, attribs.data());
         }
 
-        if (eglContext->m_Surface == EGL_NO_SURFACE)
+        if (surface == EGL_NO_SURFACE)
         {
             DAIS_ERROR("Failed to create EGL window surface: %s", GetErrorString(s_EGL.getError()));
             return false;
         }
 
-        eglContext->m_Config = config;
-
         //load the appropriate client library
+        void* client = nullptr;
         if (!s_EGL.KHR_GetAllProcAddresses)
         {
             //LEARN C++: is this how you store const ref returned from the functions?
@@ -369,19 +367,27 @@ namespace dais
                     continue;
                 }
 
-                eglContext->m_Client = Platform::OpenLibrary(libName);
-                if (eglContext->m_Client)
+                client = Platform::OpenLibrary(libName);
+                if (client)
                 {
                     break;
                 }
             }
 
-            if (!eglContext->m_Client)
+            if (!client)
             {
                 DAIS_ERROR("Failed to load EGL client library!");
                 return false;
             }
         }
+
+        EglContext* eglContext = new EglContext();
+        eglContext->m_Handle = contextHandle;
+        eglContext->m_Config = config;
+        eglContext->m_Surface = surface;
+        eglContext->m_Client = client;
+
+        window->m_Context = eglContext;
 
         return true;
     }

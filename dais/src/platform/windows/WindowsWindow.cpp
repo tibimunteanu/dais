@@ -176,7 +176,7 @@ namespace dais
     ///////////////////////////////////// STATIC CREATE ///////////////////////////////////////
 
     Window* Window::PlatformCreate(const std::string& title, int32_t width, int32_t height,
-                                   const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+        const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
     {
         WindowsWindow* window = new WindowsWindow(title, width, height, windowConfig, contextConfig, framebufferConfig, monitor);
 
@@ -337,21 +337,13 @@ namespace dais
     ////////////////////////////////////// CONSTRUCTOR ////////////////////////////////////////
 
     WindowsWindow::WindowsWindow(const std::string& title, int32_t width, int32_t height,
-                                 const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
+        const WindowConfig* windowConfig, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig, Monitor* monitor)
         : Window(title, width, height, windowConfig, contextConfig, framebufferConfig, monitor)
     {
         m_Maximized = windowConfig->maximized;
         m_ScaleToMonitor = windowConfig->scaleToMonitor;
         m_KeyMenu = windowConfig->keyMenu;
-
-        if (contextConfig->type == ContextType::Native)
-        {
-            m_Context = new WindowsWglContext();
-        }
-        else if (contextConfig->type == ContextType::EGL)
-        {
-            m_Context = new EglContext();
-        }
+        m_Context = nullptr;
     }
 
     WindowsWindow::~WindowsWindow()

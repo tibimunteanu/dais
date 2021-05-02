@@ -67,6 +67,7 @@ int main(int argc, char** argv)
 
     //test window api
     dais::Platform::s_Hints.refreshRate = -1;
+
     dais::Platform::s_Hints.window.resizable = true;
     dais::Platform::s_Hints.window.visible = true;
     dais::Platform::s_Hints.window.decorated = true;
@@ -75,14 +76,18 @@ int main(int argc, char** argv)
     dais::Platform::s_Hints.window.centerCursor = true;
     dais::Platform::s_Hints.window.focusOnShow = true;
     dais::Platform::s_Hints.window.scaleToMonitor = true;
-    dais::Platform::s_Hints.context.api = dais::ContextAPI::OpenGLES;
+
+    dais::Platform::s_Hints.context.api = dais::ContextAPI::OpenGL;
     dais::Platform::s_Hints.context.type = dais::ContextType::Native;
+    dais::Platform::s_Hints.context.profile = dais::ContextProfile::Core;
     dais::Platform::s_Hints.context.robustness = dais::ContextRobustnessMode::None;
+    dais::Platform::s_Hints.context.release = dais::ContextReleaseBehavior::Any;
     dais::Platform::s_Hints.context.debug = false;
     dais::Platform::s_Hints.context.noerror = false;
     dais::Platform::s_Hints.context.forward = false;
     dais::Platform::s_Hints.context.major = 1;
     dais::Platform::s_Hints.context.minor = 0;
+
     dais::Platform::s_Hints.framebuffer.redBits = 8;
     dais::Platform::s_Hints.framebuffer.greenBits = 8;
     dais::Platform::s_Hints.framebuffer.blueBits = 8;

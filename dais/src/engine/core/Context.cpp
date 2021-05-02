@@ -550,15 +550,15 @@ namespace dais
                 return false;
             }
 
-            if (window->GetContext()->m_Major >= 3)
+            if (window->m_Context->m_Major >= 3)
             {
                 //check if extension is in the modern OpenGL extensions string list
                 GLint count;
-                window->GetContext()->GetIntegerv(GL_NUM_EXTENSIONS, &count);
+                window->m_Context->GetIntegerv(GL_NUM_EXTENSIONS, &count);
 
                 for (int32_t i = 0; i < count; i++)
                 {
-                    const char* en = (const char*)window->GetContext()->GetStringi(GL_EXTENSIONS, i);
+                    const char* en = (const char*)window->m_Context->GetStringi(GL_EXTENSIONS, i);
                     if (!en)
                     {
                         DAIS_ERROR("Extension string retrieval is broken!");
@@ -574,7 +574,7 @@ namespace dais
             else
             {
                 //check if extension is in the old style OpenGL extension string
-                const char* extensions = (const char*)window->GetContext()->GetString(GL_EXTENSIONS);
+                const char* extensions = (const char*)window->m_Context->GetString(GL_EXTENSIONS);
                 if (!extensions)
                 {
                     DAIS_ERROR("Extension string retrieval is broken!");
@@ -617,7 +617,7 @@ namespace dais
 
     void Context::DestroyContext(Window* window)
     {
-        if (window->GetContext()->m_API == ContextAPI::None)
+        if (window->m_Context->m_API == ContextAPI::None)
         {
             DAIS_ERROR("Cannot destroy context of a window that has no OpenGL or OpenGL ES context!");
             return;

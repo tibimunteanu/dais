@@ -168,10 +168,8 @@ namespace dais
             return false;
         }
 
-        ((WindowsWglContext*)window->m_Context)->m_DC = dc;
-
         //get the pixelFormat closest to the desired ContextConfig and FramebufferConfig
-        int32_t pixelFormat = GetClosestPixelFormat(window, contextConfig, framebufferConfig);
+        int32_t pixelFormat = GetClosestPixelFormat(dc, contextConfig, framebufferConfig);
         if (!pixelFormat)
         {
             return false;
@@ -337,7 +335,11 @@ namespace dais
                 return false;
             }
 
-            ((WindowsWglContext*)window->m_Context)->m_Handle = contextHandle;
+            WindowsWglContext* wglContext = new WindowsWglContext();
+            wglContext->m_DC = dc;
+            wglContext->m_Handle = contextHandle;
+
+            window->m_Context = wglContext;
         }
         else
         {
@@ -349,8 +351,6 @@ namespace dais
                 return false;
             }
 
-            ((WindowsWglContext*)window->m_Context)->m_Handle = contextHandle;
-
             if (share)
             {
                 if (!s_WGL.shareLists(share, contextHandle))
@@ -359,6 +359,12 @@ namespace dais
                     return false;
                 }
             }
+
+            WindowsWglContext* wglContext = new WindowsWglContext();
+            wglContext->m_DC = dc;
+            wglContext->m_Handle = contextHandle;
+
+            window->m_Context = wglContext;
         }
 
         return true;
@@ -497,19 +503,17 @@ namespace dais
 
     ///////////////////////////////////////// UTILS ///////////////////////////////////////////
 
-    int32_t WindowsWglContext::GetClosestPixelFormat(Window* window, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
+    int32_t WindowsWglContext::GetClosestPixelFormat(HDC dc, const ContextConfig* contextConfig, const FramebufferConfig* framebufferConfig)
     {
         int32_t nativeCount;
         std::vector<int32_t> attribs = {};
-
-        WindowsWglContext* wglContext = (WindowsWglContext*)window->GetContext();
 
         if (s_WGL.ARB_PixelFormat)
         {
             //get native pixel format count through "modern" extension
             const int32_t attrib = WGL_NUMBER_PIXEL_FORMATS_ARB;
 
-            if (!s_WGL.getPixelFormatAttribivARB(wglContext->m_DC, 1, 0, 1, &attrib, &nativeCount))
+            if (!s_WGL.getPixelFormatAttribivARB(dc, 1, 0, 1, &attrib, &nativeCount))
             {
                 DAIS_ERROR("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format count!");
                 return 0;
@@ -563,7 +567,7 @@ namespace dais
         else
         {
             //get native pixel format count the old way
-            nativeCount = DescribePixelFormat(wglContext->m_DC, 1, sizeof(PIXELFORMATDESCRIPTOR), NULL);
+            nativeCount = DescribePixelFormat(dc, 1, sizeof(PIXELFORMATDESCRIPTOR), NULL);
         }
 
         std::vector<FramebufferConfig> usableConfigs = {};
@@ -585,7 +589,7 @@ namespace dais
                 int32_t values[64];
                 DAIS_ASSERT(attribs.size() <= 64, "Cannot get more than 64 attribs!");
 
-                if (!s_WGL.getPixelFormatAttribivARB(wglContext->m_DC, pixelFormat, 0, attribs.size(), attribs.data(), values))
+                if (!s_WGL.getPixelFormatAttribivARB(dc, pixelFormat, 0, attribs.size(), attribs.data(), values))
                 {
                     DAIS_ERROR("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format attributes!");
                     return 0;
@@ -662,7 +666,7 @@ namespace dais
             {
                 //get pixel format attributes the old way
                 PIXELFORMATDESCRIPTOR pfd;
-                if (!DescribePixelFormat(wglContext->m_DC, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd))
+                if (!DescribePixelFormat(dc, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd))
                 {
                     DAIS_ERROR("Failed to describe pixel format!");
                     return 0;

@@ -159,6 +159,7 @@ namespace dais
     public:
         virtual ~Window();
         friend class Context;
+        friend class EglContext;
 
     public: DAIS_PUBLIC_API
         bool IsMaximized() const;
