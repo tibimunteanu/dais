@@ -279,3 +279,23 @@ typedef const char* (WINAPI* PFNWGLGETEXTENSIONSSTRINGEXTPROC)(void);
 typedef const char* (WINAPI* PFNWGLGETEXTENSIONSSTRINGARBPROC)(HDC hDc);
 typedef HGLRC(WINAPI* PFNWGLCREATECONTEXTATTRIBSARBPROC) (HDC hDc, HGLRC hShareContext, const int* attribList);
 
+
+#ifdef DAIS_ENABLE_LOG
+#define DAIS_ERROR_WIN32(...) \
+{ \
+    WCHAR buffer[1024] = L""; \
+    char message[1024] = ""; \
+    FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_MAX_WIDTH_MASK, \
+                   NULL, \
+                   GetLastError() & 0xffff, \
+                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), \
+                   buffer, \
+                   sizeof(buffer) / sizeof(WCHAR), \
+                   NULL); \
+    WideCharToMultiByte(CP_UTF8, 0, buffer, -1, message, sizeof(message), NULL, NULL); \
+    printf("ERROR: "); printf(__VA_ARGS__); printf(" ["); printf(message); printf("]\n"); \
+}
+
+#else
+#define DAIS_ERROR_WIN32(...)
+#endif

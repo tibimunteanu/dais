@@ -285,7 +285,7 @@ namespace dais
             else if (result == DISP_CHANGE_NOTUPDATED) error = "Failed to write to registry";
             else if (result == DISP_CHANGE_RESTART) error = "Computer restart required";
 
-            DAIS_ERROR("Failed to set video mode: %s", error);
+            DAIS_ERROR_WIN32("Failed to set video mode: %s", error);
         }
     }
 

@@ -129,14 +129,14 @@ namespace dais
     {
         if (!OpenClipboard(WindowsPlatform::s_HelperWindowHandle))
         {
-            DAIS_ERROR("Failed to open clipboard!");
+            DAIS_ERROR_WIN32("Failed to open clipboard!");
             return nullptr;
         }
 
         HANDLE object = GetClipboardData(CF_UNICODETEXT);
         if (!object)
         {
-            DAIS_ERROR("Failed to convert clipboard to string!");
+            DAIS_ERROR_WIN32("Failed to convert clipboard to string!");
             CloseClipboard();
             return nullptr;
         }
@@ -144,7 +144,7 @@ namespace dais
         WCHAR* buffer = (WCHAR*)GlobalLock(object);
         if (!buffer)
         {
-            DAIS_ERROR("Failed to lock global handle!");
+            DAIS_ERROR_WIN32("Failed to lock global handle!");
             CloseClipboard();
             return nullptr;
         }
@@ -169,14 +169,14 @@ namespace dais
         HANDLE object = GlobalAlloc(GMEM_MOVEABLE, characterCount * sizeof(WCHAR));
         if (!object)
         {
-            DAIS_ERROR("Failed to allocate global handle for clipboard!");
+            DAIS_ERROR_WIN32("Failed to allocate global handle for clipboard!");
             return;
         }
 
         WCHAR* buffer = (WCHAR*)GlobalLock(object);
         if (!buffer)
         {
-            DAIS_ERROR("Failed to lock global handle!");
+            DAIS_ERROR_WIN32("Failed to lock global handle!");
             GlobalFree(object);
             return;
         }
@@ -186,7 +186,7 @@ namespace dais
 
         if (!OpenClipboard(WindowsPlatform::s_HelperWindowHandle))
         {
-            DAIS_ERROR("Failed to open clipboard!");
+            DAIS_ERROR_WIN32("Failed to open clipboard!");
             GlobalFree(object);
             return;
         }
@@ -351,7 +351,7 @@ namespace dais
         s_Libs.winmm.instance = LoadLibraryA("winmm.dll");
         if (!s_Libs.winmm.instance)
         {
-            DAIS_ERROR("[WindowsPlatform] LoadLibraries(): Failed to load winmm.dll!");
+            DAIS_ERROR_WIN32("Failed to load winmm.dll!");
             return false;
         }
 
@@ -360,7 +360,7 @@ namespace dais
         s_Libs.user32.instance = LoadLibraryA("user32.dll");
         if (!s_Libs.user32.instance)
         {
-            DAIS_ERROR("[WindowsPlatform] LoadLibraries(): Failed to load user32.dll!");
+            DAIS_ERROR_WIN32("Failed to load user32.dll!");
             return false;
         }
 
@@ -841,7 +841,7 @@ namespace dais
 
         if (!RegisterClassExW(&wc))
         {
-            DAIS_ERROR("Failed to register window class!");
+            DAIS_ERROR_WIN32("Failed to register window class!");
             return false;
         }
 
@@ -962,6 +962,7 @@ namespace dais
         size = WideCharToMultiByte(CP_UTF8, 0, source, -1, nullptr, 0, NULL, NULL);
         if (!size)
         {
+            DAIS_ERROR_WIN32("Failed to convert wide string to UTF8!");
             return nullptr;
         }
 
@@ -969,6 +970,7 @@ namespace dais
 
         if (!WideCharToMultiByte(CP_UTF8, 0, source, -1, target, size, NULL, NULL))
         {
+            DAIS_ERROR_WIN32("Failed to convert wide string to UTF8!");
             free(target);
             return nullptr;
         }
@@ -1006,6 +1008,7 @@ namespace dais
         count = MultiByteToWideChar(CP_UTF8, 0, source, -1, NULL, 0);
         if (!count)
         {
+            DAIS_ERROR_WIN32("Failed to convert UTF8 to wide string!");
             return nullptr;
         }
 
@@ -1013,6 +1016,7 @@ namespace dais
 
         if (!MultiByteToWideChar(CP_UTF8, 0, source, -1, target, count))
         {
+            DAIS_ERROR_WIN32("Failed to convert UTF8 to wide string!");
             free(target);
             return nullptr;
         }

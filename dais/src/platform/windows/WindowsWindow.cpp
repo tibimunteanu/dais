@@ -121,14 +121,14 @@ namespace dais
 
         if (!color)
         {
-            DAIS_ERROR("Failed to create a RGBA bitmap!");
+            DAIS_ERROR_WIN32("Failed to create a RGBA bitmap!");
             return NULL;
         }
 
         HBITMAP mask = CreateBitmap(image->width, image->height, 1, 1, NULL);
         if (!mask)
         {
-            DAIS_ERROR("Failed to create a mask bitmap!");
+            DAIS_ERROR_WIN32("Failed to create a mask bitmap!");
             return NULL;
         }
 
@@ -159,11 +159,11 @@ namespace dais
         {
             if (icon)
             {
-                DAIS_ERROR("Failed to create icon!");
+                DAIS_ERROR_WIN32("Failed to create icon!");
             }
             else
             {
-                DAIS_ERROR("Failed to create cursor!");
+                DAIS_ERROR_WIN32("Failed to create cursor!");
             }
         }
 
@@ -235,7 +235,7 @@ namespace dais
 
         if (!windowHandle)
         {
-            DAIS_ERROR("Failed to create window '%s'!", title.c_str());
+            DAIS_ERROR_WIN32("Failed to create window '%s'!", title.c_str());
 
             delete window;
             return nullptr;
@@ -881,7 +881,7 @@ namespace dais
 
             if (!RegisterRawInputDevices(&rid, 1, sizeof(rid)))
             {
-                DAIS_ERROR("Failed to register raw input device!");
+                DAIS_ERROR_WIN32("Failed to register raw input device!");
             }
         }
         else
@@ -890,7 +890,7 @@ namespace dais
 
             if (!RegisterRawInputDevices(&rid, 1, sizeof(rid)))
             {
-                DAIS_ERROR("Failed to remove raw input device!");
+                DAIS_ERROR_WIN32("Failed to remove raw input device!");
             }
         }
     }
@@ -1356,7 +1356,7 @@ namespace dais
                     WindowsPlatform::s_RawInput,
                     &size, sizeof(RAWINPUTHEADER)) == (UINT)-1)
                 {
-                    DAIS_ERROR("Failed to retrieve raw input data!");
+                    DAIS_ERROR_WIN32("Failed to retrieve raw input data!");
                     break;
                 }
 

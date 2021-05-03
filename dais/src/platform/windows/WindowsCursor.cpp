@@ -7,7 +7,6 @@ namespace dais
         HCURSOR cursorHandle = (HCURSOR)WindowsWindow::CreateIcon(image, xHot, yHot, false);
         if (!cursorHandle)
         {
-            DAIS_ERROR("Failed to create cursor!");
             return nullptr;
         }
 
@@ -46,7 +45,7 @@ namespace dais
 
         if (!cursorHandle)
         {
-            DAIS_ERROR("Failed to create standard cursor!");
+            DAIS_ERROR_WIN32("Failed to create standard cursor!");
             return nullptr;
         }
 

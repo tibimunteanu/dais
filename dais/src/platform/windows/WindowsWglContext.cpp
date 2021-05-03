@@ -20,7 +20,7 @@ namespace dais
         s_WGL.instance = LoadLibraryA("opengl32.dll");
         if (!s_WGL.instance)
         {
-            DAIS_ERROR("Failed to load opengl32.dll!");
+            DAIS_ERROR_WIN32("Failed to load opengl32.dll!");
             return false;
         }
 
@@ -47,14 +47,14 @@ namespace dais
         int dummyPFDID = ChoosePixelFormat(dummyDC, &dummyPFD);
         if (dummyPFDID == 0)
         {
-            DAIS_ERROR("Failed to choose pixel format for dummy context!");
+            DAIS_ERROR_WIN32("Failed to choose pixel format for dummy context!");
             return false;
         }
 
         //set the dummy pixel format
         if (!SetPixelFormat(dummyDC, dummyPFDID, &dummyPFD))
         {
-            DAIS_ERROR("Failed to set pixel format for dummy context!");
+            DAIS_ERROR_WIN32("Failed to set pixel format for dummy context!");
             return false;
         }
 
@@ -62,7 +62,7 @@ namespace dais
         HGLRC dummyRC = s_WGL.createContext(dummyDC);
         if (!dummyRC)
         {
-            DAIS_ERROR("Failed to create dummy rendering context!");
+            DAIS_ERROR_WIN32("Failed to create dummy rendering context!");
             return false;
         }
 
@@ -72,7 +72,7 @@ namespace dais
         //make the dummy context current
         if (!s_WGL.makeCurrent(dummyDC, dummyRC))
         {
-            DAIS_ERROR("Failed to make dummy context current!");
+            DAIS_ERROR_WIN32("Failed to make dummy context current!");
 
             //restore previous context and delete dummy context
             s_WGL.makeCurrent(prevDC, prevRC);
@@ -180,14 +180,14 @@ namespace dais
         PIXELFORMATDESCRIPTOR pfd;
         if (!DescribePixelFormat(dc, pixelFormat, sizeof(pfd), &pfd))
         {
-            DAIS_ERROR("Failed to retrieve PFD for selected pixel format!");
+            DAIS_ERROR_WIN32("Failed to retrieve PFD for selected pixel format!");
             return false;
         }
 
         //set the chosen pixel format
         if (!SetPixelFormat(dc, pixelFormat, &pfd))
         {
-            DAIS_ERROR("Failed to set selected pixel format!");
+            DAIS_ERROR_WIN32("Failed to set selected pixel format!");
             return false;
         }
 
@@ -347,7 +347,7 @@ namespace dais
             HGLRC contextHandle = s_WGL.createContext(dc);
             if (!contextHandle)
             {
-                DAIS_ERROR("Failed to create OpenGL context!");
+                DAIS_ERROR_WIN32("Failed to create OpenGL context!");
                 return false;
             }
 
@@ -355,7 +355,7 @@ namespace dais
             {
                 if (!s_WGL.shareLists(share, contextHandle))
                 {
-                    DAIS_ERROR("Failed to enable sharing with specified OpenGL context!");
+                    DAIS_ERROR_WIN32("Failed to enable sharing with specified OpenGL context!");
                     return false;
                 }
             }
@@ -385,7 +385,7 @@ namespace dais
             }
             else
             {
-                DAIS_ERROR("Failed to make context current!");
+                DAIS_ERROR_WIN32("Failed to make context current!");
                 Platform::s_ContextSlot->Set(nullptr);
             }
         }
@@ -393,7 +393,7 @@ namespace dais
         {
             if (!WindowsWglContext::s_WGL.makeCurrent(NULL, NULL))
             {
-                DAIS_ERROR("Failed to clear current context!");
+                DAIS_ERROR_WIN32("Failed to clear current context!");
             }
 
             Platform::s_ContextSlot->Set(nullptr);
@@ -515,7 +515,7 @@ namespace dais
 
             if (!s_WGL.getPixelFormatAttribivARB(dc, 1, 0, 1, &attrib, &nativeCount))
             {
-                DAIS_ERROR("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format count!");
+                DAIS_ERROR_WIN32("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format count!");
                 return 0;
             }
 
@@ -591,7 +591,7 @@ namespace dais
 
                 if (!s_WGL.getPixelFormatAttribivARB(dc, pixelFormat, 0, attribs.size(), attribs.data(), values))
                 {
-                    DAIS_ERROR("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format attributes!");
+                    DAIS_ERROR_WIN32("OpenGL GetPixelFormatAttribivARB failed. Could not retrieve pixel format attributes!");
                     return 0;
                 }
 
@@ -668,7 +668,7 @@ namespace dais
                 PIXELFORMATDESCRIPTOR pfd;
                 if (!DescribePixelFormat(dc, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd))
                 {
-                    DAIS_ERROR("Failed to describe pixel format!");
+                    DAIS_ERROR_WIN32("Failed to describe pixel format!");
                     return 0;
                 }
 

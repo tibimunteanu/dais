@@ -7,7 +7,7 @@ namespace dais
         DWORD index = TlsAlloc();
         if (index == TLS_OUT_OF_INDEXES)
         {
-            DAIS_ERROR("Failed to allocate TLS index!");
+            DAIS_ERROR_WIN32("Failed to allocate TLS index!");
             return nullptr;
         }
 
