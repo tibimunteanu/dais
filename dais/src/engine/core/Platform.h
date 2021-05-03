@@ -32,6 +32,7 @@ namespace dais
             int32_t refreshRate;
         } s_Hints;
 
+        static uint64_t s_TimerOffset;
         static ThreadLocalStorage* s_ContextSlot;
 
     protected:
@@ -61,6 +62,11 @@ namespace dais
 
         static const std::vector<Monitor*>& GetMonitors();
         static Monitor* GetPrimaryMonitor();
+
+        static double GetTime();
+        static void SetTime(double time);
+        static uint64_t GetTimerValue();
+        static uint64_t GetTimerFrequency();
 
         static bool IsRawMouseMotionSupported();
         static const char* GetKeyName(Key key, int32_t scancode);
@@ -106,6 +112,9 @@ namespace dais
         static void PlatformWaitEventsTimeout(double timeout);
 
         static bool PlatformIsRawMouseMotionSupported();
+
+        static uint64_t PlatformGetTimerValue();
+        static uint64_t PlatformGetTimerFrequency();
 
         static const char* PlatformGetClipboardString();
         static void PlatformSetClipboardString(const char* string);

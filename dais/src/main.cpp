@@ -220,8 +220,14 @@ int main(int argc, char** argv)
     window->SetSizeCallback(OnWindowSizeChanged);
 
     //loop
+    double prevTime = dais::Platform::GetTime() - (1.0 / 60.0);
+    double dt;
     while (!window->ShouldClose())
     {
+        double time = dais::Platform::GetTime();
+        dt = time - prevTime;
+        prevTime = time;
+
         if (hasContext)
         {
             glClearColor(0.3f, 0.5f, 0.8f, 1.0f);

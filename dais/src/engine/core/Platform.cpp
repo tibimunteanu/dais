@@ -8,6 +8,7 @@ namespace dais
     std::vector<Window*> Platform::s_Windows = {};
     std::vector<Monitor*> Platform::s_Monitors = {};
     std::vector<Cursor*> Platform::s_Cursors = {};
+    uint64_t Platform::s_TimerOffset = 0;
     ThreadLocalStorage* Platform::s_ContextSlot = nullptr;
     Platform::Callbacks Platform::s_Callbacks = {};
 
@@ -27,6 +28,8 @@ namespace dais
         {
             return false;
         }
+
+        s_TimerOffset = PlatformGetTimerValue();
 
         SetHintsToDefult();
 
@@ -142,6 +145,35 @@ namespace dais
         return s_Windows.size() > 0
             ? s_Windows[0]
             : nullptr;
+    }
+
+
+    double Platform::GetTime()
+    {
+        return (double)(PlatformGetTimerValue() - s_TimerOffset) / PlatformGetTimerFrequency();
+    }
+
+    void Platform::SetTime(double time)
+    {
+        if (time != time
+            || time < 0.0
+            || time > 18446744073.0)
+        {
+            DAIS_ERROR("Invalid time %f", time);
+            return;
+        }
+
+        s_TimerOffset = PlatformGetTimerValue() - (uint64_t)(time * PlatformGetTimerFrequency());
+    }
+
+    uint64_t Platform::GetTimerValue()
+    {
+        return PlatformGetTimerValue();
+    }
+
+    uint64_t Platform::GetTimerFrequency()
+    {
+        return PlatformGetTimerFrequency();
     }
 
 

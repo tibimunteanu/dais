@@ -8,6 +8,8 @@ namespace dais
     HDEVNOTIFY WindowsPlatform::s_DeviceNotificationHandle = nullptr;
     DWORD WindowsPlatform::s_ForegroundLockTimeout = 0;
     int32_t WindowsPlatform::s_AcquiredMonitorCount = 0;
+    bool WindowsPlatform::s_TimerHasPC = false;
+    uint64_t WindowsPlatform::s_TimerFrequency = 0;
     char* WindowsPlatform::s_ClipboardString = nullptr;
     Key WindowsPlatform::s_Keycodes[] = {};
     int16_t WindowsPlatform::s_Scancodes[] = {};
@@ -51,6 +53,8 @@ namespace dais
         {
             return false;
         }
+
+        WindowsPlatform::InitTimer();
 
         WindowsPlatform::PollMonitors();
 
@@ -122,6 +126,26 @@ namespace dais
     bool Platform::PlatformIsRawMouseMotionSupported()
     {
         return true;
+    }
+
+
+    uint64_t Platform::PlatformGetTimerValue()
+    {
+        if (WindowsPlatform::s_TimerHasPC)
+        {
+            uint64_t value;
+            QueryPerformanceCounter((LARGE_INTEGER*)&value);
+            return value;
+        }
+        else
+        {
+            return WindowsPlatform::s_Libs.winmm.GetTime();
+        }
+    }
+
+    uint64_t Platform::PlatformGetTimerFrequency()
+    {
+        return WindowsPlatform::s_TimerFrequency;
     }
 
 
@@ -817,6 +841,23 @@ namespace dais
 
                 delete monitor;
             }
+        }
+    }
+
+
+    void WindowsPlatform::InitTimer()
+    {
+        uint64_t frequency;
+
+        if (QueryPerformanceFrequency((LARGE_INTEGER*)&frequency))
+        {
+            s_TimerHasPC = true;
+            s_TimerFrequency = frequency;
+        }
+        else
+        {
+            s_TimerHasPC = false;
+            s_TimerFrequency = 1000;
         }
     }
 

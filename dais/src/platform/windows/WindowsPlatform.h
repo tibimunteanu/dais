@@ -17,6 +17,8 @@ namespace dais
         static HDEVNOTIFY s_DeviceNotificationHandle;
         static DWORD s_ForegroundLockTimeout;
         static int32_t s_AcquiredMonitorCount;
+        static bool s_TimerHasPC;
+        static uint64_t s_TimerFrequency;
         static char* s_ClipboardString;
         static Key s_Keycodes[512];
         static int16_t s_Scancodes[(int32_t)Key::Count];
@@ -103,6 +105,8 @@ namespace dais
         static void AdjustRect(RECT* rect, DWORD style, DWORD styleEx, UINT dpi);
 
         static void PollMonitors();
+
+        static void InitTimer();
 
         static bool RegisterWindowClass();
         static void UnregisterWindowClass();
