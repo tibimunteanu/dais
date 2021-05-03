@@ -50,7 +50,6 @@ namespace dais
         void PlatformGetContentScale(float* xScale, float* yScale) override;
         void PlatformGetCursorPosition(double* x, double* y) override;
         float PlatformGetOpacity() override;
-        const char* PlatformGetClipboardString() override;
         void* PlatformGetHandle() const override;
 
         void PlatformSetTitle(const std::string& title) override;
@@ -65,7 +64,6 @@ namespace dais
         void PlatformSetFloating(bool value) override;
         void PlatformSetResizable(bool value) override;
         void PlatformSetMousePassThrough(bool value) override;
-        void PlatformSetClipboardString(const char* string) override;
         void PlatformSetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate) override;
         void PlatformSetCursor(Cursor* cursor) override;
         void PlatformSetCursorPosition(double x, double y) override;

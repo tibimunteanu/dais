@@ -81,6 +81,7 @@ namespace dais
 
         static Cursor* CreateCursor(const Image* image, int32_t xHot, int32_t yHot);
         static Cursor* CreateStandardCursor(CursorShape shape);
+        static void DestroyCursor(Cursor* cursor);
 
         static const char* GetClipboardString();
         static void SetClipboardString(const char* string);
@@ -105,6 +106,9 @@ namespace dais
         static void PlatformWaitEventsTimeout(double timeout);
 
         static bool PlatformIsRawMouseMotionSupported();
+
+        static const char* PlatformGetClipboardString();
+        static void PlatformSetClipboardString(const char* string);
 
         static const char* PlatformGetScancodeName(int32_t scancode);
         static int32_t PlatformGetKeyScancode(Key key);

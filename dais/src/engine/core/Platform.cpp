@@ -238,6 +238,40 @@ namespace dais
         return cursor;
     }
 
+    void Platform::DestroyCursor(Cursor* cursor)
+    {
+        //make sure the cursor is not being used by any window
+        for (Window* window : s_Windows)
+        {
+            if (window->m_Cursor == cursor)
+            {
+                window->SetCursorType(nullptr);
+            }
+        }
+
+        for (uint32_t i = 0; i < s_Cursors.size(); i++)
+        {
+            if (s_Cursors[i] == cursor)
+            {
+                s_Cursors.erase(s_Cursors.begin() + i);
+                break;
+            }
+        }
+
+        delete cursor;
+    }
+
+
+    const char* Platform::GetClipboardString()
+    {
+        return PlatformGetClipboardString();
+    }
+
+    void Platform::SetClipboardString(const char* string)
+    {
+        PlatformSetClipboardString(string);
+    }
+
 
     void Platform::SetMonitorConnectedCallback(MonitorCallback callback)
     {

@@ -242,13 +242,14 @@ namespace dais
     {
         switch (mode)
         {
-            case InputMode::Cursor:         return (int32_t)m_CursorMode;
-            case InputMode::StickyKeys:     return m_StickyKeys;
-            case InputMode::LockKeyMods:    return m_StickyMouseButtons;
-            case InputMode::RawMouseMotion: return m_RawMouseMotion;
+            case InputMode::Cursor:             return (int32_t)m_CursorMode;
+            case InputMode::StickyKeys:         return m_StickyKeys;
+            case InputMode::StickyMouseButtons: return m_StickyMouseButtons;
+            case InputMode::LockKeyMods:        return m_LockKeyMods;
+            case InputMode::RawMouseMotion:     return m_RawMouseMotion;
         }
 
-        DAIS_ERROR("Invalid input mode 0x%08X", mode);
+        DAIS_ERROR("Invalid input mode %d", (int32_t)mode);
         return false;
     }
 
@@ -510,23 +511,25 @@ namespace dais
     {
         if (mode == InputMode::Cursor)
         {
-            if (value != (int32_t)CursorMode::Normal
-                && value != (int32_t)CursorMode::Hidden
-                && value != (int32_t)CursorMode::Disabled)
+            CursorMode cursorMode = (CursorMode)value;
+
+            if (cursorMode != CursorMode::Normal
+                && cursorMode != CursorMode::Hidden
+                && cursorMode != CursorMode::Disabled)
             {
                 DAIS_ERROR("Invalid cursor mode 0x%08X", value);
                 return;
             }
 
-            if (m_CursorMode == (CursorMode)value)
+            if (m_CursorMode == cursorMode)
             {
                 return;
             }
 
-            m_CursorMode = (CursorMode)value;
+            m_CursorMode = cursorMode;
 
             PlatformGetCursorPosition(&m_VirtualCursorPositionX, &m_VirtualCursorPositionY);
-            PlatformSetCursorMode((CursorMode)value);
+            PlatformSetCursorMode(cursorMode);
         }
         else if (mode == InputMode::StickyKeys)
         {

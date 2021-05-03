@@ -158,6 +158,7 @@ namespace dais
 
     public:
         virtual ~Window();
+        friend class Platform;
         friend class Context;
         friend class EglContext;
 
@@ -256,7 +257,6 @@ namespace dais
         virtual void PlatformGetContentScale(float* xScale, float* yScale) = 0;
         virtual float PlatformGetOpacity() = 0;
         virtual void PlatformGetCursorPosition(double* x, double* y) = 0;
-        virtual const char* PlatformGetClipboardString() = 0;
         virtual void* PlatformGetHandle() const = 0;
 
         virtual void PlatformSetTitle(const std::string& title) = 0;
@@ -271,7 +271,6 @@ namespace dais
         virtual void PlatformSetFloating(bool value) = 0;
         virtual void PlatformSetResizable(bool value) = 0;
         virtual void PlatformSetMousePassThrough(bool value) = 0;
-        virtual void PlatformSetClipboardString(const char* string) = 0;
         virtual void PlatformSetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate) = 0;
         virtual void PlatformSetCursor(Cursor* cursor) = 0;
         virtual void PlatformSetCursorPosition(double x, double y) = 0;

@@ -1,6 +1,5 @@
 #include "platform/windows/WindowsPlatform.h"
 
-
 namespace dais
 {
     ///////////////////////////////// STATIC INTERNAL API /////////////////////////////////////
@@ -527,39 +526,6 @@ namespace dais
         return 1.0f;
     }
 
-    const char* WindowsWindow::PlatformGetClipboardString()
-    {
-        if (!OpenClipboard(WindowsPlatform::s_HelperWindowHandle))
-        {
-            DAIS_ERROR("Failed to open clipboard!");
-            return nullptr;
-        }
-
-        HANDLE object = GetClipboardData(CF_UNICODETEXT);
-        if (!object)
-        {
-            DAIS_ERROR("Failed to convert clipboard to string!");
-            CloseClipboard();
-            return nullptr;
-        }
-
-        WCHAR* buffer = (WCHAR*)GlobalLock(object);
-        if (!buffer)
-        {
-            DAIS_ERROR("Failed to lock global handle!");
-            CloseClipboard();
-            return nullptr;
-        }
-
-        free(WindowsPlatform::s_ClipboardString);
-        WindowsPlatform::s_ClipboardString = WindowsPlatform::WideStringToUTF8(buffer);
-
-        GlobalUnlock(object);
-        CloseClipboard();
-
-        return WindowsPlatform::s_ClipboardString;
-    }
-
     void* WindowsWindow::PlatformGetHandle() const
     {
         return m_Handle;
@@ -772,44 +738,6 @@ namespace dais
         {
             SetLayeredWindowAttributes(m_Handle, key, alpha, flags);
         }
-    }
-
-    void WindowsWindow::PlatformSetClipboardString(const char* string)
-    {
-        int characterCount = MultiByteToWideChar(CP_UTF8, 0, string, -1, NULL, 0);
-        if (!characterCount)
-        {
-            return;
-        }
-
-        HANDLE object = GlobalAlloc(GMEM_MOVEABLE, characterCount * sizeof(WCHAR));
-        if (!object)
-        {
-            DAIS_ERROR("Failed to allocate global handle for clipboard!");
-            return;
-        }
-
-        WCHAR* buffer = (WCHAR*)GlobalLock(object);
-        if (!buffer)
-        {
-            DAIS_ERROR("Failed to lock global handle!");
-            GlobalFree(object);
-            return;
-        }
-
-        MultiByteToWideChar(CP_UTF8, 0, string, -1, buffer, characterCount);
-        GlobalUnlock(object);
-
-        if (!OpenClipboard(WindowsPlatform::s_HelperWindowHandle))
-        {
-            DAIS_ERROR("Failed to open clipboard!");
-            GlobalFree(object);
-            return;
-        }
-
-        EmptyClipboard();
-        SetClipboardData(CF_UNICODETEXT, object);
-        CloseClipboard();
     }
 
     void WindowsWindow::PlatformSetMonitor(Monitor* monitor, int32_t x, int32_t y, int32_t width, int32_t height, int32_t refreshRate)
