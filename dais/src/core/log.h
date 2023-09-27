@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/base.h"
-#include "core/arena.h"
+#include "core/memory.h"
 
 #ifdef _DEBUG
 #    define LOG_WARN_ENABLED  1
@@ -27,7 +27,7 @@ API B8 logInit(Arena* pArena, LogConfig config);
 
 API void logRelease(void);
 
-API void logOutput(LogLevel level, const char* message, ...);
+API void logOutput(LogLevel level, CStringLit message, ...);
 
 // Macros
 #define logFatal(message, ...) logOutput(LOG_LEVEL_FATAL, message, ##__VA_ARGS__);

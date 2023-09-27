@@ -15,24 +15,24 @@
 #        define debugBreak() __builtin_trap()
 #    endif
 
-API void _logReportAssertionFailure(const char* expression, const char* message, const char* file, I32 line);
+API void _logReportAssertionFailure(CStringLit expression, CStringLit message, CStringLit file, I32 line);
 
-#    define assert(expr)                                                \
-        {                                                               \
-            if (expr) {                                                 \
-            } else {                                                    \
+#    define assert(expr)                                                   \
+        {                                                                  \
+            if (expr) {                                                    \
+            } else {                                                       \
                 _logReportAssertionFailure(#expr, "", __FILE__, __LINE__); \
-                debugBreak();                                           \
-            }                                                           \
+                debugBreak();                                              \
+            }                                                              \
         }
 
-#    define assertMsg(expr, message)                                         \
-        {                                                                    \
-            if (expr) {                                                      \
-            } else {                                                         \
+#    define assertMsg(expr, message)                                            \
+        {                                                                       \
+            if (expr) {                                                         \
+            } else {                                                            \
                 _logReportAssertionFailure(#expr, message, __FILE__, __LINE__); \
-                debugBreak();                                                \
-            }                                                                \
+                debugBreak();                                                   \
+            }                                                                   \
         }
 #else
 #    define assert(expr)

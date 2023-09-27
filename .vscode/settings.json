@@ -8,11 +8,20 @@
     "game.h": "c",
     "dais.h": "c",
     "arena.h": "c",
-    "engine.h": "c"
+    "engine.h": "c",
+    "engine_types.h": "c",
+    "memory.h": "c"
   },
   "todohighlight.keywords": [
     {
       "text": "internal",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "global",
       "color": "#fb4934",
       "backgroundColor": "rgba(0,0,0,0)",
       "overviewRulerColor": "rgba(0,0,0,0)",

@@ -1,16 +1,15 @@
-#include "core/arena.h"
+#include "memory.h"
 
 #include "core/log.h"
-#include "os/os.h"
 
 Arena* arenaCreate(U64 size) {
     size = roundUpToMultipleOf(size, ARENA_RESERVE_GRANULARITY);
-    void* pMemory = osMemoryReserve(size);
+    void* pMemory = memoryReserve(size);
     U64 commitSize = ARENA_COMMIT_GRANULARITY;
 
     assert(commitSize > sizeof(Arena));
 
-    osMemoryCommit(pMemory, commitSize);
+    memoryCommit(pMemory, commitSize);
 
     Arena* pArena = (Arena*)pMemory;
     pArena->pos = sizeof(Arena);
@@ -21,7 +20,7 @@ Arena* arenaCreate(U64 size) {
 }
 
 void arenaDestroy(Arena* pArena) {
-    osMemoryRelease(pArena, pArena->size);
+    memoryRelease(pArena, pArena->size);
 }
 
 void* arenaPush(Arena* pArena, U64 size) {
@@ -44,7 +43,7 @@ void* arenaPushAligned(Arena* pArena, U64 size, U64 align) {
         if (pArena->commitPos < pArena->pos) {
             U64 commitSize = pArena->pos - pArena->commitPos;
             commitSize = roundUpToMultipleOf(commitSize, ARENA_COMMIT_GRANULARITY);
-            osMemoryCommit((U8*)pArena + pArena->commitPos, commitSize);
+            memoryCommit((U8*)pArena + pArena->commitPos, commitSize);
             pArena->commitPos += commitSize;
         }
     } else {
@@ -76,7 +75,7 @@ void arenaPopTo(Arena* pArena, U64 pos) {
     U64 posAlignedToCommitBoundary = roundUpToMultipleOf(pArena->pos, ARENA_COMMIT_GRANULARITY);
     if (posAlignedToCommitBoundary + ARENA_DECOMMIT_THRESHOLD < pArena->commitPos) {
         U64 decommitSize = pArena->commitPos - posAlignedToCommitBoundary;
-        osMemoryDecommit((U8*)pArena + posAlignedToCommitBoundary, decommitSize);
+        memoryDecommit((U8*)pArena + posAlignedToCommitBoundary, decommitSize);
         pArena->commitPos -= decommitSize;
     }
 }

@@ -47,3 +47,6 @@ typedef signed char B8;
 
 #define MANTISSA_MASK_F32 (U32)0x7FFFFF
 #define MANTISSA_MASK_F64 (U64)0xFFFFFFFFFFFFFull
+
+typedef char* CString;
+typedef const char* CStringLit;

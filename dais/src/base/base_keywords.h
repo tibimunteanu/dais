@@ -3,6 +3,7 @@
 #include "base_platform_detection.h"
 
 #define internal static
+#define global   extern
 
 #if defined(EXPORT)
 #    if defined(COMP_CL)

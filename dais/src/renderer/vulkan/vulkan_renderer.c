@@ -165,7 +165,7 @@ U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     }
 
     // Check for required extensions
-    const char* deviceExtensionNames[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+    CStringLit deviceExtensionNames[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
     if (arrayCount(deviceExtensionNames) > 0) {
         U32 availableExtensionsCount = 0;
 
@@ -291,8 +291,8 @@ B8 vulkanRendererInit(Window* pWindow) {
         .apiVersion = VK_API_VERSION_1_3,
     };
 
-    const char* instanceExtensionNames[] = {VK_KHR_SURFACE_EXTENSION_NAME, VK_OS_EXTENSION_NAMES};
-    const char* instanceLayers[] = {};
+    CStringLit instanceExtensionNames[] = {VK_KHR_SURFACE_EXTENSION_NAME, VK_OS_EXTENSION_NAMES};
+    CStringLit instanceLayers[] = {};
 
     VkInstanceCreateInfo instanceCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,

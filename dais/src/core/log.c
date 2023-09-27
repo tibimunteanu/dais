@@ -21,12 +21,12 @@ void logRelease(void) {
     pState = NULL;
 }
 
-void logOutput(LogLevel level, const char* message, ...) {
+void logOutput(LogLevel level, CStringLit message, ...) {
     if (pState == NULL) {
         return;
     }
 
-    static char* levelStrings[] = {"[FATAL]: ", "[ERROR]: ", " [WARN]: ", " [INFO]: ", "[DEBUG]: ", "[TRACE]: "};
+    static CString levelStrings[] = {"[FATAL]: ", "[ERROR]: ", " [WARN]: ", " [INFO]: ", "[DEBUG]: ", "[TRACE]: "};
 
     __builtin_va_list args;
     va_start(args, message);
@@ -36,7 +36,7 @@ void logOutput(LogLevel level, const char* message, ...) {
     printf("%s%s\n", levelStrings[level], buffer);
 }
 
-void _logReportAssertionFailure(const char* expression, const char* message, const char* file, I32 line) {
+void _logReportAssertionFailure(CStringLit expression, CStringLit message, CStringLit file, I32 line) {
     logOutput(
         LOG_LEVEL_FATAL, "Assertion failed: %s, message: %s, file: %s, line: %d\n", expression, message, file, line
     );

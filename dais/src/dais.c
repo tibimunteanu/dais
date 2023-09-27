@@ -1,32 +1,37 @@
-#include "core/engine.h"
+#include "dais.h"
+
 #include "core/log.h"
+#include "core/memory.h"
 #include "renderer/vulkan/vulkan_renderer.h"
 
-Engine engine = {0};
+Dais dais = {0};
 
-B8 engineAwake(void) {
-    engine.pApp = NULL;
-    engine.isRunning = false;
-    engine.pArena = arenaCreate(gigabytes(1));
+B8 daisAwake(void) {
+    dais.pArena = arenaCreate(gigabytes(1));
 
     // Log init
     LogConfig logConfig = {
         .fileName = "log.txt",
     };
-    if (!logInit(engine.pArena, logConfig)) {
+    if (!logInit(dais.pArena, logConfig)) {
         return false;
     }
 
     return true;
 }
 
-B8 engineStart(App* pApp) {
-    engine.pApp = pApp;
+B8 daisStart(App* pApp) {
+    dais.pApp = pApp;
 
     pApp->stage = APP_STAGE_NONE;
 
+    if (!platformInit()) {
+        logFatal("Failed to initialize the platform");
+        return false;
+    }
+
     Window window = {0};
-    if (!osWindowCreate(engine.pArena, engine.pApp->config.name, engine.pApp->config.startRect, &window)) {
+    if (!windowCreate(dais.pArena, dais.pApp->config.name, dais.pApp->config.startRect, &window)) {
         logFatal("Failed to create window");
         return false;
     }
@@ -50,7 +55,7 @@ B8 engineStart(App* pApp) {
     pApp->stage = APP_STAGE_STARTED;
 
     pApp->stage = APP_STAGE_RUNNING;
-    engine.isRunning = true;
+    dais.isRunning = true;
 
     // while (engine.isRunning) {
     //     // TODO: app loop
@@ -59,10 +64,10 @@ B8 engineStart(App* pApp) {
     return true;
 }
 
-B8 engineShutdown(App* pApp) {
+B8 daisShutdown(App* pApp) {
     B8 shutdownOk = true;
 
-    engine.isRunning = false;
+    dais.isRunning = false;
 
     pApp->stage = APP_STAGE_SHUTTING_DOWN;
     if (!pApp->shutdown(pApp)) {
@@ -73,9 +78,10 @@ B8 engineShutdown(App* pApp) {
 
     vulkanRendererRelease();
     logRelease();
-    arenaDestroy(engine.pArena);
+    platformRelease();
+    arenaDestroy(dais.pArena);
 
-    memoryZeroStruct(&engine);
+    memoryZeroStruct(&dais);
 
     return shutdownOk;
 }

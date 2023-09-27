@@ -1,5 +1,5 @@
 #include "renderer/vulkan/os/vulkan_os.h"
-#include "os/win32/os_win32.h"
+#include "platform/win32/win32_platform.h"
 #include "core/log.h"
 
 B8 vulkanCreateSurfaceOS(
@@ -13,13 +13,14 @@ B8 vulkanCreateSurfaceOS(
         return false;
     }
 
-    Win32Window* win32Window = (Win32Window*)pWindow->pOsState;
+    Win32Platform* win32Platform = dais.platform.pInternal;
+    Win32Window* win32Window = pWindow->pInternal;
 
     VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {
         .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
         .pNext = NULL,
         .flags = 0,
-        .hinstance = win32Window->instance,
+        .hinstance = win32Platform->instance,
         .hwnd = win32Window->handle,
     };
 

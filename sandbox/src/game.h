@@ -1,6 +1,6 @@
 #pragma once
 
-#include <dais.h>
+#include <dais_entry.h>
 
 B8 awake(App* pApp);
 B8 start(App* pApp);

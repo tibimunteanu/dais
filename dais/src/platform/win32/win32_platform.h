@@ -1,7 +1,6 @@
 #pragma once
 
 #include "base/base.h"
-#include "os/os.h"
 
 #ifndef NOMINMAX
 #    define NOMINMAX
@@ -15,7 +14,12 @@
 #    define WIN32_LEAN_AND_MEAN
 #endif
 
+#ifndef UNICODE
+#    define UNICODE
+#endif
+
 #include <windows.h>
+#include <dbt.h>
 
 typedef struct Win32Monitor {
     HMONITOR handle;
@@ -28,6 +32,14 @@ typedef struct Win32Monitor {
 } Win32Monitor;
 
 typedef struct Win32Window {
-    HINSTANCE instance;
     HWND handle;
 } Win32Window;
+
+typedef struct Win32Platform {
+    HINSTANCE instance;
+    HWND helperWindowHandle;
+    ATOM helperWindowClass;
+    HWND mainWindowClass;
+    HDEVNOTIFY deviceNotificationHandle;
+
+} Win32Platform;
