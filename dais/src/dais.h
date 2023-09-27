@@ -1,17 +1,34 @@
 #pragma once
 
-#include "base/base.h"
-#include "core/log.h"
-#include "core/memory.h"
-#include "core/library.h"
-#include "core/monitor.h"
-#include "core/window.h"
-#include "math/math.h"
-#include "dais_types.h"
+#include "engine.h"
 
-B32 platformInit(void);
-B32 platformRelease(void);
+extern B8 appRegister(App* pApp);
 
-API B8 daisAwake(void);
-API B8 daisStart(App* pApp);
-API B8 daisShutdown(App* pApp);
+int main(void) {
+    if (!engineAwake()) {
+        return -1;
+    }
+
+    App app = {0};
+
+    if (!appRegister(&app)) {
+        return -2;
+    }
+
+    if (!app.awake || !app.start || !app.update || !app.render || !app.shutdown) {
+        logFatal("App is missing required function pointers");
+        return -3;
+    }
+
+    if (!engineStart(&app)) {
+        logFatal("Failed to start engine");
+        return -4;
+    }
+
+    if (!engineShutdown(&app)) {
+        logError("Engine did not shutdown gracefully");
+        return -5;
+    }
+
+    return 0;
+}

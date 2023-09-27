@@ -1,7 +1,7 @@
 #pragma once
 
 #include "base/base.h"
-#include "core/memory.h"
+#include "core/arena.h"
 
 #ifdef _DEBUG
 #    define LOG_WARN_ENABLED  1

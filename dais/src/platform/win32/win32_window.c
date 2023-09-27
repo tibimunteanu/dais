@@ -1,12 +1,12 @@
 #include "base/base.h"
 
 #ifdef OS_WINDOWS
-#    include "platform/win32/win32_platform.h"
-#    include "core/window.h"
+#    include "platform/win32/win32_base.h"
+#    include "platform/win32/win32_platform_types.h"
+#    include "platform/window.h"
 #    include "core/log.h"
-#    include "core/memory.h"
+#    include "core/arena.h"
 #    include "math/math_types.h"
-#    include "dais_types.h"
 
 B8 windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_pWindow) {
     Win32Platform* win32Platform = dais.platform.pInternal;

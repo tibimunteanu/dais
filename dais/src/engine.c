@@ -1,12 +1,12 @@
-#include "dais.h"
+#include "engine.h"
 
 #include "core/log.h"
-#include "core/memory.h"
+#include "core/arena.h"
 #include "renderer/vulkan/vulkan_renderer.h"
 
-Dais dais = {0};
+Engine dais = {0};
 
-B8 daisAwake(void) {
+B8 engineAwake(void) {
     dais.pArena = arenaCreate(gigabytes(1));
 
     // Log init
@@ -20,7 +20,7 @@ B8 daisAwake(void) {
     return true;
 }
 
-B8 daisStart(App* pApp) {
+B8 engineStart(App* pApp) {
     dais.pApp = pApp;
 
     pApp->stage = APP_STAGE_NONE;
@@ -36,7 +36,7 @@ B8 daisStart(App* pApp) {
         return false;
     }
 
-    if (!vulkanRendererInit(&window)) {
+    if (!vulkanRendererInit(&dais.platform, &window)) {
         logFatal("Failed to initialize vulkan renderer");
     }
 
@@ -64,7 +64,7 @@ B8 daisStart(App* pApp) {
     return true;
 }
 
-B8 daisShutdown(App* pApp) {
+B8 engineShutdown(App* pApp) {
     B8 shutdownOk = true;
 
     dais.isRunning = false;

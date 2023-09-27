@@ -1,8 +1,6 @@
 #pragma once
 
 #include "base/base.h"
-#include "core/memory_types.h"
-#include "math/math_types.h"
 
 typedef struct Window {
     void* pInternal;
@@ -46,40 +44,3 @@ typedef struct Platform {
 
     void* pInternal;
 } Platform;
-
-typedef enum AppStage {
-    APP_STAGE_NONE = 0,
-    APP_STAGE_AWAKING = 1,
-    APP_STAGE_AWAKEN = 2,
-    APP_STAGE_STARTING = 3,
-    APP_STAGE_STARTED = 4,
-    APP_STAGE_RUNNING = 5,
-    APP_STAGE_SHUTTING_DOWN = 6
-} AppStage;
-
-typedef struct AppConfig {
-    char name[256];
-    Vec4U32 startRect;
-} AppConfig;
-
-typedef struct App {
-    AppStage stage;
-    AppConfig config;
-
-    B8 (*awake)(struct App* pApp);
-    B8 (*start)(struct App* pApp);
-    B8 (*update)(struct App* pApp);
-    B8 (*render)(struct App* pApp);
-    B8 (*shutdown)(struct App* pApp);
-
-    void* pState;
-} App;
-
-typedef struct Dais {
-    App* pApp;
-    B8 isRunning;
-    Arena* pArena;
-    Platform platform;
-} Dais;
-
-global Dais dais;

@@ -1,11 +1,10 @@
 #include "base/base.h"
 
 #ifdef OS_WINDOWS
-#    pragma comment(lib, "user32")
-#    include "platform/win32/win32_platform.h"
+#    include "platform/win32/win32_base.h"
+#    include "platform/win32/win32_platform_types.h"
 #    include "core/log.h"
-#    include "core/memory.h"
-#    include "dais_types.h"
+#    include "core/arena.h"
 
 // private
 internal void _pollMonitors(void) {

@@ -1,16 +1,19 @@
 #pragma once
 
 #include "base/base.h"
-#include "core/memory_types.h"
 
-API U64 memoryPageSizeGet(void);
-API void* memoryReserve(U64 size);
-API void memoryRelease(void* pMemory, U64 size);
-API void memoryCommit(void* pMemory, U64 size);
-API void memoryDecommit(void* pMemory, U64 size);
-API void memoryProtect(void* pMemory, U64 size, MemoryAccessFlags flags);
+typedef struct Arena {
+    U64 pos;
+    U64 commitPos;
+    U64 size;
+    U64 __padding__;
+} Arena;
 
-// arena
+typedef struct TempArena {
+    Arena* pArena;
+    U64 pos;
+} TempArena;
+
 #if !defined(ARENA_RESERVE_GRANULARITY)
 #    define ARENA_RESERVE_GRANULARITY megabytes(64)
 #endif

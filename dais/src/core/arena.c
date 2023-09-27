@@ -1,6 +1,7 @@
 #include "memory.h"
 
 #include "core/log.h"
+#include "platform/memory.h"
 
 Arena* arenaCreate(U64 size) {
     size = roundUpToMultipleOf(size, ARENA_RESERVE_GRANULARITY);

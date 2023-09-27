@@ -1,8 +1,9 @@
 #include "base/base.h"
 
 #ifdef OS_WINDOWS
-#    include "platform/win32/win32_platform.h"
-#    include "core/memory.h"
+#    include "platform/win32/win32_base.h"
+#    include "platform/win32/win32_platform_types.h"
+#    include "platform/memory.h"
 
 U64 memoryPageSizeGet(void) {
     SYSTEM_INFO info;

@@ -1,9 +1,20 @@
-#include "renderer/vulkan/os/vulkan_os.h"
-#include "platform/win32/win32_platform.h"
-#include "core/log.h"
+#include "base/base.h"
 
-B8 vulkanCreateSurfaceOS(
-    VkInstance vkInstance, Window* pWindow, VkAllocationCallbacks* pVkAllocator, VkSurfaceKHR* out_pVkSurface
+#if defined(OS_WINDOWS)
+#    include "platform/win32/win32_platform_types.h"
+#    include "renderer/vulkan/vulkan_types.h"
+#    include "core/log.h"
+
+CStringLit vulkanPlatformGetSurfaceExtensionName(void) {
+    return "VK_KHR_win32_surface";
+}
+
+B8 vulkanPlatformCreateSurface(
+    VkInstance vkInstance,
+    Platform* pPlatform,
+    Window* pWindow,
+    VkAllocationCallbacks* pVkAllocator,
+    VkSurfaceKHR* out_pVkSurface
 ) {
     PFN_vkCreateWin32SurfaceKHR vkCreateWin32SurfaceKHR =
         (PFN_vkCreateWin32SurfaceKHR)vkGetInstanceProcAddr(vkInstance, "vkCreateWin32SurfaceKHR");
@@ -13,7 +24,7 @@ B8 vulkanCreateSurfaceOS(
         return false;
     }
 
-    Win32Platform* win32Platform = dais.platform.pInternal;
+    Win32Platform* win32Platform = pPlatform->pInternal;
     Win32Window* win32Window = pWindow->pInternal;
 
     VkWin32SurfaceCreateInfoKHR surfaceCreateInfo = {
@@ -31,3 +42,4 @@ B8 vulkanCreateSurfaceOS(
 
     return true;
 }
+#endif

@@ -274,7 +274,7 @@ U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     return score;
 }
 
-B8 vulkanRendererInit(Window* pWindow) {
+B8 vulkanRendererInit(Platform* pPlatform, Window* pWindow) {
     if (volkInitialize() != VK_SUCCESS) {
         logError("Failed to initialize vulkan loader");
         return false;
@@ -291,7 +291,8 @@ B8 vulkanRendererInit(Window* pWindow) {
         .apiVersion = VK_API_VERSION_1_3,
     };
 
-    CStringLit instanceExtensionNames[] = {VK_KHR_SURFACE_EXTENSION_NAME, VK_OS_EXTENSION_NAMES};
+    CStringLit surfaceExtensionName = vulkanPlatformGetSurfaceExtensionName();
+    CStringLit instanceExtensionNames[] = {VK_KHR_SURFACE_EXTENSION_NAME, surfaceExtensionName};
     CStringLit instanceLayers[] = {};
 
     VkInstanceCreateInfo instanceCreateInfo = {
@@ -327,7 +328,7 @@ B8 vulkanRendererInit(Window* pWindow) {
     );
 
     // Surface
-    if (!vulkanCreateSurfaceOS(vkInstance, pWindow, pVkAllocator, &vkSurface)) {
+    if (!vulkanPlatformCreateSurface(vkInstance, pPlatform, pWindow, pVkAllocator, &vkSurface)) {
         logError("Failed to create vulkan surface");
         return false;
     }

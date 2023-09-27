@@ -1,8 +1,8 @@
 #include "base/base.h"
 
 #ifdef OS_WINDOWS
-#    include "platform/win32/win32_platform.h"
-#    include "core/library.h"
+#    include "platform/win32/win32_base.h"
+#    include "platform/library.h"
 
 void* libraryOpen(CStringLit path) {
     HMODULE module = LoadLibraryA(path);
