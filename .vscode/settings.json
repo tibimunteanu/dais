@@ -1,0 +1,43 @@
+{
+  "editor.fontSize": 13.2,
+  "files.associations": {
+    "base.h": "c",
+    "*.rh": "c",
+    "winapifamily.h": "c",
+    "math_types.h": "c",
+    "game.h": "c",
+    "dais.h": "c",
+    "arena.h": "c",
+    "engine.h": "c"
+  },
+  "todohighlight.keywords": [
+    {
+      "text": "internal",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "inl",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "noinl",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "API",
+      "color": "#1f9cf0",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    }
+  ]
+}
