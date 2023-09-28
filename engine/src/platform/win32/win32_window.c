@@ -9,7 +9,7 @@
 #    include "math/math_types.h"
 
 B8 windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_pWindow) {
-    Win32Platform* win32Platform = dais.platform.pInternal;
+    Win32Platform* win32Platform = pDais->pPlatform->pInternal;
 
     memoryZero(out_pWindow, sizeof(Window));
 

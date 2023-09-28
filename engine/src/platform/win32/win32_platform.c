@@ -43,7 +43,7 @@ internal LRESULT CALLBACK _helperWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam,
 }
 
 internal B32 _createHelperWindow(void) {
-    Win32Platform* pWin32Platform = dais.platform.pInternal;
+    Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 
     MSG msg;
     WNDCLASSEXW wc = {sizeof(wc)};
@@ -105,14 +105,15 @@ internal B32 _createHelperWindow(void) {
 }
 
 // init
-B32 platformInit(void) {
-    dais.platform.pInternal = arenaPushZero(dais.pArena, sizeof(Win32Platform));
+B32 platformInit(Arena* pArena) {
+    pDais->pPlatform = arenaPushZero(pArena, sizeof(Platform));
+    pDais->pPlatform->pInternal = arenaPushZero(pArena, sizeof(Win32Platform));
 
-    Win32Platform* pWin32Platform = dais.platform.pInternal;
+    Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 
     if (!GetModuleHandleExW(
             GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-            (const WCHAR*)&dais,
+            (const WCHAR*)&pDais,
             (HMODULE*)&pWin32Platform->instance
         )) {
         logFatal("Failed to retrieve own module handle");

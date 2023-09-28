@@ -3,7 +3,7 @@
     {
       "name": "Win32",
       "includePath": [
-        "${workspaceFolder}/dais/src/**",
+        "${workspaceFolder}/engine/src/**",
         "${VULKAN_SDK}/include"
       ],
       "defines": ["_DEBUG", "UNICODE", "_UNICODE", "EXPORT"],
@@ -16,7 +16,7 @@
     {
       "name": "Linux",
       "includePath": [
-        "${workspaceFolder}/dais/src/**",
+        "${workspaceFolder}/engine/src/**",
         "${VULKAN_SDK}/include"
       ],
       "defines": ["_DEBUG", "UNICODE", "_UNICODE", "EXPORT"],

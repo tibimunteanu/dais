@@ -8,7 +8,7 @@
       "stopAtEntry": false,
       "cwd": "${workspaceFolder}/bin/",
       "environment": [],
-      "program": "${workspaceFolder}/bin/sandbox",
+      "program": "${workspaceFolder}/bin/dais",
       "osx": {
         "MIMode": "lldb",
         "targetArchitecture": "arm64",
@@ -19,7 +19,7 @@
       },
       "windows": {
         "type": "cppvsdbg",
-        "program": "${workspaceFolder}/bin/sandbox.exe",
+        "program": "${workspaceFolder}/bin/dais.exe",
         "console": "integratedTerminal"
       }
     }

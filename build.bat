@@ -22,12 +22,16 @@ del bin\*.pdb
 
 ECHO "%ACTION_STR% everything on %PLATFORM% (%TARGET%)..."
 
-REM Dais
-make -f "Makefile.library.mak" %ACTION% TARGET=%TARGET% ASSEMBLY=dais ADDL_INC_FLAGS="-I%VULKAN_SDK%\include"
+REM Engine
+make -f "Makefile.library.mak" %ACTION% TARGET=%TARGET% ASSEMBLY=engine ADDL_INC_FLAGS="-I%VULKAN_SDK%\include"
 IF %ERRORLEVEL% NEQ 0 (echo Error:%ERRORLEVEL% && exit)
 
-REM Sandbox
-make -f "Makefile.executable.mak" %ACTION% TARGET=%TARGET% ASSEMBLY=sandbox ADDL_INC_FLAGS="-I%VULKAN_SDK%\include -Idais\src" ADDL_LINK_FLAGS="-ldais"
+REM Game
+make -f "Makefile.library.mak" %ACTION% TARGET=%TARGET% ASSEMBLY=game ADDL_INC_FLAGS="-I%VULKAN_SDK%\include -Iengine\src" ADDL_LINK_FLAGS="-lengine"
+IF %ERRORLEVEL% NEQ 0 (echo Error:%ERRORLEVEL% && exit)
+
+REM Dais (Launcher)
+make -f "Makefile.executable.mak" %ACTION% TARGET=%TARGET% ASSEMBLY=dais ADDL_INC_FLAGS="-I%VULKAN_SDK%\include -Iengine\src" ADDL_LINK_FLAGS="-lengine"
 IF %ERRORLEVEL% NEQ 0 (echo Error:%ERRORLEVEL% && exit)
 
 ECHO "All assemblies %ACTION_STR_PAST% successfully on %PLATFORM% (%TARGET%)."

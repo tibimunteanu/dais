@@ -274,7 +274,7 @@ U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     return score;
 }
 
-B8 vulkanRendererInit(Platform* pPlatform, Window* pWindow) {
+B8 vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     if (volkInitialize() != VK_SUCCESS) {
         logError("Failed to initialize vulkan loader");
         return false;
@@ -284,7 +284,7 @@ B8 vulkanRendererInit(Platform* pPlatform, Window* pWindow) {
     VkApplicationInfo applicationInfo = {
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pNext = NULL,
-        .pApplicationName = "Dais Renderer",
+        .pApplicationName = "Dais Game",
         .applicationVersion = VK_MAKE_VERSION(0, 0, 1),
         .pEngineName = "Dais Engine",
         .engineVersion = VK_MAKE_VERSION(0, 0, 1),

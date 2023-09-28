@@ -2,25 +2,15 @@
 
 internal Arena* pArena;
 
-B8 appRegister(App* pApp) {
-    pApp->config = (AppConfig) {
+GameConfig configure(void) {
+    return (GameConfig) {
         .name = "Sandbox",
         .startRect = (Vec4U32) {200, 200, 960, 540},
     };
-
-    pApp->awake = awake;
-    pApp->start = start;
-    pApp->update = update;
-    pApp->render = render;
-    pApp->shutdown = shutdown;
-
-    pApp->pState = NULL;
-
-    return true;
 }
 
-B8 awake(App* pApp) {
-    logInfo("Awakening app");
+B8 awake(void) {
+    logInfo("Awakening game");
 
     pArena = arenaCreate(gigabytes(1));
 
@@ -36,8 +26,8 @@ B8 awake(App* pApp) {
     return true;
 }
 
-B8 start(App* pApp) {
-    logInfo("Starting app");
+B8 start(void) {
+    logInfo("Starting game");
 
     U64 stall = 10000000000;
     while (stall--)
@@ -46,16 +36,16 @@ B8 start(App* pApp) {
     return true;
 }
 
-B8 update(App* pApp) {
+B8 update(void) {
     return true;
 }
 
-B8 render(App* pApp) {
+B8 render(void) {
     return true;
 }
 
-B8 shutdown(App* pApp) {
-    logInfo("Shutting down app");
+B8 shutdown(void) {
+    logInfo("Shutting down game");
 
     arenaDestroy(pArena);
     pArena = NULL;

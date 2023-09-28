@@ -10,7 +10,12 @@
     "arena.h": "c",
     "engine.h": "c",
     "engine_types.h": "c",
-    "memory.h": "c"
+    "memory.h": "c",
+    "win32_platform_types.h": "c",
+    "platform.h": "c",
+    "chrono": "c",
+    "system_error": "c",
+    "xlocale": "c"
   },
   "todohighlight.keywords": [
     {
