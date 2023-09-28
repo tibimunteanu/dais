@@ -95,10 +95,11 @@
         }                                                                        \
     }
 
-#define panicErr(message, err)                                                                \
-    logFatal("PANIC -> %s() - %s:%d - error: %s", __FUNCTION__, __FILE__, __LINE__, message); \
+// #define logFatal(message, ...) logOutput(LOG_LEVEL_FATAL, message, ##__VA_ARGS__);
+#define panicErr(err, message, ...)                                                                       \
+    logFatal("PANIC -> %s() - %s:%d - error: " message, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); \
     return err
 
-#define panic(message) panicErr(message, ERROR)
+#define panic(message, ...) panicErr(ERROR, message, ##__VA_ARGS__)
 
 // BRIEF: linked list helpers
