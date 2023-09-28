@@ -6,7 +6,7 @@
 
 Engine* pDais = NULL;
 
-internal Result _loadGameLibrary(void) {
+private Result _loadGameLibrary(void) {
     void* pGameLib = libraryOpen("game.dll");
 
     if (!pGameLib) {
@@ -28,7 +28,7 @@ internal Result _loadGameLibrary(void) {
     return OK;
 }
 
-Result engineRun(void) {
+public Result engineRun(void) {
     Arena* pArena = arenaCreate(gigabytes(1));
 
     pDais = arenaPushStructZero(pArena, Engine);
@@ -49,7 +49,7 @@ Result engineRun(void) {
 
     try(platformInit(pArena));
 
-    Window window = {0};
+    Window window = { 0 };
     try(windowCreate(pArena, pDais->pGame->config.name, pDais->pGame->config.startRect, &window));
 
     try(vulkanRendererInit(pArena, pDais->pPlatform, &window));
@@ -79,9 +79,8 @@ Result engineRun(void) {
 
     vulkanRendererRelease();
     logRelease();
-    platformRelease();
 
-    memoryZeroStruct(&pDais);
+    alert(platformRelease());
 
     arenaDestroy(pArena);
     pArena = NULL;

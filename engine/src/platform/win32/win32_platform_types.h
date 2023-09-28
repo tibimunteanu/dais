@@ -20,9 +20,8 @@ typedef struct Win32Window {
 
 typedef struct Win32Platform {
     HINSTANCE instance;
-    HWND helperWindowHandle;
+    ATOM mainWindowClass;
     ATOM helperWindowClass;
-    HWND mainWindowClass;
+    HWND helperWindowHandle;
     HDEVNOTIFY deviceNotificationHandle;
-
 } Win32Platform;

@@ -1,19 +1,19 @@
 #pragma once
 
-typedef unsigned char U8;
-typedef unsigned short U16;
-typedef unsigned int U32;
+typedef unsigned char      U8;
+typedef unsigned short     U16;
+typedef unsigned int       U32;
 typedef unsigned long long U64;
 
 typedef signed char I8;
-typedef short I16;
-typedef int I32;
-typedef long long I64;
+typedef short       I16;
+typedef int         I32;
+typedef long long   I64;
 
-typedef float F32;
+typedef float  F32;
 typedef double F64;
 
-typedef int B32;
+typedef int         B32;
 typedef signed char B8;
 
 #define true  1
@@ -48,13 +48,14 @@ typedef signed char B8;
 #define MANTISSA_MASK_F32 (U32)0x7FFFFF
 #define MANTISSA_MASK_F64 (U64)0xFFFFFFFFFFFFFull
 
-typedef char* CString;
+typedef char*       CString;
 typedef const char* CStringLit;
 
 typedef I32 Result;
 
-typedef enum ResultType {
+// NOTE: any result set enum can be used with "panicErr(CUSTOM_RESULT)" macro
+typedef enum BaseResult {
     ERROR = -1,
     INCOMPLETE = 0,
     OK = 1,
-} ResultType;
+} BaseResult;

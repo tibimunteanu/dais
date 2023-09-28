@@ -1,15 +1,15 @@
 #include "game.h"
 
-internal Arena* pArena;
+private Arena* pArena;
 
-GameConfig configure(void) {
+public GameConfig configure(void) {
     return (GameConfig) {
-        .name = "Sandbox",
-        .startRect = (Vec4U32) {200, 200, 960, 540},
+               .name = "Sandbox",
+               .startRect = (Vec4U32) { 200, 200, 960, 540 },
     };
 }
 
-Result awake(void) {
+public Result awake(void) {
     logInfo("Awakening game");
 
     pArena = arenaCreate(gigabytes(1));
@@ -26,27 +26,26 @@ Result awake(void) {
     return OK;
 }
 
-Result start(void) {
+public Result start(void) {
     logInfo("Starting game");
 
     panic("Panic at START");
 
     U64 stall = 10000000000;
-    while (stall--)
-        ;
+    while (stall--) {}
 
     return OK;
 }
 
-Result update(void) {
+public Result update(void) {
     return OK;
 }
 
-Result render(void) {
+public Result render(void) {
     return OK;
 }
 
-Result shutdown(void) {
+public Result shutdown(void) {
     logInfo("Shutting down game");
 
     // panic("If shutdown panics, the engine still continues shutting down");

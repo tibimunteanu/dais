@@ -1,15 +1,15 @@
 #include "base/base.h"
 
 #if defined(OS_WINDOWS)
-#    include "platform/win32/win32_platform_types.h"
-#    include "renderer/vulkan/vulkan_types.h"
-#    include "core/log.h"
+    #include "platform/win32/win32_platform_types.h"
+    #include "renderer/vulkan/vulkan_types.h"
+    #include "core/log.h"
 
-CStringLit vulkanPlatformGetSurfaceExtensionName(void) {
+public CStringLit vulkanPlatformGetSurfaceExtensionName(void) {
     return "VK_KHR_win32_surface";
 }
 
-Result vulkanPlatformCreateSurface(
+public Result vulkanPlatformCreateSurface(
     VkInstance vkInstance,
     Platform* pPlatform,
     Window* pWindow,

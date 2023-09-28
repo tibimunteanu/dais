@@ -6,7 +6,7 @@ F32 f32Inf(void) {
         U32 u;
     } result;
     result.u = 0x7f800000;
-    return (result.f);
+    return result.f;
 }
 
 F32 f32NegInf(void) {
@@ -15,7 +15,7 @@ F32 f32NegInf(void) {
         U32 u;
     } result;
     result.u = 0xff800000;
-    return (result.f);
+    return result.f;
 }
 
 F64 f64Inf(void) {
@@ -24,7 +24,7 @@ F64 f64Inf(void) {
         U64 u;
     } result;
     result.u = 0x7ff0000000000000;
-    return (result.f);
+    return result.f;
 }
 
 F64 f64NegInf(void) {
@@ -33,7 +33,7 @@ F64 f64NegInf(void) {
         U64 u;
     } result;
     result.u = 0xfff0000000000000;
-    return (result.f);
+    return result.f;
 }
 
 B32 f32IsNan(F32 x) {
@@ -109,7 +109,7 @@ F32 f32Floor(F32 x) {
     } else {
         result = (F32)(((I32)x) - 1);
     }
-    return (result);
+    return result;
 }
 
 F64 f64Floor(F64 x) {
@@ -119,7 +119,7 @@ F64 f64Floor(F64 x) {
     } else {
         result = (F64)(((I64)x) - 1);
     }
-    return (result);
+    return result;
 }
 
 F32 f32Round(F32 x) {
@@ -129,7 +129,7 @@ F32 f32Round(F32 x) {
     } else {
         result = (F32)(((I32)(x - 0.5f)) - 1);
     }
-    return (result);
+    return result;
 }
 
 F64 f64Round(F64 x) {
@@ -139,7 +139,7 @@ F64 f64Round(F64 x) {
     } else {
         result = (F64)(((I64)(x - 0.5)) - 1);
     }
-    return (result);
+    return result;
 }
 
 F32 f32Ceil(F32 x) {
@@ -149,7 +149,7 @@ F32 f32Ceil(F32 x) {
     } else {
         result = (F32)(I32)x;
     }
-    return (result);
+    return result;
 }
 
 F64 f64Ceil(F64 x) {
@@ -159,7 +159,7 @@ F64 f64Ceil(F64 x) {
     } else {
         result = (F64)(I64)x;
     }
-    return (result);
+    return result;
 }
 
 F32 f32Sin(F32 x) {
@@ -251,11 +251,11 @@ F64 f64Pow(F64 x, F64 y) {
 }
 
 B8 f32Equals(F32 a, F32 b) {
-    return f32Abs(a - b) <= TOLERANCE_F32 * max(max(f32Abs(a), f32Abs(b)), 1.0f);
+    return f32Abs(a - b) <= TOLERANCE_F32* max(max(f32Abs(a), f32Abs(b)), 1.0f);
 }
 
 B8 f64Equals(F64 a, F64 b) {
-    return f64Abs(a - b) <= TOLERANCE_F64 * max(max(f64Abs(a), f64Abs(b)), 1.0);
+    return f64Abs(a - b) <= TOLERANCE_F64* max(max(f64Abs(a), f64Abs(b)), 1.0);
 }
 
 F32 f32Lerp(F32 a, F32 b, F32 t) {
@@ -284,67 +284,67 @@ F64 f64Remap(F64 value, F64 minValue, F64 maxValue, F64 newMinValue, F64 newMaxV
 
 // BRIEF: Vector 2
 Vec2F32 vec2F32Zero(void) {
-    return (Vec2F32) {0.0f, 0.0f};
+    return (Vec2F32) { 0.0f, 0.0f };
 }
 
 Vec2F32 vec2F32One(void) {
-    return (Vec2F32) {1.0f, 1.0f};
+    return (Vec2F32) { 1.0f, 1.0f };
 }
 
 Vec2F32 vec2F32Up(void) {
-    return (Vec2F32) {0.0f, 1.0f};
+    return (Vec2F32) { 0.0f, 1.0f };
 }
 
 Vec2F32 vec2F32Down(void) {
-    return (Vec2F32) {0.0f, -1.0f};
+    return (Vec2F32) { 0.0f, -1.0f };
 }
 
 Vec2F32 vec2F32Left(void) {
-    return (Vec2F32) {-1.0f, 0.0f};
+    return (Vec2F32) { -1.0f, 0.0f };
 }
 
 Vec2F32 vec2F32Right(void) {
-    return (Vec2F32) {1.0f, 0.0f};
+    return (Vec2F32) { 1.0f, 0.0f };
 }
 
 Vec2F32 vec2F32Add(Vec2F32 a, Vec2F32 b) {
-    return (Vec2F32) {a.x + b.x, a.y + b.y};
+    return (Vec2F32) { a.x + b.x, a.y + b.y };
 }
 
 Vec2F32 vec2F32AddScalar(Vec2F32 a, F32 scalar) {
-    return (Vec2F32) {a.x + scalar, a.y + scalar};
+    return (Vec2F32) { a.x + scalar, a.y + scalar };
 }
 
 Vec2F32 vec2F32Sub(Vec2F32 a, Vec2F32 b) {
-    return (Vec2F32) {a.x - b.x, a.y - b.y};
+    return (Vec2F32) { a.x - b.x, a.y - b.y };
 }
 
 Vec2F32 vec2F32SubScalar(Vec2F32 a, F32 scalar) {
-    return (Vec2F32) {a.x - scalar, a.y - scalar};
+    return (Vec2F32) { a.x - scalar, a.y - scalar };
 }
 
 Vec2F32 vec2F32Mul(Vec2F32 a, Vec2F32 b) {
-    return (Vec2F32) {a.x * b.x, a.y * b.y};
+    return (Vec2F32) { a.x* b.x, a.y* b.y };
 }
 
 Vec2F32 vec2F32MulScalar(Vec2F32 v, F32 scalar) {
-    return (Vec2F32) {v.x * scalar, v.y * scalar};
+    return (Vec2F32) { v.x* scalar, v.y* scalar };
 }
 
 Vec2F32 vec2F32Div(Vec2F32 a, Vec2F32 b) {
-    return (Vec2F32) {a.x / b.x, a.y / b.y};
+    return (Vec2F32) { a.x / b.x, a.y / b.y };
 }
 
 Vec2F32 vec2F32DivScalar(Vec2F32 v, F32 scalar) {
-    return (Vec2F32) {v.x / scalar, v.y / scalar};
+    return (Vec2F32) { v.x / scalar, v.y / scalar };
 }
 
 Vec2F32 vec2F32Negate(Vec2F32 v) {
-    return (Vec2F32) {-v.x, -v.y};
+    return (Vec2F32) { -v.x, -v.y };
 }
 
 Vec2F32 vec2F32Inverse(Vec2F32 v) {
-    return (Vec2F32) {1.0f / v.x, 1.0f / v.y};
+    return (Vec2F32) { 1.0f / v.x, 1.0f / v.y };
 }
 
 F32 vec2F32LengthSquared(Vec2F32 v) {
@@ -396,7 +396,7 @@ F32 vec2F32DistanceSquared(Vec2F32 a, Vec2F32 b) {
 }
 
 Vec2F32 vec2F32Transform(Vec2F32 v, Mat4F32 m) {
-    return (Vec2F32) {v.x * m.m0 + v.y * m.m4 + 0.0f * m.m8 + m.m12, v.x * m.m1 + v.y * m.m5 + 0.0f * m.m9 + m.m13};
+    return (Vec2F32) { v.x* m.m0 + v.y* m.m4 + 0.0f* m.m8 + m.m12, v.x* m.m1 + v.y* m.m5 + 0.0f* m.m9 + m.m13 };
 }
 
 F32 vec2F32Angle(Vec2F32 a, Vec2F32 b) {
@@ -404,11 +404,11 @@ F32 vec2F32Angle(Vec2F32 a, Vec2F32 b) {
 }
 
 Vec2F32 vec2F32Clamp(Vec2F32 v, Vec2F32 minValue, Vec2F32 maxValue) {
-    return (Vec2F32) {clamp(v.x, minValue.x, maxValue.x), clamp(v.y, minValue.y, maxValue.y)};
+    return (Vec2F32) { clamp(v.x, minValue.x, maxValue.x), clamp(v.y, minValue.y, maxValue.y) };
 }
 
 Vec2F32 vec2F32ClampScalar(Vec2F32 v, F32 minValue, F32 maxValue) {
-    return (Vec2F32) {clamp(v.x, minValue, maxValue), clamp(v.y, minValue, maxValue)};
+    return (Vec2F32) { clamp(v.x, minValue, maxValue), clamp(v.y, minValue, maxValue) };
 }
 
 Vec2F32 vec2F32ClampLength(Vec2F32 v, F32 minValue, F32 maxValue) {
@@ -456,81 +456,81 @@ Vec2F32 vec2F32Rotate(Vec2F32 v, F32 angleRad) {
     F32 C = f32Cos(angleRad);
     F32 s = f32Sin(angleRad);
 
-    return (Vec2F32) {v.x * C - v.y * s, v.x * s + v.y * C};
+    return (Vec2F32) { v.x* C - v.y* s, v.x* s + v.y* C };
 }
 
 // BRIEF: Vector 3
 
 Vec3F32 vec3F32Zero(void) {
-    return (Vec3F32) {0.0f, 0.0f, 0.0f};
+    return (Vec3F32) { 0.0f, 0.0f, 0.0f };
 }
 
 Vec3F32 vec3F32One(void) {
-    return (Vec3F32) {1.0f, 1.0f, 1.0f};
+    return (Vec3F32) { 1.0f, 1.0f, 1.0f };
 }
 
 Vec3F32 vec3F32Up(void) {
-    return (Vec3F32) {0.0f, 1.0f, 0.0f};
+    return (Vec3F32) { 0.0f, 1.0f, 0.0f };
 }
 
 Vec3F32 vec3F32Down(void) {
-    return (Vec3F32) {0.0f, -1.0f, 0.0f};
+    return (Vec3F32) { 0.0f, -1.0f, 0.0f };
 }
 
 Vec3F32 vec3F32Left(void) {
-    return (Vec3F32) {-1.0f, 0.0f, 0.0f};
+    return (Vec3F32) { -1.0f, 0.0f, 0.0f };
 }
 
 Vec3F32 vec3F32Right(void) {
-    return (Vec3F32) {1.0f, 0.0f, 0.0f};
+    return (Vec3F32) { 1.0f, 0.0f, 0.0f };
 }
 
 Vec3F32 vec3F32Forward(void) {
-    return (Vec3F32) {0.0f, 0.0f, -1.0f};
+    return (Vec3F32) { 0.0f, 0.0f, -1.0f };
 }
 
 Vec3F32 vec3F32Backward(void) {
-    return (Vec3F32) {0.0f, 0.0f, 1.0f};
+    return (Vec3F32) { 0.0f, 0.0f, 1.0f };
 }
 
 Vec3F32 vec3F32Add(Vec3F32 a, Vec3F32 b) {
-    return (Vec3F32) {a.x + b.x, a.y + b.y, a.z + b.z};
+    return (Vec3F32) { a.x + b.x, a.y + b.y, a.z + b.z };
 }
 
 Vec3F32 vec3F32AddScalar(Vec3F32 a, F32 scalar) {
-    return (Vec3F32) {a.x + scalar, a.y + scalar, a.z + scalar};
+    return (Vec3F32) { a.x + scalar, a.y + scalar, a.z + scalar };
 }
 
 Vec3F32 vec3F32Sub(Vec3F32 a, Vec3F32 b) {
-    return (Vec3F32) {a.x - b.x, a.y - b.y, a.z - b.z};
+    return (Vec3F32) { a.x - b.x, a.y - b.y, a.z - b.z };
 }
 
 Vec3F32 vec3F32SubScalar(Vec3F32 a, F32 scalar) {
-    return (Vec3F32) {a.x - scalar, a.y - scalar, a.z - scalar};
+    return (Vec3F32) { a.x - scalar, a.y - scalar, a.z - scalar };
 }
 
 Vec3F32 vec3F32Mul(Vec3F32 a, Vec3F32 b) {
-    return (Vec3F32) {a.x * b.x, a.y * b.y, a.z * b.z};
+    return (Vec3F32) { a.x* b.x, a.y* b.y, a.z* b.z };
 }
 
 Vec3F32 vec3F32MulScalar(Vec3F32 v, F32 scalar) {
-    return (Vec3F32) {v.x * scalar, v.y * scalar, v.z * scalar};
+    return (Vec3F32) { v.x* scalar, v.y* scalar, v.z* scalar };
 }
 
 Vec3F32 vec3F32Div(Vec3F32 a, Vec3F32 b) {
-    return (Vec3F32) {a.x / b.x, a.y / b.y, a.z / b.z};
+    return (Vec3F32) { a.x / b.x, a.y / b.y, a.z / b.z };
 }
 
 Vec3F32 vec3F32DivScalar(Vec3F32 v, F32 scalar) {
-    return (Vec3F32) {v.x / scalar, v.y / scalar, v.z / scalar};
+    return (Vec3F32) { v.x / scalar, v.y / scalar, v.z / scalar };
 }
 
 Vec3F32 vec3F32Negate(Vec3F32 v) {
-    return (Vec3F32) {-v.x, -v.y, -v.z};
+    return (Vec3F32) { -v.x, -v.y, -v.z };
 }
 
 Vec3F32 vec3F32Inverse(Vec3F32 v) {
-    return (Vec3F32) {1.0f / v.x, 1.0f / v.y, 1.0f / v.z};
+    return (Vec3F32) { 1.0f / v.x, 1.0f / v.y, 1.0f / v.z };
 }
 
 F32 vec3F32LengthSquared(Vec3F32 v) {
@@ -562,7 +562,7 @@ F32 vec3F32Dot(Vec3F32 a, Vec3F32 b) {
 }
 
 Vec3F32 vec3F32Cross(Vec3F32 a, Vec3F32 b) {
-    return (Vec3F32) {a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x};
+    return (Vec3F32) { a.y* b.z - a.z* b.y, a.z* b.x - a.x* b.z, a.x* b.y - a.y* b.x };
 }
 
 B8 vec3F32EqualsApprox(Vec3F32 a, Vec3F32 b, F32 tolerance) {
@@ -583,9 +583,10 @@ F32 vec3F32DistanceSquared(Vec3F32 a, Vec3F32 b) {
 
 Vec3F32 vec3F32Transform(Vec3F32 v, Mat4F32 m) {
     return (Vec3F32) {
-        v.x * m.m0 + v.y * m.m4 + v.z * m.m8 + m.m12,
-        v.x * m.m1 + v.y * m.m5 + v.z * m.m9 + m.m13,
-        v.x * m.m2 + v.y * m.m6 + v.z * m.m10 + m.m14};
+               v.x* m.m0 + v.y* m.m4 + v.z* m.m8 + m.m12,
+                      v.x* m.m1 + v.y* m.m5 + v.z* m.m9 + m.m13,
+                      v.x* m.m2 + v.y* m.m6 + v.z* m.m10 + m.m14
+    };
 }
 
 F32 vec3F32Angle(Vec3F32 a, Vec3F32 b) {
@@ -609,11 +610,13 @@ QuatF32 vec3F32Quat(Vec3F32 a, Vec3F32 b) {
 
 Vec3F32 vec3F32Clamp(Vec3F32 v, Vec3F32 minValue, Vec3F32 maxValue) {
     return (Vec3F32) {
-        clamp(v.x, minValue.x, maxValue.x), clamp(v.y, minValue.y, maxValue.y), clamp(v.z, minValue.z, maxValue.z)};
+               clamp(v.x, minValue.x, maxValue.x), clamp(v.y, minValue.y, maxValue.y),
+               clamp(v.z, minValue.z, maxValue.z)
+    };
 }
 
 Vec3F32 vec3F32ClampScalar(Vec3F32 v, F32 minValue, F32 maxValue) {
-    return (Vec3F32) {clamp(v.x, minValue, maxValue), clamp(v.y, minValue, maxValue), clamp(v.z, minValue, maxValue)};
+    return (Vec3F32) { clamp(v.x, minValue, maxValue), clamp(v.y, minValue, maxValue), clamp(v.z, minValue, maxValue) };
 }
 
 Vec3F32 vec3F32ClampLength(Vec3F32 v, F32 minValue, F32 maxValue) {
@@ -650,7 +653,8 @@ Vec3F32 vec3F32Refract(Vec3F32 dirNormalized, Vec3F32 normal, F32 ratio) {
 
     if (dSquared >= 0.0f) {
         result = vec3F32Sub(
-            vec3F32MulScalar(dirNormalized, ratio), vec3F32MulScalar(normal, ratio * dot + f32Sqrt(dSquared))
+            vec3F32MulScalar(dirNormalized, ratio),
+            vec3F32MulScalar(normal, ratio * dot + f32Sqrt(dSquared))
         );
     }
 
@@ -661,7 +665,7 @@ Vec3F32 vec3F32Unproject(Vec3F32 source, Mat4F32 projection, Mat4F32 view) {
     Vec3F32 result;
 
     Mat4F32 mvpInv = mat4F32Inverse(mat4F32Mul(view, projection));
-    QuatF32 q = quatF32Transform((QuatF32) {source.x, source.y, source.z, 1.0f}, mvpInv);
+    QuatF32 q = quatF32Transform((QuatF32) { source.x, source.y, source.z, 1.0f }, mvpInv);
 
     result.x = q.x / q.w;
     result.y = q.y / q.w;
@@ -714,51 +718,51 @@ void vec3F32OrthoNormalize(Vec3F32* in_out_pLhs, Vec3F32* in_out_pRhs) {
 // BRIEF: Vector 4
 
 Vec4F32 vec4F32Zero(void) {
-    return (Vec4F32) {0.0f, 0.0f, 0.0f, 0.0f};
+    return (Vec4F32) { 0.0f, 0.0f, 0.0f, 0.0f };
 }
 
 Vec4F32 vec4F32One(void) {
-    return (Vec4F32) {1.0f, 1.0f, 1.0f, 1.0f};
+    return (Vec4F32) { 1.0f, 1.0f, 1.0f, 1.0f };
 }
 
 Vec4F32 vec4F32Add(Vec4F32 a, Vec4F32 b) {
-    return (Vec4F32) {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
+    return (Vec4F32) { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
 }
 
 Vec4F32 vec4F32AddScalar(Vec4F32 v, F32 scalar) {
-    return (Vec4F32) {v.x + scalar, v.y + scalar, v.z + scalar, v.w + scalar};
+    return (Vec4F32) { v.x + scalar, v.y + scalar, v.z + scalar, v.w + scalar };
 }
 
 Vec4F32 vec4F32Sub(Vec4F32 a, Vec4F32 b) {
-    return (Vec4F32) {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w};
+    return (Vec4F32) { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
 }
 
 Vec4F32 vec4F32SubScalar(Vec4F32 v, F32 scalar) {
-    return (Vec4F32) {v.x - scalar, v.y - scalar, v.z - scalar, v.w - scalar};
+    return (Vec4F32) { v.x - scalar, v.y - scalar, v.z - scalar, v.w - scalar };
 }
 
 Vec4F32 vec4F32Mul(Vec4F32 a, Vec4F32 b) {
-    return (Vec4F32) {a.x * b.x, a.y * b.y, a.z * b.z, a.w * b.w};
+    return (Vec4F32) { a.x* b.x, a.y* b.y, a.z* b.z, a.w* b.w };
 }
 
 Vec4F32 vec4F32MulScalar(Vec4F32 v, F32 scalar) {
-    return (Vec4F32) {v.x * scalar, v.y * scalar, v.z * scalar, v.w * scalar};
+    return (Vec4F32) { v.x* scalar, v.y* scalar, v.z* scalar, v.w* scalar };
 }
 
 Vec4F32 vec4F32Div(Vec4F32 a, Vec4F32 b) {
-    return (Vec4F32) {a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w};
+    return (Vec4F32) { a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w };
 }
 
 Vec4F32 vec4F32DivScalar(Vec4F32 v, F32 scalar) {
-    return (Vec4F32) {v.x / scalar, v.y / scalar, v.z / scalar, v.w / scalar};
+    return (Vec4F32) { v.x / scalar, v.y / scalar, v.z / scalar, v.w / scalar };
 }
 
 Vec4F32 vec4F32Negate(Vec4F32 a) {
-    return (Vec4F32) {-a.x, -a.y, -a.z, -a.w};
+    return (Vec4F32) { -a.x, -a.y, -a.z, -a.w };
 }
 
 Vec4F32 vec4F32Inverse(Vec4F32 a) {
-    return (Vec4F32) {1.0f / a.x, 1.0f / a.y, 1.0f / a.z, 1.0f / a.w};
+    return (Vec4F32) { 1.0f / a.x, 1.0f / a.y, 1.0f / a.z, 1.0f / a.w };
 }
 
 F32 vec4F32LengthSquared(Vec4F32 v) {
@@ -800,18 +804,20 @@ B8 vec4F32Equals(Vec4F32 a, Vec4F32 b) {
 
 Vec4F32 vec4F32Clamp(Vec4F32 v, Vec4F32 minValue, Vec4F32 maxValue) {
     return (Vec4F32) {
-        clamp(v.x, minValue.x, maxValue.x),
-        clamp(v.y, minValue.y, maxValue.y),
-        clamp(v.z, minValue.z, maxValue.z),
-        clamp(v.w, minValue.w, maxValue.w)};
+               clamp(v.x, minValue.x, maxValue.x),
+               clamp(v.y, minValue.y, maxValue.y),
+               clamp(v.z, minValue.z, maxValue.z),
+               clamp(v.w, minValue.w, maxValue.w)
+    };
 }
 
 Vec4F32 vec4F32ClampScalar(Vec4F32 v, F32 minValue, F32 maxValue) {
     return (Vec4F32) {
-        clamp(v.x, minValue, maxValue),
-        clamp(v.y, minValue, maxValue),
-        clamp(v.z, minValue, maxValue),
-        clamp(v.w, minValue, maxValue)};
+               clamp(v.x, minValue, maxValue),
+               clamp(v.y, minValue, maxValue),
+               clamp(v.z, minValue, maxValue),
+               clamp(v.w, minValue, maxValue)
+    };
 }
 
 Vec4F32 vec4F32Lerp(Vec4F32 a, Vec4F32 b, F32 t) {
@@ -1141,27 +1147,27 @@ Mat4F32 mat4F32RotateZyx(Vec3F32 angleRad) {
 }
 
 Vec3F32 mat4F32Left(Mat4F32 m) {
-    return Vec3Normalize((Vec3F32) {-m.m0, -m.m4, -m.m8});
+    return Vec3Normalize((Vec3F32) { -m.m0, -m.m4, -m.m8 });
 }
 
 Vec3F32 mat4F32Right(Mat4F32 m) {
-    return Vec3Normalize((Vec3F32) {m.m0, m.m4, m.m8});
+    return Vec3Normalize((Vec3F32) { m.m0, m.m4, m.m8 });
 }
 
 Vec3F32 mat4F32Down(Mat4F32 m) {
-    return Vec3Normalize((Vec3F32) {-m.m1, -m.m5, -m.m9});
+    return Vec3Normalize((Vec3F32) { -m.m1, -m.m5, -m.m9 });
 }
 
 Vec3F32 mat4F32Up(Mat4F32 m) {
-    return Vec3Normalize((Vec3F32) {m.m1, m.m5, m.m9});
+    return Vec3Normalize((Vec3F32) { m.m1, m.m5, m.m9 });
 }
 
 Vec3F32 mat4F32Forward(Mat4F32 m) {
-    return Vec3Normalize((Vec3F32) {-m.m2, -m.m6, -m.m10});
+    return Vec3Normalize((Vec3F32) { -m.m2, -m.m6, -m.m10 });
 }
 
 Vec3F32 mat4F32Backward(Mat4F32 m) {
-    return Vec3Normalize((Vec3F32) {m.m2, m.m6, m.m10});
+    return Vec3Normalize((Vec3F32) { m.m2, m.m6, m.m10 });
 }
 
 Mat4F32 mat4F32Frustum(F32 left, F32 right, F32 bottom, F32 top, F32 near, F32 far) {
@@ -1242,26 +1248,26 @@ Mat4F32 mat4F32LookAt(Vec3F32 position, Vec3F32 target, Vec3F32 Up) {
 // BRIEF: Quaternion
 
 QuatF32 quatF32Identity(void) {
-    return (QuatF32) {0.0f, 0.0f, 0.0f, 1.0f};
+    return (QuatF32) { 0.0f, 0.0f, 0.0f, 1.0f };
 }
 
 QuatF32 quatF32Add(QuatF32 a, QuatF32 b) {
-    QuatF32 result = {a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w};
+    QuatF32 result = { a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w };
     return result;
 }
 
 QuatF32 quatF32AddScalar(QuatF32 a, F32 scalar) {
-    QuatF32 result = {a.x + scalar, a.y + scalar, a.z + scalar, a.w + scalar};
+    QuatF32 result = { a.x + scalar, a.y + scalar, a.z + scalar, a.w + scalar };
     return result;
 }
 
 QuatF32 quatF32Sub(QuatF32 a, QuatF32 b) {
-    QuatF32 result = {a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w};
+    QuatF32 result = { a.x - b.x, a.y - b.y, a.z - b.z, a.w - b.w };
     return result;
 }
 
 QuatF32 quatF32SubScalar(QuatF32 q, F32 scalar) {
-    QuatF32 result = {q.x - scalar, q.y - scalar, q.z - scalar, q.w - scalar};
+    QuatF32 result = { q.x - scalar, q.y - scalar, q.z - scalar, q.w - scalar };
     return result;
 }
 
@@ -1277,17 +1283,17 @@ QuatF32 quatF32Mul(QuatF32 a, QuatF32 b) {
 }
 
 QuatF32 quatF32MulScalar(QuatF32 q, F32 scalar) {
-    QuatF32 result = {q.x * scalar, q.y * scalar, q.z * scalar, q.w * scalar};
+    QuatF32 result = { q.x * scalar, q.y * scalar, q.z * scalar, q.w * scalar };
     return result;
 }
 
 QuatF32 quatF32Div(QuatF32 a, QuatF32 b) {
-    QuatF32 result = {a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w};
+    QuatF32 result = { a.x / b.x, a.y / b.y, a.z / b.z, a.w / b.w };
     return result;
 }
 
 QuatF32 quatF32DivScalar(QuatF32 a, F32 scalar) {
-    QuatF32 result = {a.x / scalar, a.y / scalar, a.z / scalar, a.w / scalar};
+    QuatF32 result = { a.x / scalar, a.y / scalar, a.z / scalar, a.w / scalar };
     return result;
 }
 
@@ -1314,11 +1320,11 @@ QuatF32 quatF32Normalize(QuatF32 q) {
 }
 
 QuatF32 quatF32Negate(QuatF32 q) {
-    return (QuatF32) {-q.x, -q.y, -q.z, -q.w};
+    return (QuatF32) { -q.x, -q.y, -q.z, -q.w };
 }
 
 QuatF32 quatF32Conjugate(QuatF32 q) {
-    return (QuatF32) {-q.x, -q.y, -q.z, q.w};
+    return (QuatF32) { -q.x, -q.y, -q.z, q.w };
 }
 
 QuatF32 quatF32Inverse(QuatF32 q) {
@@ -1507,7 +1513,7 @@ void quatF32ToAxisAngle(QuatF32 q, Vec3F32* out_pAxis, F32* out_pAngle) {
         q = quatF32Normalize(q);
     }
 
-    Vec3F32 resultAxis = {0.0f, 0.0f, 0.0f};
+    Vec3F32 resultAxis = { 0.0f, 0.0f, 0.0f };
     F32 resultAngle = 2.0f * f32Acos(q.w);
     F32 den = f32Sqrt(1.0f - q.w * q.w);
 
@@ -1570,30 +1576,30 @@ Vec3F32 quatF32ToEuler(QuatF32 q) {
 // BRIEF: Colors
 
 U32 u32FromColor3U32(Color3U32 c) {
-    return (((c.r & 0x0FF) << 16) | ((c.g & 0x0FF) << 8) | (c.b & 0x0FF));
+    return ((c.r & 0x0FF) << 16) | ((c.g & 0x0FF) << 8) | (c.b & 0x0FF);
 }
 
 Color3U32 color3U32FromU32(U32 u) {
-    Color3U32 result = (Color3U32) {(u >> 16) & 0x0FF, (u >> 8) & 0x0FF, (u)&0x0FF};
+    Color3U32 result = (Color3U32) { (u >> 16) & 0x0FF, (u >> 8) & 0x0FF, (u) & 0x0FF };
     return result;
 }
 
 Color3F32 color3F32FromColor3U32(Color3U32 c) {
-    Color3F32 result = (Color3F32) {c.r / 255.0f, c.g / 255.0f, c.b / 255.0f};
+    Color3F32 result = (Color3F32) { c.r / 255.0f, c.g / 255.0f, c.b / 255.0f };
     return result;
 }
 
 Color3U32 color3U32FromColor3F32(Color3F32 c) {
-    Color3U32 result = (Color3U32) {c.r * 255, c.g * 255, c.b * 255};
+    Color3U32 result = (Color3U32) { c.r* 255, c.g* 255, c.b* 255 };
     return result;
 }
 
 ColorF32 colorF32FromColorU32(ColorU32 c) {
-    ColorF32 result = (ColorF32) {c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, c.a / 255.0f};
+    ColorF32 result = (ColorF32) { c.r / 255.0f, c.g / 255.0f, c.b / 255.0f, c.a / 255.0f };
     return result;
 }
 
 ColorU32 colorU32FromColorF32(ColorF32 c) {
-    ColorU32 result = (ColorU32) {c.r * 255, c.g * 255, c.b * 255, c.a * 255};
+    ColorU32 result = (ColorU32) { c.r* 255, c.g* 255, c.b* 255, c.a* 255 };
     return result;
 }

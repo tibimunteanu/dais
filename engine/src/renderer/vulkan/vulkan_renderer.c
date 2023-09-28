@@ -3,13 +3,14 @@
 
 #include <string.h>
 
-internal VkAllocationCallbacks* pVkAllocator = NULL;
-internal VkInstance vkInstance = VK_NULL_HANDLE;
-internal VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
-internal VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
-
-Result _getDeviceSwapchainSupport(
-    VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VulkanDeviceSwapchainSupport* out_pDeviceSwapchainSupport
+private VkAllocationCallbacks* pVkAllocator = NULL;
+private VkInstance vkInstance = VK_NULL_HANDLE;
+private VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
+private VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
+private Result _getDeviceSwapchainSupport(
+    VkPhysicalDevice physicalDevice,
+    VkSurfaceKHR surface,
+    VulkanDeviceSwapchainSupport* out_pDeviceSwapchainSupport
 ) {
     // Surface capabilities
     VkResult result =
@@ -33,7 +34,10 @@ Result _getDeviceSwapchainSupport(
                 (VkSurfaceFormatKHR*)malloc(sizeof(VkSurfaceFormatKHR) * out_pDeviceSwapchainSupport->formatCount);
         }
         result = vkGetPhysicalDeviceSurfaceFormatsKHR(
-            physicalDevice, surface, &out_pDeviceSwapchainSupport->formatCount, out_pDeviceSwapchainSupport->pFormats
+            physicalDevice,
+            surface,
+            &out_pDeviceSwapchainSupport->formatCount,
+            out_pDeviceSwapchainSupport->pFormats
         );
 
         if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
@@ -43,7 +47,10 @@ Result _getDeviceSwapchainSupport(
 
     // Present modes
     result = vkGetPhysicalDeviceSurfacePresentModesKHR(
-        physicalDevice, surface, &out_pDeviceSwapchainSupport->presentModeCount, NULL
+        physicalDevice,
+        surface,
+        &out_pDeviceSwapchainSupport->presentModeCount,
+        NULL
     );
 
     if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
@@ -69,8 +76,7 @@ Result _getDeviceSwapchainSupport(
 
     return OK;
 }
-
-U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
+private U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     // Check for required features
     VkPhysicalDeviceFeatures physicalDeviceFeatures;
     vkGetPhysicalDeviceFeatures(physicalDevice, &physicalDeviceFeatures);
@@ -145,7 +151,7 @@ U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     }
 
     // Check for swapchain support
-    VulkanDeviceSwapchainSupport vulkanDeviceSwapchainSupport = {0};
+    VulkanDeviceSwapchainSupport vulkanDeviceSwapchainSupport = { 0 };
     if (failed(_getDeviceSwapchainSupport(physicalDevice, vkSurface, &vulkanDeviceSwapchainSupport))) {
         return 0;
     }
@@ -160,7 +166,7 @@ U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     }
 
     // Check for required extensions
-    CStringLit deviceExtensionNames[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+    CStringLit deviceExtensionNames[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
     if (arrayCount(deviceExtensionNames) > 0) {
         U32 availableExtensionsCount = 0;
 
@@ -268,8 +274,11 @@ U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
 
     return score;
 }
-
-Result vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
+public Result vulkanRendererInit(
+    Arena* pArena,
+    Platform* pPlatform,
+    Window* pWindow
+) {
     if (volkInitialize() != VK_SUCCESS) {
         panic("Failed to initialize vulkan loader");
     }
@@ -286,7 +295,7 @@ Result vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     };
 
     CStringLit surfaceExtensionName = vulkanPlatformGetSurfaceExtensionName();
-    CStringLit instanceExtensionNames[] = {VK_KHR_SURFACE_EXTENSION_NAME, surfaceExtensionName};
+    CStringLit instanceExtensionNames[] = { VK_KHR_SURFACE_EXTENSION_NAME, surfaceExtensionName };
     CStringLit instanceLayers[] = {};
 
     VkInstanceCreateInfo instanceCreateInfo = {
@@ -363,8 +372,7 @@ Result vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     logInfo("Vulkan renderer initialized");
     return OK;
 }
-
-void vulkanRendererRelease(void) {
+public void vulkanRendererRelease(void) {
     logInfo("Vulkan renderer releasing");
 
     vkDestroyInstance(vkInstance, pVkAllocator);

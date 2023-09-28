@@ -1,17 +1,16 @@
 #include "base/base.h"
 
 #ifdef OS_WINDOWS
-#    include "platform/win32/win32_base.h"
-#    include "platform/win32/win32_platform_types.h"
-#    include "core/log.h"
-#    include "core/arena.h"
+    #include "platform/win32/win32_base.h"
+    #include "platform/win32/win32_platform_types.h"
+    #include "core/log.h"
+    #include "core/arena.h"
 
-// private
-internal void _pollMonitors(void) {
+private void _pollMonitors(void) {
     logInfo("Polling monitors...");
 }
 
-internal LRESULT CALLBACK _helperWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+private LRESULT CALLBACK _helperWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_DISPLAYCHANGE: {
             _pollMonitors();
@@ -42,19 +41,33 @@ internal LRESULT CALLBACK _helperWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam,
     return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
 
-internal Result _createHelperWindow(void) {
+private Result _getModuleHandle(void) {
     Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 
-    MSG msg;
-    WNDCLASSEXW wc = {sizeof(wc)};
-    HMODULE module = GetModuleHandle(0);
+    if (!GetModuleHandleExW(
+        GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+        (const WCHAR*)&pDais,
+        &pWin32Platform->instance
+        )) {
+        panic("Failed to get the module handle");
+    }
 
-    wc.style = CS_OWNDC;
-    wc.lpfnWndProc = (WNDPROC)_helperWindowProc;
-    wc.hInstance = module;
-    wc.lpszClassName = L"DaisHelperWindow";
+    return OK;
+}
 
-    pWin32Platform->helperWindowClass = RegisterClassExW(&wc);
+private Result _createHelperWindow(void) {
+    Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
+
+    WNDCLASSEXW windowClassCreateInfo = {
+        .cbSize = sizeof(WNDCLASSEXW),
+        .style = CS_OWNDC,
+        .lpfnWndProc = (WNDPROC)_helperWindowProc,
+        .hInstance = pWin32Platform->instance,
+        .lpszClassName = L"DaisHelperWindow",
+    };
+
+    pWin32Platform->helperWindowClass = RegisterClassExW(&windowClassCreateInfo);
+
     if (!pWin32Platform->helperWindowClass) {
         panic("Failed to register helper window class");
     }
@@ -70,7 +83,7 @@ internal Result _createHelperWindow(void) {
         1,
         NULL,
         NULL,
-        module,
+        pWin32Platform->instance,
         NULL
     );
 
@@ -81,19 +94,23 @@ internal Result _createHelperWindow(void) {
     // NOTE: if a STARTUPINFO is passed along, the first ShowWindow is ignored
     ShowWindow(pWin32Platform->helperWindowHandle, SW_HIDE);
 
-    // register for HID device notifications
-    {
-        DEV_BROADCAST_DEVICEINTERFACE_W dbi = {
-            .dbcc_size = sizeof(dbi),
-            .dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE,
-            .dbcc_classguid = (GUID) {0x4d1e55b2, 0xf16f, 0x11cf, {0x88, 0xcb, 0x00, 0x11, 0x11, 0x00, 0x00, 0x30}},
-        };
+    DEV_BROADCAST_DEVICEINTERFACE_W dbi = {
+        .dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE_W),
+        .dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE,
+        .dbcc_classguid = (GUID) { 0x4d1e55b2, 0xf16f, 0x11cf, { 0x88, 0xcb, 0x00, 0x11, 0x11, 0x00, 0x00, 0x30 } },
+    };
 
-        pWin32Platform->deviceNotificationHandle = RegisterDeviceNotificationW(
-            pWin32Platform->helperWindowHandle, (DEV_BROADCAST_HDR*)&dbi, DEVICE_NOTIFY_WINDOW_HANDLE
-        );
+    pWin32Platform->deviceNotificationHandle = RegisterDeviceNotificationW(
+        pWin32Platform->helperWindowHandle,
+        (DEV_BROADCAST_HDR*)&dbi,
+        DEVICE_NOTIFY_WINDOW_HANDLE
+    );
+
+    if (!pWin32Platform->deviceNotificationHandle) {
+        panic("Failed to register for device notifications");
     }
 
+    MSG msg;
     while (PeekMessageW(&msg, pWin32Platform->helperWindowHandle, 0, 0, PM_REMOVE)) {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
@@ -102,21 +119,40 @@ internal Result _createHelperWindow(void) {
     return OK;
 }
 
-// init
-Result platformInit(Arena* pArena) {
+private Result _destroyHelperWindow(void) {
+    Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
+
+    if (pWin32Platform->deviceNotificationHandle) {
+        if (UnregisterDeviceNotification(pWin32Platform->deviceNotificationHandle) == 0) {
+            panic("Failed to unregister device notification");
+        }
+        pWin32Platform->deviceNotificationHandle = 0;
+    }
+
+    if (pWin32Platform->helperWindowHandle) {
+        if (DestroyWindow(pWin32Platform->helperWindowHandle) == 0) {
+            panic("Failed to destroy helper window");
+        }
+        pWin32Platform->helperWindowHandle = 0;
+    }
+
+    if (pWin32Platform->helperWindowClass) {
+        if (UnregisterClassW(MAKEINTATOM(pWin32Platform->helperWindowClass), pWin32Platform->instance) == 0) {
+            panic("Failed to unregister helper window class");
+        }
+        pWin32Platform->helperWindowClass = 0;
+    }
+
+    return OK;
+}
+
+public Result platformInit(Arena* pArena) {
     pDais->pPlatform = arenaPushStructZero(pArena, Platform);
     pDais->pPlatform->pInternal = arenaPushStructZero(pArena, Win32Platform);
 
-    Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
+    // Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 
-    if (!GetModuleHandleExW(
-            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-            (const WCHAR*)&pDais,
-            (HMODULE*)&pWin32Platform->instance
-        )) {
-        panic("Failed to get the module handle");
-    }
-
+    try(_getModuleHandle());
     try(_createHelperWindow());
 
     _pollMonitors();
@@ -124,7 +160,9 @@ Result platformInit(Arena* pArena) {
     return OK;
 }
 
-Result platformRelease(void) {
+public Result platformRelease(void) {
+    try(_destroyHelperWindow());
+
     return OK;
 }
 

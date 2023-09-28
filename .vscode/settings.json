@@ -1,5 +1,10 @@
 {
   "editor.fontSize": 13.8,
+  "[c]": {
+    "editor.defaultFormatter": "zachflower.uncrustify"
+  },
+  "uncrustify.useTempFile": true,
+  "uncrustify.executablePath.windows": "C:\\Program Files\\Uncrustify\\bin\\uncrustify.exe",
   "files.associations": {
     "base.h": "c",
     "*.rh": "c",
@@ -15,9 +20,24 @@
     "platform.h": "c",
     "chrono": "c",
     "system_error": "c",
-    "xlocale": "c"
+    "xlocale": "c",
+    "win32_base.h": "c"
   },
   "todohighlight.keywords": [
+    {
+      "text": "private",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "public",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
     {
       "text": "internal",
       "color": "#fb4934",
