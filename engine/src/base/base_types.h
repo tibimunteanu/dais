@@ -50,3 +50,11 @@ typedef signed char B8;
 
 typedef char* CString;
 typedef const char* CStringLit;
+
+typedef I32 Result;
+
+typedef enum ResultType {
+    ERROR = -1,
+    INCOMPLETE = 0,
+    OK = 1,
+} ResultType;

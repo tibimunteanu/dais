@@ -2,4 +2,4 @@
 
 #include "dais.h"
 
-API B8 engineRun(void);
+API Result engineRun(void);

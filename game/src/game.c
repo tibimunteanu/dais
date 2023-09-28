@@ -9,7 +9,7 @@ GameConfig configure(void) {
     };
 }
 
-B8 awake(void) {
+Result awake(void) {
     logInfo("Awakening game");
 
     pArena = arenaCreate(gigabytes(1));
@@ -23,32 +23,36 @@ B8 awake(void) {
     }
     logInfo("After temp block pos is %llu", pArena->pos);
 
-    return true;
+    return OK;
 }
 
-B8 start(void) {
+Result start(void) {
     logInfo("Starting game");
+
+    // panic("Panic at START");
 
     U64 stall = 10000000000;
     while (stall--)
         ;
 
-    return true;
+    return OK;
 }
 
-B8 update(void) {
-    return true;
+Result update(void) {
+    return OK;
 }
 
-B8 render(void) {
-    return true;
+Result render(void) {
+    return OK;
 }
 
-B8 shutdown(void) {
+Result shutdown(void) {
     logInfo("Shutting down game");
+
+    // panic("If shutdown panics, the engine still continues shutting down");
 
     arenaDestroy(pArena);
     pArena = NULL;
 
-    return true;
+    return OK;
 }

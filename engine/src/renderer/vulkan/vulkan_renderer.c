@@ -8,7 +8,7 @@ internal VkInstance vkInstance = VK_NULL_HANDLE;
 internal VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
 internal VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
 
-B8 _getDeviceSwapchainSupport(
+Result _getDeviceSwapchainSupport(
     VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VulkanDeviceSwapchainSupport* out_pDeviceSwapchainSupport
 ) {
     // Surface capabilities
@@ -16,8 +16,7 @@ B8 _getDeviceSwapchainSupport(
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &out_pDeviceSwapchainSupport->capabilities);
 
     if (result != VK_SUCCESS) {
-        logError("vkGetPhysicalDeviceSurfaceCapabilitiesKHR: Failed to get surface capabilities");
-        return false;
+        panic("Failed to get physical device surface caps");
     }
 
     // Surface formats
@@ -25,8 +24,7 @@ B8 _getDeviceSwapchainSupport(
         vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &out_pDeviceSwapchainSupport->formatCount, NULL);
 
     if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-        logError("vkGetPhysicalDeviceSurfaceFormatsKHR: Failed to get surface format count");
-        return false;
+        panic("Failed to get physical device surface formats");
     }
 
     if (out_pDeviceSwapchainSupport->formatCount != 0) {
@@ -39,8 +37,7 @@ B8 _getDeviceSwapchainSupport(
         );
 
         if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-            logError("vkGetPhysicalDeviceSurfaceFormatsKHR: Failed to get surface formats");
-            return false;
+            panic("Failed to get physical device surface formats");
         }
     }
 
@@ -50,8 +47,7 @@ B8 _getDeviceSwapchainSupport(
     );
 
     if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-        logError("vkGetPhysicalDeviceSurfacePresentModesKHR: Failed to get surface present mode count");
-        return false;
+        panic("Failed to get surface present modes");
     }
 
     if (out_pDeviceSwapchainSupport->presentModeCount != 0) {
@@ -67,12 +63,11 @@ B8 _getDeviceSwapchainSupport(
         );
 
         if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-            logError("vkGetPhysicalDeviceSurfacePresentModesKHR: Failed to get surface present modes");
-            return false;
+            panic("Failed to get surface present modes");
         }
     }
 
-    return true;
+    return OK;
 }
 
 U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
@@ -151,7 +146,7 @@ U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
 
     // Check for swapchain support
     VulkanDeviceSwapchainSupport vulkanDeviceSwapchainSupport = {0};
-    if (!_getDeviceSwapchainSupport(physicalDevice, vkSurface, &vulkanDeviceSwapchainSupport)) {
+    if (failed(_getDeviceSwapchainSupport(physicalDevice, vkSurface, &vulkanDeviceSwapchainSupport))) {
         return 0;
     }
     if (vulkanDeviceSwapchainSupport.formatCount == 0 || vulkanDeviceSwapchainSupport.presentModeCount == 0) {
@@ -274,10 +269,9 @@ U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     return score;
 }
 
-B8 vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
+Result vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     if (volkInitialize() != VK_SUCCESS) {
-        logError("Failed to initialize vulkan loader");
-        return false;
+        panic("Failed to initialize vulkan loader");
     }
 
     // Instance
@@ -307,8 +301,7 @@ B8 vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     };
 
     if (vkCreateInstance(&instanceCreateInfo, pVkAllocator, &vkInstance) != VK_SUCCESS) {
-        logError("vkCreateInstance: Failed to create instance");
-        return false;
+        panic("Failed to create vulkan instance");
     }
 
     volkLoadInstanceOnly(vkInstance);
@@ -316,8 +309,7 @@ B8 vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     // Version
     U32 vkInstanceVersion;
     if (vkEnumerateInstanceVersion(&vkInstanceVersion) != VK_SUCCESS) {
-        logError("vkEnumerateInstanceVersion: Failed to get instance version");
-        return false;
+        panic("Failed to get vulkan instance version");
     }
 
     logTrace(
@@ -328,23 +320,18 @@ B8 vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     );
 
     // Surface
-    if (!vulkanPlatformCreateSurface(vkInstance, pPlatform, pWindow, pVkAllocator, &vkSurface)) {
-        logError("Failed to create vulkan surface");
-        return false;
-    }
+    try(vulkanPlatformCreateSurface(vkInstance, pPlatform, pWindow, pVkAllocator, &vkSurface));
 
     // Physical device
     U32 physicalDeviceCount = 0;
     VkResult result = vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, NULL);
 
     if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-        logError("vkEnumeratePhysicalDevices: Failed to get physical device count");
-        return false;
+        panic("Failed to get physical device count");
     }
 
     if (physicalDeviceCount == 0) {
-        logError("No physical devices found");
-        return false;
+        panic("No physical devices found");
     }
 
     physicalDeviceCount = min(physicalDeviceCount, 32);
@@ -352,8 +339,7 @@ B8 vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     result = vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, physicalDevices);
 
     if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-        logError("vkEnumeratePhysicalDevices: Failed to enumerate physical devices");
-        return false;
+        panic("Failed to enumerate physical devices");
     }
 
     U32 maxScore = 0;
@@ -369,14 +355,13 @@ B8 vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     }
 
     if (maxScoreIndex == -1) {
-        logError("No suitable physical device found");
-        return false;
+        panic("Failed to find suitable physical devices");
     }
 
     vkPhysicalDevice = physicalDevices[maxScoreIndex];
 
     logInfo("Vulkan renderer initialized");
-    return true;
+    return OK;
 }
 
 void vulkanRendererRelease(void) {

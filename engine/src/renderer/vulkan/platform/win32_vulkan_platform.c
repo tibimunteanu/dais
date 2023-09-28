@@ -9,7 +9,7 @@ CStringLit vulkanPlatformGetSurfaceExtensionName(void) {
     return "VK_KHR_win32_surface";
 }
 
-B8 vulkanPlatformCreateSurface(
+Result vulkanPlatformCreateSurface(
     VkInstance vkInstance,
     Platform* pPlatform,
     Window* pWindow,
@@ -20,8 +20,7 @@ B8 vulkanPlatformCreateSurface(
         (PFN_vkCreateWin32SurfaceKHR)vkGetInstanceProcAddr(vkInstance, "vkCreateWin32SurfaceKHR");
 
     if (vkCreateWin32SurfaceKHR == NULL) {
-        logError("vkCreateWin32SurfaceKHR: Failed to load function");
-        return false;
+        panic("Failed to load vulkan create surface function pointer");
     }
 
     Win32Platform* win32Platform = pPlatform->pInternal;
@@ -36,10 +35,9 @@ B8 vulkanPlatformCreateSurface(
     };
 
     if (vkCreateWin32SurfaceKHR(vkInstance, &surfaceCreateInfo, pVkAllocator, out_pVkSurface) != VK_SUCCESS) {
-        logError("vkCreateWin32SurfaceKHR: Failed to create surface");
-        return false;
+        panic("Failed to create vulkan surface");
     }
 
-    return true;
+    return OK;
 }
 #endif

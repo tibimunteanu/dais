@@ -23,7 +23,7 @@ typedef struct LogConfig {
     char fileName[1024];
 } LogConfig;
 
-API B8 logInit(Arena* pArena, LogConfig config);
+API Result logInit(Arena* pArena, LogConfig config);
 
 API void logRelease(void);
 

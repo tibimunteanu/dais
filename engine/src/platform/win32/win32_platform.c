@@ -42,7 +42,7 @@ internal LRESULT CALLBACK _helperWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam,
     return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
 
-internal B32 _createHelperWindow(void) {
+internal Result _createHelperWindow(void) {
     Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 
     MSG msg;
@@ -56,8 +56,7 @@ internal B32 _createHelperWindow(void) {
 
     pWin32Platform->helperWindowClass = RegisterClassExW(&wc);
     if (!pWin32Platform->helperWindowClass) {
-        logError("Failed to register helper window class");
-        return false;
+        panic("Failed to register helper window class");
     }
 
     pWin32Platform->helperWindowHandle = CreateWindowExW(
@@ -76,8 +75,7 @@ internal B32 _createHelperWindow(void) {
     );
 
     if (!pWin32Platform->helperWindowHandle) {
-        logError("Failed to create helper window");
-        return false;
+        panic("Failed to create helper window");
     }
 
     // NOTE: if a STARTUPINFO is passed along, the first ShowWindow is ignored
@@ -101,11 +99,11 @@ internal B32 _createHelperWindow(void) {
         DispatchMessageW(&msg);
     }
 
-    return true;
+    return OK;
 }
 
 // init
-B32 platformInit(Arena* pArena) {
+Result platformInit(Arena* pArena) {
     pDais->pPlatform = arenaPushZero(pArena, sizeof(Platform));
     pDais->pPlatform->pInternal = arenaPushZero(pArena, sizeof(Win32Platform));
 
@@ -116,22 +114,18 @@ B32 platformInit(Arena* pArena) {
             (const WCHAR*)&pDais,
             (HMODULE*)&pWin32Platform->instance
         )) {
-        logFatal("Failed to retrieve own module handle");
-        return false;
+        panic("Failed to get the module handle");
     }
 
-    if (!_createHelperWindow()) {
-        logFatal("Failed to create helper window");
-        return false;
-    }
+    try(_createHelperWindow());
 
     _pollMonitors();
 
-    return true;
+    return OK;
 }
 
-B32 platformRelease(void) {
-    return true;
+Result platformRelease(void) {
+    return OK;
 }
 
 #endif

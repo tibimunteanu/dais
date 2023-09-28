@@ -74,4 +74,33 @@
         memoryCopy((dst), (src), sizeof(src)); \
     } while (0)
 
+// BRIEF: Result
+#define ok(expr)     (expr) >= 0
+#define failed(expr) (expr) < 0
+
+#define alert(expr)                                                                            \
+    {                                                                                          \
+        Result result = (expr);                                                                \
+        if (failed(result)) {                                                                  \
+            logError("|->    (fn: %s, file: %s, line: %d)", __FUNCTION__, __FILE__, __LINE__); \
+        }                                                                                      \
+    }
+
+#define try(expr)                                                                              \
+    {                                                                                          \
+        Result result = (expr);                                                                \
+        if (failed(result)) {                                                                  \
+            logFatal("|->    (fn: %s, file: %s, line: %d)", __FUNCTION__, __FILE__, __LINE__); \
+            return result;                                                                     \
+        }                                                                                      \
+    }
+
+#define panic(message)                                                                                             \
+    logFatal("Panic: (fn: %s, file: %s, line: %d, err: %d) %s", __FUNCTION__, __FILE__, __LINE__, ERROR, message); \
+    return ERROR
+
+#define panicErr(message, err)                                                                                   \
+    logFatal("Panic: (fn: %s, file: %s, line: %d, err: %d) %s", __FUNCTION__, __FILE__, __LINE__, err, message); \
+    return err
+
 // BRIEF: linked list helpers

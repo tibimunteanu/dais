@@ -6,7 +6,29 @@
 
 Engine* pDais = NULL;
 
-B8 engineRun(void) {
+internal Result _loadGameLibrary(void) {
+    void* pGameLib = libraryOpen("game.dll");
+
+    if (!pGameLib) {
+        panic("Failed to open game library");
+    }
+
+    pDais->pGame->configure = libraryLoadFunction(pGameLib, "configure");
+    pDais->pGame->awake = libraryLoadFunction(pGameLib, "awake");
+    pDais->pGame->start = libraryLoadFunction(pGameLib, "start");
+    pDais->pGame->update = libraryLoadFunction(pGameLib, "update");
+    pDais->pGame->render = libraryLoadFunction(pGameLib, "render");
+    pDais->pGame->shutdown = libraryLoadFunction(pGameLib, "shutdown");
+
+    if (!pDais->pGame->configure || !pDais->pGame->awake || !pDais->pGame->start || !pDais->pGame->update ||
+        !pDais->pGame->render || !pDais->pGame->shutdown) {
+        panic("Failed to load game function pointers");
+    }
+
+    return OK;
+}
+
+Result engineRun(void) {
     Arena* pArena = arenaCreate(gigabytes(1));
 
     pDais = arenaPushZero(pArena, sizeof(Engine));
@@ -15,57 +37,29 @@ B8 engineRun(void) {
     LogConfig logConfig = {
         .fileName = "log.txt",
     };
-    if (!logInit(pArena, logConfig)) {
-        return false;
-    }
+
+    try(logInit(pArena, logConfig));
 
     pDais->pGame = arenaPushZero(pArena, sizeof(Game));
 
-    void* pSandboxLib = libraryOpen("sandbox.dll");
-
-    pDais->pGame->configure = libraryLoadFunction(pSandboxLib, "configure");
-    pDais->pGame->awake = libraryLoadFunction(pSandboxLib, "awake");
-    pDais->pGame->start = libraryLoadFunction(pSandboxLib, "start");
-    pDais->pGame->update = libraryLoadFunction(pSandboxLib, "update");
-    pDais->pGame->render = libraryLoadFunction(pSandboxLib, "render");
-    pDais->pGame->shutdown = libraryLoadFunction(pSandboxLib, "shutdown");
-
-    if (!pDais->pGame->configure || !pDais->pGame->awake || !pDais->pGame->start || !pDais->pGame->update ||
-        !pDais->pGame->render || !pDais->pGame->shutdown) {
-        logFatal("Game is missing required functions");
-        return false;
-    }
+    try(_loadGameLibrary());
 
     pDais->pGame->config = pDais->pGame->configure();
     pDais->pGame->stage = GAME_STAGE_NONE;
 
-    if (!platformInit(pArena)) {
-        logFatal("Failed to initialize the platform");
-        return false;
-    }
+    try(platformInit(pArena));
 
     Window window = {0};
-    if (!windowCreate(pArena, pDais->pGame->config.name, pDais->pGame->config.startRect, &window)) {
-        logFatal("Failed to create window");
-        return false;
-    }
+    try(windowCreate(pArena, pDais->pGame->config.name, pDais->pGame->config.startRect, &window));
 
-    if (!vulkanRendererInit(pArena, pDais->pPlatform, &window)) {
-        logFatal("Failed to initialize vulkan renderer");
-    }
+    try(vulkanRendererInit(pArena, pDais->pPlatform, &window));
 
     pDais->pGame->stage = GAME_STAGE_AWAKING;
-    if (!pDais->pGame->awake()) {
-        logFatal("Failed to awake game");
-        return false;
-    }
+    try(pDais->pGame->awake());
     pDais->pGame->stage = GAME_STAGE_AWAKEN;
 
     pDais->pGame->stage = GAME_STAGE_STARTING;
-    if (!pDais->pGame->start()) {
-        logFatal("Failed to start game");
-        return false;
-    }
+    try(pDais->pGame->start());
     pDais->pGame->stage = GAME_STAGE_STARTED;
 
     // loop
@@ -77,15 +71,10 @@ B8 engineRun(void) {
     // }
 
     // shutdown
-    B8 shutdownOk = true;
-
     pDais->isRunning = false;
 
     pDais->pGame->stage = GAME_STAGE_SHUTTING_DOWN;
-    if (!pDais->pGame->shutdown()) {
-        logError("Failed to shutdown game");
-        shutdownOk = false;
-    }
+    alert(pDais->pGame->shutdown());
     pDais->pGame->stage = GAME_STAGE_NONE;
 
     vulkanRendererRelease();
@@ -97,5 +86,5 @@ B8 engineRun(void) {
     arenaDestroy(pArena);
     pArena = NULL;
 
-    return shutdownOk;
+    return OK;
 }

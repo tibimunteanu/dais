@@ -10,11 +10,11 @@ typedef struct LogState {
 
 internal LogState* pState;
 
-B8 logInit(Arena* pArena, LogConfig config) {
+Result logInit(Arena* pArena, LogConfig config) {
     pState = (LogState*)arenaPushZero(pArena, sizeof(LogState));
     pState->config = config;
 
-    return true;
+    return OK;
 }
 
 void logRelease(void) {
