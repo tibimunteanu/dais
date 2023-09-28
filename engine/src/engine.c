@@ -31,7 +31,7 @@ internal Result _loadGameLibrary(void) {
 Result engineRun(void) {
     Arena* pArena = arenaCreate(gigabytes(1));
 
-    pDais = arenaPushZero(pArena, sizeof(Engine));
+    pDais = arenaPushStructZero(pArena, Engine);
 
     // Log init
     LogConfig logConfig = {
@@ -40,7 +40,7 @@ Result engineRun(void) {
 
     try(logInit(pArena, logConfig));
 
-    pDais->pGame = arenaPushZero(pArena, sizeof(Game));
+    pDais->pGame = arenaPushStructZero(pArena, Game);
 
     try(_loadGameLibrary());
 

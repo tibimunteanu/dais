@@ -11,7 +11,7 @@ typedef struct LogState {
 internal LogState* pState;
 
 Result logInit(Arena* pArena, LogConfig config) {
-    pState = (LogState*)arenaPushZero(pArena, sizeof(LogState));
+    pState = arenaPushStructZero(pArena, LogState);
     pState->config = config;
 
     return OK;
@@ -26,7 +26,7 @@ void logOutput(LogLevel level, CStringLit message, ...) {
         return;
     }
 
-    static CString levelStrings[] = {"[FATAL]: ", "[ERROR]: ", " [WARN]: ", " [INFO]: ", "[DEBUG]: ", "[TRACE]: "};
+    static CString levelStrings[] = {"FATAL :: ", "ERROR :: ", " WARN :: ", " INFO :: ", "DEBUG :: ", "TRACE :: "};
 
     __builtin_va_list args;
     va_start(args, message);

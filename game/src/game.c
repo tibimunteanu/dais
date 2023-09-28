@@ -29,7 +29,7 @@ Result awake(void) {
 Result start(void) {
     logInfo("Starting game");
 
-    // panic("Panic at START");
+    panic("Panic at START");
 
     U64 stall = 10000000000;
     while (stall--)

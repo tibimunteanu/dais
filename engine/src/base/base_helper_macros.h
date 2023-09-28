@@ -78,29 +78,27 @@
 #define ok(expr)     (expr) >= 0
 #define failed(expr) (expr) < 0
 
-#define alert(expr)                                                                            \
-    {                                                                                          \
-        Result result = (expr);                                                                \
-        if (failed(result)) {                                                                  \
-            logError("|->    (fn: %s, file: %s, line: %d)", __FUNCTION__, __FILE__, __LINE__); \
-        }                                                                                      \
+#define alert(expr)                                                              \
+    {                                                                            \
+        Result result = (expr);                                                  \
+        if (failed(result)) {                                                    \
+            logError("    | -> %s() - %s:%d", __FUNCTION__, __FILE__, __LINE__); \
+        }                                                                        \
     }
 
-#define try(expr)                                                                              \
-    {                                                                                          \
-        Result result = (expr);                                                                \
-        if (failed(result)) {                                                                  \
-            logFatal("|->    (fn: %s, file: %s, line: %d)", __FUNCTION__, __FILE__, __LINE__); \
-            return result;                                                                     \
-        }                                                                                      \
+#define try(expr)                                                                \
+    {                                                                            \
+        Result result = (expr);                                                  \
+        if (failed(result)) {                                                    \
+            logFatal("    | -> %s() - %s:%d", __FUNCTION__, __FILE__, __LINE__); \
+            return result;                                                       \
+        }                                                                        \
     }
 
-#define panic(message)                                                                                             \
-    logFatal("Panic: (fn: %s, file: %s, line: %d, err: %d) %s", __FUNCTION__, __FILE__, __LINE__, ERROR, message); \
-    return ERROR
-
-#define panicErr(message, err)                                                                                   \
-    logFatal("Panic: (fn: %s, file: %s, line: %d, err: %d) %s", __FUNCTION__, __FILE__, __LINE__, err, message); \
+#define panicErr(message, err)                                                                \
+    logFatal("PANIC -> %s() - %s:%d - error: %s", __FUNCTION__, __FILE__, __LINE__, message); \
     return err
+
+#define panic(message) panicErr(message, ERROR)
 
 // BRIEF: linked list helpers

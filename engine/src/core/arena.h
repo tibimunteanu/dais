@@ -36,11 +36,14 @@ API void arenaClear(Arena* pArena);
 API void arenaPop(Arena* pArena, U64 size);
 API void arenaPopTo(Arena* pArena, U64 pos);
 
-#define arenaPushArray(pArena, T, count)     (T*)arenaPush(pArena, sizeof(T) * (count))
-#define arenaPushArrayZero(pArena, T, count) (T*)arenaPushZero(pArena, sizeof(T) * (count))
+#define arenaPushStruct(pArena, T)                   (T*)arenaPush(pArena, sizeof(T))
+#define arenaPushStructZero(pArena, T)               (T*)arenaPushZero(pArena, sizeof(T))
+#define arenaPushStructAligned(pArena, T, align)     (T*)arenaPushAligned(pArena, sizeof(T), (align))
+#define arenaPushStructAlignedZero(pArena, T, align) (T*)arenaPushAlignedZero(pArena, sizeof(T), (align))
 
+#define arenaPushArray(pArena, T, count)               (T*)arenaPush(pArena, sizeof(T) * (count))
+#define arenaPushArrayZero(pArena, T, count)           (T*)arenaPushZero(pArena, sizeof(T) * (count))
 #define arenaPushArrayAligned(pArena, T, count, align) (T*)arenaPushAligned(pArena, sizeof(T) * (count), (align))
-
 #define arenaPushArrayAlignedZero(pArena, T, count, align) \
     (T*)arenaPushAlignedZero(pArena, sizeof(T) * (count), (align))
 

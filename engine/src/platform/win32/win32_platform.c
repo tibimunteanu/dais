@@ -104,8 +104,8 @@ internal Result _createHelperWindow(void) {
 
 // init
 Result platformInit(Arena* pArena) {
-    pDais->pPlatform = arenaPushZero(pArena, sizeof(Platform));
-    pDais->pPlatform->pInternal = arenaPushZero(pArena, sizeof(Win32Platform));
+    pDais->pPlatform = arenaPushStructZero(pArena, Platform);
+    pDais->pPlatform->pInternal = arenaPushStructZero(pArena, Win32Platform);
 
     Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 

@@ -60,7 +60,7 @@ Result windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_p
         panic("Failed to create window");
     }
 
-    Win32Window* win32Window = arenaPushZero(pArena, sizeof(Win32Window));
+    Win32Window* win32Window = arenaPushStructZero(pArena, Win32Window);
     win32Window->handle = windowHandle;
 
     out_pWindow->pInternal = win32Window;
