@@ -101,4 +101,6 @@
 
 #define panic(message, ...) panicErr(ERROR, message, ##__VA_ARGS__)
 
+#define unreachable panic("Unreachable path")
+
 // BRIEF: linked list helpers

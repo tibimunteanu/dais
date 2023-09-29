@@ -102,6 +102,13 @@
       "isWholeLine": false
     },
     {
+      "text": "unreachable",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
       "text": "ok",
       "color": "#fb4934",
       "backgroundColor": "rgba(0,0,0,0)",
