@@ -10,6 +10,7 @@ typedef struct LogState {
 
 private LogState* pState;
 
+
 public Result logInit(Arena* pArena, LogConfig config) {
     pState = arenaPushStructZero(pArena, LogState);
     pState->config = config;

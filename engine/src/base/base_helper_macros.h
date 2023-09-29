@@ -95,7 +95,6 @@
             }                                                                        \
         }
 
-// #define logFatal(message, ...) logOutput(LOG_LEVEL_FATAL, message, ##__VA_ARGS__);
 #define panicErr(err, message, ...)                                                                           \
         logFatal("PANIC -> %s() - %s:%d - error: " message, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); \
         return err

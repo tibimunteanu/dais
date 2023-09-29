@@ -2,6 +2,7 @@
 
 private Arena* pArena;
 
+
 public GameConfig configure(void) {
     return (GameConfig) {
                .name = "Sandbox",
@@ -47,8 +48,6 @@ public Result render(void) {
 
 public Result shutdown(void) {
     logInfo("Shutting down game");
-
-    // panic("If shutdown panics, the engine still continues shutting down");
 
     arenaDestroy(pArena);
     pArena = NULL;

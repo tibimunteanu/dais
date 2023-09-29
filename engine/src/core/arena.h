@@ -14,6 +14,7 @@ typedef struct TempArena {
     U64 pos;
 } TempArena;
 
+
 #if !defined(ARENA_RESERVE_GRANULARITY)
     #define ARENA_RESERVE_GRANULARITY megabytes(64)
 #endif
@@ -26,6 +27,7 @@ typedef struct TempArena {
     #define ARENA_DECOMMIT_THRESHOLD megabytes(64)
 #endif
 
+
 API Arena* arenaCreate(U64 size);
 API void arenaDestroy(Arena* pArena);
 API void* arenaPush(Arena* pArena, U64 size);
@@ -35,6 +37,7 @@ API void* arenaPushAlignedZero(Arena* pArena, U64 size, U64 align);
 API void arenaClear(Arena* pArena);
 API void arenaPop(Arena* pArena, U64 size);
 API void arenaPopTo(Arena* pArena, U64 pos);
+
 
 #define arenaPushStruct(pArena, T)                   (T*)arenaPush(pArena, sizeof(T))
 #define arenaPushStructZero(pArena, T)               (T*)arenaPushZero(pArena, sizeof(T))
@@ -50,7 +53,7 @@ API void arenaPopTo(Arena* pArena, U64 pos);
     (align)                                                                          \
 )
 
-// arenaTemp
+
 API TempArena arenaTempBegin(Arena* pArena);
 API void arenaTempEnd(TempArena tempArena);
 

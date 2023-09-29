@@ -7,6 +7,7 @@ private VkAllocationCallbacks* pVkAllocator = NULL;
 private VkInstance vkInstance = VK_NULL_HANDLE;
 private VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
 private VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
+
 private Result _getDeviceSwapchainSupport(
     VkPhysicalDevice physicalDevice,
     VkSurfaceKHR surface,
@@ -76,6 +77,7 @@ private Result _getDeviceSwapchainSupport(
 
     return OK;
 }
+
 private U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     // Check for required features
     VkPhysicalDeviceFeatures physicalDeviceFeatures;
@@ -274,6 +276,8 @@ private U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
 
     return score;
 }
+
+
 public Result vulkanRendererInit(
     Arena* pArena,
     Platform* pPlatform,
@@ -372,6 +376,7 @@ public Result vulkanRendererInit(
     logInfo("Vulkan renderer initialized");
     return OK;
 }
+
 public void vulkanRendererRelease(void) {
     logInfo("Vulkan renderer releasing");
 

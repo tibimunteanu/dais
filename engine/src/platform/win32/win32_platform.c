@@ -1,10 +1,12 @@
 #include "base/base.h"
 
-#ifdef OS_WINDOWS
+#if defined(OS_WINDOWS)
+
     #include "platform/win32/win32_base.h"
     #include "platform/win32/win32_platform_types.h"
     #include "core/log.h"
     #include "core/arena.h"
+
 
 private void _pollMonitors(void) {
     logInfo("Polling monitors...");
@@ -41,7 +43,7 @@ private LRESULT CALLBACK _helperWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
     return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
 
-private Result _getModuleHandle(void) {
+private Result _cacheInstanceHandle(void) {
     Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 
     if (!GetModuleHandleExW(
@@ -146,13 +148,14 @@ private Result _destroyHelperWindow(void) {
     return OK;
 }
 
+
 public Result platformInit(Arena* pArena) {
     pDais->pPlatform = arenaPushStructZero(pArena, Platform);
     pDais->pPlatform->pInternal = arenaPushStructZero(pArena, Win32Platform);
 
     // Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 
-    try(_getModuleHandle());
+    try(_cacheInstanceHandle());
     try(_createHelperWindow());
 
     _pollMonitors();
@@ -166,4 +169,4 @@ public Result platformRelease(void) {
     return OK;
 }
 
-#endif
+#endif /* if defined(OS_WINDOWS) */

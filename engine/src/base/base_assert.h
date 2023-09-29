@@ -4,10 +4,10 @@
 #include "base_keywords.h"
 #include "base_platform_detection.h"
 
-// NOTE: disable assertions by commenting out the below line.
+// NOTE: disable assert, assertMsg and staticAssert by commenting out the below line.
 #define ASSERTIONS_ENABLED
 
-#ifdef ASSERTIONS_ENABLED
+#if defined(ASSERTIONS_ENABLED)
     #if defined(COMP_CL)
         #include <intrin.h>
         #define debugBreak() __debugbreak()

@@ -4,7 +4,8 @@
 #include "core/arena.h"
 #include "renderer/vulkan/vulkan_renderer.h"
 
-Engine* pDais = NULL;
+public Engine* pDais = NULL;
+
 
 private Result _loadGameLibrary(void) {
     void* pGameLib = libraryOpen("game.dll");
@@ -27,6 +28,7 @@ private Result _loadGameLibrary(void) {
 
     return OK;
 }
+
 
 public Result engineRun(void) {
     Arena* pArena = arenaCreate(gigabytes(1));

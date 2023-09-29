@@ -1,6 +1,7 @@
 #include "base/base.h"
 
-#ifdef OS_WINDOWS
+#if defined(OS_WINDOWS)
+
     #include "platform/win32/win32_base.h"
     #include "platform/win32/win32_platform_types.h"
     #include "platform/memory.h"
@@ -48,4 +49,5 @@ public void memoryProtect(void* pMemory, U64 size, MemoryAccessFlags flags) {
     DWORD oldFlags = 0;
     VirtualProtect(pMemory, size, newFlags, &oldFlags);
 }
-#endif
+
+#endif /* if defined(OS_WINDOWS) */

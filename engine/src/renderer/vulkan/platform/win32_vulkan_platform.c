@@ -1,6 +1,7 @@
 #include "base/base.h"
 
 #if defined(OS_WINDOWS)
+
     #include "platform/win32/win32_platform_types.h"
     #include "renderer/vulkan/vulkan_types.h"
     #include "core/log.h"
@@ -40,4 +41,5 @@ public Result vulkanPlatformCreateSurface(
 
     return OK;
 }
-#endif
+
+#endif /* if defined(OS_WINDOWS) */

@@ -1,6 +1,6 @@
 #include "base/base.h"
 
-#ifdef OS_WINDOWS
+#if defined(OS_WINDOWS)
 
     #include "platform/win32/win32_base.h"
     #include "platform/win32/win32_platform_types.h"
@@ -76,4 +76,4 @@ public Result windowCreate(
     return OK;
 }
 
-#endif
+#endif /* if defined(OS_WINDOWS) */
