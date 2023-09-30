@@ -3,7 +3,7 @@
   "[c]": {
     "editor.defaultFormatter": "zachflower.uncrustify"
   },
-  "uncrustify.useTempFile": true,
+  "uncrustify.useTempFile": false,
   "uncrustify.executablePath.windows": "C:\\Program Files\\Uncrustify\\bin\\uncrustify.exe",
   "files.associations": {
     "base.h": "c",

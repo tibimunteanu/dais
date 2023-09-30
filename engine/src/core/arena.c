@@ -82,7 +82,7 @@ public void arenaPopTo(Arena* pArena, U64 pos) {
     }
 }
 
-
+// temp arena
 public TempArena arenaTempBegin(Arena* pArena) {
     TempArena temp = { 0 };
     temp.pArena = pArena;

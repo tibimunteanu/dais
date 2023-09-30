@@ -148,7 +148,7 @@ private Result _destroyHelperWindow(void) {
     return OK;
 }
 
-
+//
 public Result platformInit(Arena* pArena) {
     pDais->pPlatform = arenaPushStructZero(pArena, Platform);
     pDais->pPlatform->pInternal = arenaPushStructZero(pArena, Win32Platform);

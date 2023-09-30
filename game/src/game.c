@@ -2,7 +2,7 @@
 
 private Arena* pArena;
 
-
+//
 public GameConfig configure(void) {
     return (GameConfig) {
                .name = "Sandbox",
@@ -21,6 +21,37 @@ public Result awake(void) {
         arenaPushArrayAligned(pArena, U8, 100, 8);
         arenaPushZero(pArena, 100);
         logInfo("After push pos %llu", pArena->pos);
+
+        PoolCreateInfo poolCreateInfo = {
+            .slotSize = 16,
+            .slotAlignment = 32,
+            .reservedSlots = 10
+        };
+
+        Pool* pPool = poolCreate(pArena, poolCreateInfo);
+
+        logInfo("After pool creation %llu", pArena->pos);
+
+        (void)poolAlloc(pPool);
+
+        logInfo("After 1 chunk alloc %llu", pArena->pos);
+
+        void* block = NULL;
+        for (I32 i = 0; i < 9; i++) {
+            block = poolAlloc(pPool);
+        }
+
+        logInfo("After 9 more chunk alloc %llu", pArena->pos);
+
+        poolFree(pPool, block);
+
+        logInfo("After 1 chunk free %llu", pArena->pos);
+
+        for (I32 i = 0; i < 11; i++) {
+            block = poolAlloc(pPool);
+        }
+
+        logInfo("After 10 more chunk alloc %llu", pArena->pos);
     }
     logInfo("After temp block pos is %llu", pArena->pos);
 

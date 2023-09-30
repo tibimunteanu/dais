@@ -6,7 +6,7 @@
 
 public Engine* pDais = NULL;
 
-
+//
 private Result _loadGameLibrary(void) {
     void* pGameLib = libraryOpen("game.dll");
 
@@ -29,7 +29,7 @@ private Result _loadGameLibrary(void) {
     return OK;
 }
 
-
+//
 public Result engineRun(void) {
     Arena* pArena = arenaCreate(gigabytes(1));
 

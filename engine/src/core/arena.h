@@ -6,7 +6,7 @@ typedef struct Arena {
     U64 pos;
     U64 commitPos;
     U64 size;
-    U64 __padding__;
+    U64 __padding__[13]; // arena base is 128 bytes aligned
 } Arena;
 
 typedef struct TempArena {

@@ -3,6 +3,7 @@
 #include "base/base.h"
 #include "core/log.h"
 #include "core/arena.h"
+#include "core/pool.h"
 #include "math/math.h"
 #include "platform/platform.h"
 #include "platform/memory.h"
