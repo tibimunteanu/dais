@@ -3,7 +3,7 @@
 #include "core/log.h"
 #include "platform/memory.h"
 
-public Arena* arenaCreate(U64 size) {
+pub Arena* arenaCreate(U64 size) {
     size = roundUpToMultipleOf(size, ARENA_RESERVE_GRANULARITY);
     void* pMemory = memoryReserve(size);
     U64 commitSize = ARENA_COMMIT_GRANULARITY;
@@ -20,19 +20,19 @@ public Arena* arenaCreate(U64 size) {
     return pArena;
 }
 
-public void arenaDestroy(Arena* pArena) {
+pub void arenaDestroy(Arena* pArena) {
     memoryRelease(pArena, pArena->size);
 }
 
-public void* arenaPush(Arena* pArena, U64 size) {
+pub void* arenaPush(Arena* pArena, U64 size) {
     return arenaPushAligned(pArena, size, 1);
 }
 
-public void* arenaPushZero(Arena* pArena, U64 size) {
+pub void* arenaPushZero(Arena* pArena, U64 size) {
     return arenaPushAlignedZero(pArena, size, 1);
 }
 
-public void* arenaPushAligned(Arena* pArena, U64 size, U64 align) {
+pub void* arenaPushAligned(Arena* pArena, U64 size, U64 align) {
     void* pMemory = 0;
 
     U64 posAligned = align == 1 ? pArena->pos : alignUpPow2(pArena->pos, align);
@@ -54,7 +54,7 @@ public void* arenaPushAligned(Arena* pArena, U64 size, U64 align) {
     return pMemory;
 }
 
-public void* arenaPushAlignedZero(Arena* pArena, U64 size, U64 align) {
+pub void* arenaPushAlignedZero(Arena* pArena, U64 size, U64 align) {
     void* pMemory = arenaPushAligned(pArena, size, align);
     if (pMemory) {
         memoryZero(pMemory, size);
@@ -62,15 +62,15 @@ public void* arenaPushAlignedZero(Arena* pArena, U64 size, U64 align) {
     return pMemory;
 }
 
-public void arenaClear(Arena* pArena) {
+pub void arenaClear(Arena* pArena) {
     arenaPopTo(pArena, sizeof(Arena));
 }
 
-public void arenaPop(Arena* pArena, U64 size) {
+pub void arenaPop(Arena* pArena, U64 size) {
     arenaPopTo(pArena, pArena->pos - size);
 }
 
-public void arenaPopTo(Arena* pArena, U64 pos) {
+pub void arenaPopTo(Arena* pArena, U64 pos) {
     pArena->pos = clamp(sizeof(Arena), pos, pArena->size);
 
     U64 posAlignedToCommitBoundary = roundUpToMultipleOf(pArena->pos, ARENA_COMMIT_GRANULARITY);
@@ -83,13 +83,13 @@ public void arenaPopTo(Arena* pArena, U64 pos) {
 }
 
 // temp arena
-public TempArena arenaTempBegin(Arena* pArena) {
-    TempArena temp = { 0 };
+pub TempArena arenaTempBegin(Arena* pArena) {
+    TempArena temp = {0};
     temp.pArena = pArena;
     temp.pos = pArena->pos;
     return temp;
 }
 
-public void arenaTempEnd(TempArena tempArena) {
+pub void arenaTempEnd(TempArena tempArena) {
     arenaPopTo(tempArena.pArena, tempArena.pos);
 }

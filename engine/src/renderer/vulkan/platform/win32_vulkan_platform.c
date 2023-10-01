@@ -6,11 +6,11 @@
     #include "renderer/vulkan/vulkan_types.h"
     #include "core/log.h"
 
-public CStringLit vulkanPlatformGetSurfaceExtensionName(void) {
+pub CStringLit vulkanPlatformGetSurfaceExtensionName(void) {
     return "VK_KHR_win32_surface";
 }
 
-public Result vulkanPlatformCreateSurface(
+pub Result vulkanPlatformCreateSurface(
     VkInstance vkInstance,
     Platform* pPlatform,
     Window* pWindow,

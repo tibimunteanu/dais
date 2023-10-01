@@ -8,26 +8,27 @@ typedef struct LogState {
     LogConfig config;
 } LogState;
 
-private LogState* pState;
+//
+prv LogState* pState;
 
-
-public Result logInit(Arena* pArena, LogConfig config) {
+//
+pub Result logInit(Arena* pArena, LogConfig config) {
     pState = arenaPushStructZero(pArena, LogState);
     pState->config = config;
 
     return OK;
 }
 
-public void logRelease(void) {
+pub void logRelease(void) {
     pState = NULL;
 }
 
-public void logOutput(LogLevel level, CStringLit message, ...) {
+pub void logOutput(LogLevel level, CStringLit message, ...) {
     if (pState == NULL) {
         return;
     }
 
-    static CString levelStrings[] = { "FATAL :: ", "ERROR :: ", " WARN :: ", " INFO :: ", "DEBUG :: ", "TRACE :: " };
+    static CString levelStrings[] = {"FATAL :: ", "ERROR :: ", " WARN :: ", " INFO :: ", "DEBUG :: ", "TRACE :: "};
 
     __builtin_va_list args;
     va_start(args, message);

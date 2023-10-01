@@ -4,10 +4,10 @@
 #include "core/arena.h"
 #include "renderer/vulkan/vulkan_renderer.h"
 
-public Engine* pDais = NULL;
+pub Engine* pDais = NULL;
 
 //
-private Result _loadGameLibrary(void) {
+prv Result _loadGameLibrary(void) {
     void* pGameLib = libraryOpen("game.dll");
 
     if (!pGameLib) {
@@ -30,7 +30,7 @@ private Result _loadGameLibrary(void) {
 }
 
 //
-public Result engineRun(void) {
+pub Result engineRun(void) {
     Arena* pArena = arenaCreate(gigabytes(1));
 
     pDais = arenaPushStructZero(pArena, Engine);
@@ -51,7 +51,7 @@ public Result engineRun(void) {
 
     try(platformInit(pArena));
 
-    Window window = { 0 };
+    Window window = {0};
     try(windowCreate(pArena, pDais->pGame->config.name, pDais->pGame->config.startRect, &window));
 
     try(vulkanRendererInit(pArena, pDais->pPlatform, &window));

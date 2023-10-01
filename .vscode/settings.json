@@ -1,7 +1,7 @@
 {
   "editor.fontSize": 13.8,
   "[c]": {
-    "editor.defaultFormatter": "zachflower.uncrustify"
+    "editor.defaultFormatter": "ms-vscode.cpptools"
   },
   "uncrustify.useTempFile": false,
   "uncrustify.executablePath.windows": "C:\\Program Files\\Uncrustify\\bin\\uncrustify.exe",
@@ -24,6 +24,20 @@
     "win32_base.h": "c"
   },
   "todohighlight.keywords": [
+    {
+      "text": "prv",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "pub",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
     {
       "text": "private",
       "color": "#fb4934",

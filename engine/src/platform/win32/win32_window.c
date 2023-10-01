@@ -9,12 +9,7 @@
     #include "core/arena.h"
     #include "math/math_types.h"
 
-public Result windowCreate(
-    Arena* pArena,
-    CStringLit title,
-    Vec4U32 rect,
-    Window* out_pWindow
-) {
+pub Result windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_pWindow) {
     Win32Platform* win32Platform = pDais->pPlatform->pInternal;
 
     memoryZero(out_pWindow, sizeof(Window));
@@ -27,8 +22,7 @@ public Result windowCreate(
         .hInstance = win32Platform->instance,
         .hIcon = icon,
         .hCursor = LoadCursor(NULL, IDC_ARROW),
-        .lpszClassName = "DaisWindowClass"
-    };
+        .lpszClassName = "DaisWindowClass"};
 
     if (!RegisterClassA(&windowClass)) {
         panic("Failed to register window class");
@@ -37,7 +31,7 @@ public Result windowCreate(
     Vec4U32 windowRect = rect;
     DWORD windowStyle = WS_OVERLAPPED | WS_SYSMENU | WS_CAPTION | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_THICKFRAME;
     DWORD windowStyleEx = WS_EX_APPWINDOW;
-    RECT borderRect = { 0, 0, 0, 0 };
+    RECT borderRect = {0, 0, 0, 0};
 
     AdjustWindowRectEx(&borderRect, windowStyle, FALSE, windowStyleEx);
 

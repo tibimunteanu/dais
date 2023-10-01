@@ -1,16 +1,16 @@
 #include "game.h"
 
-private Arena* pArena;
+prv Arena* pArena;
 
 //
-public GameConfig configure(void) {
+pub GameConfig configure(void) {
     return (GameConfig) {
-               .name = "Sandbox",
-               .startRect = (Vec4U32) { 200, 200, 960, 540 },
+        .name = "Sandbox",
+        .startRect = (Vec4U32) {200, 200, 960, 540},
     };
 }
 
-public Result awake(void) {
+pub Result awake(void) {
     logInfo("Awakening game");
 
     pArena = arenaCreate(gigabytes(1));
@@ -22,13 +22,14 @@ public Result awake(void) {
         arenaPushZero(pArena, 100);
         logInfo("After push pos %llu", pArena->pos);
 
-        PoolCreateInfo poolCreateInfo = {
-            .slotSize = 16,
-            .slotAlignment = 32,
-            .reservedSlots = 10
-        };
-
-        Pool* pPool = poolCreate(pArena, poolCreateInfo);
+        Pool* pPool = poolCreate(
+            pArena,
+            (PoolCreateInfo) {
+                .slotSize = 16,
+                .slotAlignment = 32,
+                .reservedSlots = 10,
+            }
+        );
 
         logInfo("After pool creation %llu", pArena->pos);
 
@@ -58,26 +59,27 @@ public Result awake(void) {
     return OK;
 }
 
-public Result start(void) {
+pub Result start(void) {
     logInfo("Starting game");
 
     panic("Panic at START");
 
     U64 stall = 10000000000;
-    while (stall--) {}
+    while (stall--) {
+    }
 
     return OK;
 }
 
-public Result update(void) {
+pub Result update(void) {
     return OK;
 }
 
-public Result render(void) {
+pub Result render(void) {
     return OK;
 }
 
-public Result shutdown(void) {
+pub Result shutdown(void) {
     logInfo("Shutting down game");
 
     arenaDestroy(pArena);

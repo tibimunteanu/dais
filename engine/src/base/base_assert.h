@@ -15,30 +15,30 @@
         #define debugBreak() __builtin_trap()
     #endif
 
-    #define assert(expr)                                                                                 \
-            {                                                                                            \
-                if (expr) {                                                                              \
-                } else {                                                                                 \
-                    logOutput(LOG_LEVEL_FATAL, "ASSERT (%s) failed - %s:%d", #expr, __FILE__, __LINE__); \
-                    debugBreak();                                                                        \
-                }                                                                                        \
-            }
+    #define assert(expr)                                                                             \
+        {                                                                                            \
+            if (expr) {                                                                              \
+            } else {                                                                                 \
+                logOutput(LOG_LEVEL_FATAL, "ASSERT (%s) failed - %s:%d", #expr, __FILE__, __LINE__); \
+                debugBreak();                                                                        \
+            }                                                                                        \
+        }
 
-    #define assertMsg(expr, message, ...)           \
-            {                                       \
-                if (expr) {                         \
-                } else {                            \
-                    logOutput(                      \
-    LOG_LEVEL_FATAL,                                \
-    "ASSERT (%s) failed - %s:%d - error: " message, \
-    #expr,                                          \
-    __FILE__,                                       \
-    __LINE__,                                       \
-    __VA_ARGS__                                     \
-                    );                              \
-                    debugBreak();                   \
-                }                                   \
-            }
+    #define assertMsg(expr, message, ...)                           \
+        {                                                           \
+            if (expr) {                                             \
+            } else {                                                \
+                logOutput(                                          \
+                    LOG_LEVEL_FATAL,                                \
+                    "ASSERT (%s) failed - %s:%d - error: " message, \
+                    #expr,                                          \
+                    __FILE__,                                       \
+                    __LINE__,                                       \
+                    __VA_ARGS__                                     \
+                );                                                  \
+                debugBreak();                                       \
+            }                                                       \
+        }
 #else
     #define assert(expr)
     #define assertMsg(expr, message)

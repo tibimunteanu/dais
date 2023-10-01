@@ -3,15 +3,13 @@
 
 #include <string.h>
 
-private VkAllocationCallbacks* pVkAllocator = NULL;
-private VkInstance vkInstance = VK_NULL_HANDLE;
-private VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
-private VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
+prv VkAllocationCallbacks* pVkAllocator = NULL;
+prv VkInstance vkInstance = VK_NULL_HANDLE;
+prv VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
+prv VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
 
-private Result _getDeviceSwapchainSupport(
-    VkPhysicalDevice physicalDevice,
-    VkSurfaceKHR surface,
-    VulkanDeviceSwapchainSupport* out_pDeviceSwapchainSupport
+prv Result _getDeviceSwapchainSupport(
+    VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VulkanDeviceSwapchainSupport* out_pDeviceSwapchainSupport
 ) {
     // Surface capabilities
     VkResult result =
@@ -35,10 +33,7 @@ private Result _getDeviceSwapchainSupport(
                 (VkSurfaceFormatKHR*)malloc(sizeof(VkSurfaceFormatKHR) * out_pDeviceSwapchainSupport->formatCount);
         }
         result = vkGetPhysicalDeviceSurfaceFormatsKHR(
-            physicalDevice,
-            surface,
-            &out_pDeviceSwapchainSupport->formatCount,
-            out_pDeviceSwapchainSupport->pFormats
+            physicalDevice, surface, &out_pDeviceSwapchainSupport->formatCount, out_pDeviceSwapchainSupport->pFormats
         );
 
         if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
@@ -48,10 +43,7 @@ private Result _getDeviceSwapchainSupport(
 
     // Present modes
     result = vkGetPhysicalDeviceSurfacePresentModesKHR(
-        physicalDevice,
-        surface,
-        &out_pDeviceSwapchainSupport->presentModeCount,
-        NULL
+        physicalDevice, surface, &out_pDeviceSwapchainSupport->presentModeCount, NULL
     );
 
     if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
@@ -78,7 +70,7 @@ private Result _getDeviceSwapchainSupport(
     return OK;
 }
 
-private U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
+prv U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     // Check for required features
     VkPhysicalDeviceFeatures physicalDeviceFeatures;
     vkGetPhysicalDeviceFeatures(physicalDevice, &physicalDeviceFeatures);
@@ -153,7 +145,7 @@ private U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     }
 
     // Check for swapchain support
-    VulkanDeviceSwapchainSupport vulkanDeviceSwapchainSupport = { 0 };
+    VulkanDeviceSwapchainSupport vulkanDeviceSwapchainSupport = {0};
     if (failed(_getDeviceSwapchainSupport(physicalDevice, vkSurface, &vulkanDeviceSwapchainSupport))) {
         return 0;
     }
@@ -168,7 +160,7 @@ private U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     }
 
     // Check for required extensions
-    CStringLit deviceExtensionNames[] = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+    CStringLit deviceExtensionNames[] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
     if (arrayCount(deviceExtensionNames) > 0) {
         U32 availableExtensionsCount = 0;
 
@@ -278,11 +270,7 @@ private U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
 }
 
 //
-public Result vulkanRendererInit(
-    Arena* pArena,
-    Platform* pPlatform,
-    Window* pWindow
-) {
+pub Result vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     if (volkInitialize() != VK_SUCCESS) {
         panic("Failed to initialize vulkan loader");
     }
@@ -299,7 +287,7 @@ public Result vulkanRendererInit(
     };
 
     CStringLit surfaceExtensionName = vulkanPlatformGetSurfaceExtensionName();
-    CStringLit instanceExtensionNames[] = { VK_KHR_SURFACE_EXTENSION_NAME, surfaceExtensionName };
+    CStringLit instanceExtensionNames[] = {VK_KHR_SURFACE_EXTENSION_NAME, surfaceExtensionName};
     CStringLit instanceLayers[] = {};
 
     VkInstanceCreateInfo instanceCreateInfo = {
@@ -377,7 +365,7 @@ public Result vulkanRendererInit(
     return OK;
 }
 
-public void vulkanRendererRelease(void) {
+pub void vulkanRendererRelease(void) {
     logInfo("Vulkan renderer releasing");
 
     vkDestroyInstance(vkInstance, pVkAllocator);

@@ -1,25 +1,25 @@
 #include "pool.h"
 #include "core/log.h"
 
-// NOTE: could we have a defragment function of type one shot computation fee.
-// you could store it in the same arena if you can afford the possible wasted space or you can fix the damage done by
-// another one shot computation. this would be easier if pointers were wrapped in handles. indices are very important
-// and should be favored in critical paths.
-
-// this pool is simple. it doesn't guarantee that the allocations are
-// contiguous, but if you don't do more allocations into this arena while
-// adding all entries, they can be. the pool is associated to an arena and
-// cannot be shared with other arenas.
-
-// this should be used in situations where you don't require that all slots be
-// contiguous in memory, and you don't 100% the max number of slots your program
-// will need at runtime. you can ballpark a reservedSlots count, but allow it to
-// grow as needed. it's different than just pushing to the arena because you can
-// free any slot and reuse it later.
-
-// NOTE: the pool cannot be cleared because we don't keep track of all the
-// allocated pointers. only call sites can decide to hold on to a pointer and
-// free it later.
+/*
+ * This pool is very simple. It doesn't guarantee that the allocations are
+ * contiguous, but if you don't do more allocations into this arena while
+ * adding all entries, they will be contiguous.
+ *
+ * The pool is associated with an arena and cannot be shared with other arenas.
+ *
+ * This pool should be used in situations where you don't require all slots to be
+ * contiguous in memory, and you don't 100% know the max number of slots your program
+ * will need at runtime. You can ballpark a reservedSlots count, but allow it to
+ * grow as needed. It's different than just pushing into the arena because you can
+ * free any slot and reuse it later.
+ *
+ * The pool cannot be cleared because we don't keep track of all the
+ * allocated pointers. Only call sites can decide to hold on to a pointer and
+ * free it later.
+ *
+ * Q: Does it make sense to have a defragment function?
+ */
 Pool* poolCreate(Arena* pArena, PoolCreateInfo poolCreateInfo) {
     U64 slotSize = poolCreateInfo.slotSize;
     U64 slotAlignment = poolCreateInfo.slotAlignment;
@@ -56,7 +56,7 @@ void* poolAlloc(Pool* pPool) {
 
     PoolFreeNode* pResult = pPool->pHead;
     pPool->pHead = pPool->pHead->next;
-    pResult->next = NULL; // allocating it clears the first pointer back to zero
+    pResult->next = NULL;  // allocating it clears the first pointer back to zero
 
     return pResult;
 }

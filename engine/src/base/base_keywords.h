@@ -2,10 +2,9 @@
 
 #include "base_platform_detection.h"
 
-#define public
-#define private  static
-#define internal static
-#define global   extern
+#define pub
+#define prv    static
+#define global extern
 
 #if defined(EXPORT)
     #if defined(COMP_CL)

@@ -2,11 +2,12 @@
 
 #include "base/base.h"
 
+// NOTE: does it make sense to have an arena that would give just handles that wrap pointers?
 typedef struct Arena {
     U64 pos;
     U64 commitPos;
     U64 size;
-    U64 __padding__[13]; // arena base is 128 bytes aligned
+    U64 __padding__[13];  // arena base is 128 bytes aligned
 } Arena;
 
 typedef struct TempArena {
@@ -14,7 +15,7 @@ typedef struct TempArena {
     U64 pos;
 } TempArena;
 
-
+//
 #if !defined(ARENA_RESERVE_GRANULARITY)
     #define ARENA_RESERVE_GRANULARITY megabytes(64)
 #endif
@@ -27,7 +28,7 @@ typedef struct TempArena {
     #define ARENA_DECOMMIT_THRESHOLD megabytes(64)
 #endif
 
-
+//
 API Arena* arenaCreate(U64 size);
 API void arenaDestroy(Arena* pArena);
 API void* arenaPush(Arena* pArena, U64 size);
@@ -38,7 +39,7 @@ API void arenaClear(Arena* pArena);
 API void arenaPop(Arena* pArena, U64 size);
 API void arenaPopTo(Arena* pArena, U64 pos);
 
-
+//
 #define arenaPushStruct(pArena, T)                   (T*)arenaPush(pArena, sizeof(T))
 #define arenaPushStructZero(pArena, T)               (T*)arenaPushZero(pArena, sizeof(T))
 #define arenaPushStructAligned(pArena, T, align)     (T*)arenaPushAligned(pArena, sizeof(T), (align))
@@ -47,19 +48,15 @@ API void arenaPopTo(Arena* pArena, U64 pos);
 #define arenaPushArray(pArena, T, count)               (T*)arenaPush(pArena, sizeof(T) * (count))
 #define arenaPushArrayZero(pArena, T, count)           (T*)arenaPushZero(pArena, sizeof(T) * (count))
 #define arenaPushArrayAligned(pArena, T, count, align) (T*)arenaPushAligned(pArena, sizeof(T) * (count), (align))
-#define arenaPushArrayAlignedZero(pArena, T, count, align) (T*)arenaPushAlignedZero( \
-    pArena,                                                                          \
-    sizeof(T) * (count),                                                             \
-    (align)                                                                          \
-)
+#define arenaPushArrayAlignedZero(pArena, T, count, align) \
+    (T*)arenaPushAlignedZero(pArena, sizeof(T) * (count), (align))
 
-
+//
 API TempArena arenaTempBegin(Arena* pArena);
 API void arenaTempEnd(TempArena tempArena);
 
-#define arenaTempBlock(pArena)                                  \
-        TempArena IDENTIFIER_FROM_LINE(_tempArena_) = { 0 };    \
-        DEFER_BLOCK(                                            \
-    IDENTIFIER_FROM_LINE(_tempArena_) = arenaTempBegin(pArena), \
-    arenaTempEnd(IDENTIFIER_FROM_LINE(_tempArena_))             \
-        )
+#define arenaTempBlock(pArena)                                                                                      \
+    TempArena IDENTIFIER_FROM_LINE(_tempArena_) = {0};                                                              \
+    DEFER_BLOCK(                                                                                                    \
+        IDENTIFIER_FROM_LINE(_tempArena_) = arenaTempBegin(pArena), arenaTempEnd(IDENTIFIER_FROM_LINE(_tempArena_)) \
+    )

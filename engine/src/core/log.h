@@ -10,7 +10,7 @@
     #define LOG_TRACE_ENABLED 1
 #endif
 
-
+//
 typedef enum LogLevel {
     LOG_LEVEL_FATAL,
     LOG_LEVEL_ERROR,
@@ -24,14 +24,14 @@ typedef struct LogConfig {
     char fileName[1024];
 } LogConfig;
 
-
+//
 API Result logInit(Arena* pArena, LogConfig config);
 
 API void logRelease(void);
 
 API void logOutput(LogLevel level, CStringLit message, ...);
 
-
+//
 #define logFatal(message, ...) logOutput(LOG_LEVEL_FATAL, message, ##__VA_ARGS__);
 
 #define logError(message, ...) logOutput(LOG_LEVEL_ERROR, message, ##__VA_ARGS__);
