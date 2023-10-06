@@ -25,20 +25,6 @@
   },
   "todohighlight.keywords": [
     {
-      "text": "prv",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "pub",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
       "text": "private",
       "color": "#fb4934",
       "backgroundColor": "rgba(0,0,0,0)",
@@ -61,6 +47,27 @@
     },
     {
       "text": "global",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "fn",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "prv",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "pub",
       "color": "#fb4934",
       "backgroundColor": "rgba(0,0,0,0)",
       "overviewRulerColor": "rgba(0,0,0,0)",
@@ -110,7 +117,7 @@
     },
     {
       "text": "alert",
-      "color": "#fb4934",
+      "color": "#ff8800",
       "backgroundColor": "rgba(0,0,0,0)",
       "overviewRulerColor": "rgba(0,0,0,0)",
       "isWholeLine": false
@@ -124,6 +131,20 @@
     },
     {
       "text": "ok",
+      "color": "#009900",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "OK",
+      "color": "#009900",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "ERROR",
       "color": "#fb4934",
       "backgroundColor": "rgba(0,0,0,0)",
       "overviewRulerColor": "rgba(0,0,0,0)",
@@ -160,34 +181,6 @@
     {
       "text": "logFatal",
       "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "logError",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "logWarning",
-      "color": "#ffcc00",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "logInfo",
-      "color": "#009900",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "logTrace",
-      "color": "#868679",
       "backgroundColor": "rgba(0,0,0,0)",
       "overviewRulerColor": "rgba(0,0,0,0)",
       "isWholeLine": false

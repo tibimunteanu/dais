@@ -9,7 +9,7 @@
     #include "core/arena.h"
     #include "math/math_types.h"
 
-pub Result windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_pWindow) {
+pub fn windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_pWindow) {
     Win32Platform* win32Platform = pDais->pPlatform->pInternal;
 
     memoryZero(out_pWindow, sizeof(Window));

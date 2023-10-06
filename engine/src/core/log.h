@@ -25,7 +25,7 @@ typedef struct LogConfig {
 } LogConfig;
 
 //
-API Result logInit(Arena* pArena, LogConfig config);
+API fn logInit(Arena* pArena, LogConfig config);
 
 API void logRelease(void);
 

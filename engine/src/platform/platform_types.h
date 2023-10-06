@@ -1,6 +1,7 @@
 #pragma once
 
 #include "base/base.h"
+#include "core/pool.h"
 
 typedef struct Window {
     void* pInternal;
@@ -39,6 +40,7 @@ typedef struct Monitor {
 typedef void (*PFN_monitorCallback)(Monitor* pMonitor, I32 event);
 
 typedef struct Platform {
+    Pool* pMonitorPool;
     Monitor** pMonitors;
     U32 monitorCount;
 

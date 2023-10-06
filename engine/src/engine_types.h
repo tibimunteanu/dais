@@ -25,11 +25,11 @@ typedef struct Game {
     GameConfig config;
 
     GameConfig (*configure)(void);
-    Result (*awake)(void);
-    Result (*start)(void);
-    Result (*update)(void);
-    Result (*render)(void);
-    Result (*shutdown)(void);
+    fn (*awake)(void);
+    fn (*start)(void);
+    fn (*update)(void);
+    fn (*render)(void);
+    fn (*shutdown)(void);
 } Game;
 
 typedef struct Engine {

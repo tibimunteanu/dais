@@ -10,7 +10,7 @@ pub GameConfig configure(void) {
     };
 }
 
-pub Result awake(void) {
+pub fn awake(void) {
     logInfo("Awakening game");
 
     pArena = arenaCreate(gigabytes(1));
@@ -59,7 +59,7 @@ pub Result awake(void) {
     return OK;
 }
 
-pub Result start(void) {
+pub fn start(void) {
     logInfo("Starting game");
 
     panic("Panic at START");
@@ -71,15 +71,15 @@ pub Result start(void) {
     return OK;
 }
 
-pub Result update(void) {
+pub fn update(void) {
     return OK;
 }
 
-pub Result render(void) {
+pub fn render(void) {
     return OK;
 }
 
-pub Result shutdown(void) {
+pub fn shutdown(void) {
     logInfo("Shutting down game");
 
     arenaDestroy(pArena);

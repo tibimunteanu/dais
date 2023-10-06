@@ -32,6 +32,12 @@ pub void* arenaPushZero(Arena* pArena, U64 size) {
     return arenaPushAlignedZero(pArena, size, 1);
 }
 
+pub void* arenaPushCopy(Arena* pArena, void* pData, U64 size) {
+    void* pResult = arenaPush(pArena, size);
+    memoryCopy(pResult, pData, size);
+    return pResult;
+}
+
 pub void* arenaPushAligned(Arena* pArena, U64 size, U64 align) {
     void* pMemory = 0;
 
@@ -60,6 +66,12 @@ pub void* arenaPushAlignedZero(Arena* pArena, U64 size, U64 align) {
         memoryZero(pMemory, size);
     }
     return pMemory;
+}
+
+pub void* arenaPushCopyAligned(Arena* pArena, void* pData, U64 size, U64 align) {
+    void* pResult = arenaPushAligned(pArena, size, align);
+    memoryCopy(pResult, pData, size);
+    return pResult;
 }
 
 pub void arenaClear(Arena* pArena) {

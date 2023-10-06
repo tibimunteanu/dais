@@ -10,7 +10,7 @@ pub CStringLit vulkanPlatformGetSurfaceExtensionName(void) {
     return "VK_KHR_win32_surface";
 }
 
-pub Result vulkanPlatformCreateSurface(
+pub fn vulkanPlatformCreateSurface(
     VkInstance vkInstance,
     Platform* pPlatform,
     Window* pWindow,

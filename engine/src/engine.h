@@ -2,4 +2,4 @@
 
 #include "dais.h"
 
-API Result engineRun(void);
+API fn engineRun(void);

@@ -7,7 +7,45 @@
     #include "core/log.h"
     #include "core/arena.h"
 
-prv void _pollMonitors(void) {
+prv Monitor* _createMonitor(DISPLAY_DEVICEW* pAdapter, DISPLAY_DEVICEW* pDisplay) {
+    /* NOTE: how it works:
+
+        save copies of both wide and utf8 converted name of (adapter) as adapter name
+        save copies of both wide and utf8 converted name of (display ?? adapter) as monitor name
+
+        save if modes are pruned from the adapter flags
+        initialize mode changed to false
+
+        get the device properties
+        create a device context
+        use the device properties and device context to get the width and height in millimeters
+        delete the device context
+
+        save the handle for the monitor
+
+        return the monitor
+    */
+    return NULL;
+}
+
+prv fn _utf8FromWideString(Arena* pArena, const WCHAR* source, char** out_pResult) {
+    U64 size = WideCharToMultiByte(CP_UTF8, 0, source, -1, NULL, 0, NULL, NULL);
+    if (!size) {
+        panic("Failed to convert string to UTF-8");
+    }
+
+    U64 arenaPos = pArena->pos;
+    *out_pResult = arenaPushZero(pArena, size);
+
+    if (!WideCharToMultiByte(CP_UTF8, 0, source, -1, *out_pResult, size, NULL, NULL)) {
+        arenaPopTo(pArena, arenaPos);
+        panic("Failed to convert string to UTF-8");
+    }
+
+    return OK;
+}
+
+prv fn _pollMonitors(void) {
     /* NOTE: how it works:
 
         assume we keep an array of connected monitors between calls
@@ -39,9 +77,128 @@ prv void _pollMonitors(void) {
             call the MonitorDisconnected callback
 
         delete the disconnected array of monitor pointers
+
+        NOTE: the callbacks could actually be fire events. the platform layer
+        listens for them and insert and delete monitors in the connected list
+        and lets the events pass through to the game or anyone else might listen
      */
 
     logInfo("Polling monitors...");
+
+    Platform* pPlatform = pDais->pPlatform;
+    Pool* pPool = pPlatform->pMonitorPool;
+    (void)poolAlloc(pPool);
+
+    Arena* pArena = pPool->pArena;
+
+    arenaTempBlock(pArena) {
+        Monitor** disconnected =
+            pPlatform->monitorCount
+                ? arenaPushCopy(pArena, pPlatform->pMonitors, pPlatform->monitorCount * sizeof(Monitor*))
+                : NULL;
+
+        U32 disconnectedCount = pPlatform->monitorCount;
+
+        for (U32 adapterIndex = 0;; adapterIndex++) {
+            B8 insertFirst = false;
+
+            DISPLAY_DEVICEW adapter = {
+                .cb = sizeof(DISPLAY_DEVICEW),
+            };
+
+            if (!EnumDisplayDevicesW(NULL, adapterIndex, &adapter, 0)) {
+                break;
+            }
+
+            if (!(adapter.StateFlags & DISPLAY_DEVICE_ACTIVE)) {
+                continue;
+            }
+
+            if (adapter.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) {
+                insertFirst = true;
+            }
+
+            U32 displayIndex;
+            for (displayIndex = 0;; displayIndex++) {
+                DISPLAY_DEVICEW display = {
+                    .cb = sizeof(DISPLAY_DEVICEW),
+                };
+
+                if (!EnumDisplayDevicesW(adapter.DeviceName, displayIndex, &display, 0)) {
+                    break;
+                }
+
+                if (!(display.StateFlags & DISPLAY_DEVICE_ACTIVE)) {
+                    continue;
+                }
+
+                I32 i;
+                for (i = 0; i < disconnectedCount; i++) {
+                    if (disconnected[i] &&
+                        wcscmp(((Win32Monitor*)disconnected[i]->pInternal)->displayName, display.DeviceName) == 0) {
+                        disconnected[i] = NULL;
+                        // TODO: handle may have changed, update
+                        break;
+                    }
+                }
+
+                if (i < disconnectedCount) {
+                    continue;
+                }
+
+                // Monitor* pMonitor = _createMonitor(&adapter, &display);
+                // if (!pMonitor) {
+                //     return;
+                // }
+
+                // TODO: call monitor connected callback
+                CString adapterName;
+                CString displayName;
+                try(_utf8FromWideString(pArena, adapter.DeviceString, &adapterName));
+                try(_utf8FromWideString(pArena, display.DeviceString, &displayName));
+
+                logInfo("Adapter: %s, Display: %s, %d", adapterName, displayName, insertFirst);
+
+                insertFirst = false;
+            }
+
+            // HACK: if an active adapter does not have any display devices
+            //       add it directly as a monitor
+            if (displayIndex == 0) {
+                I32 i;
+                for (i = 0; i < disconnectedCount; i++) {
+                    if (disconnected[i] &&
+                        wcscmp(((Win32Monitor*)disconnected[i]->pInternal)->adapterName, adapter.DeviceName) == 0) {
+                        disconnected[i] = NULL;
+                        break;
+                    }
+                }
+
+                if (i < disconnectedCount) {
+                    continue;
+                }
+
+                // Monitor* monitor = _createMonitor(&adapter, NULL);
+                // if (!monitor) {
+                //     return;
+                // }
+
+                // TODO: call monitor connected callback
+                CString adapterName;
+                try(_utf8FromWideString(pArena, adapter.DeviceString, &adapterName));
+
+                logInfo("Adapter: %s, Display: none", adapterName);
+            }
+        }
+
+        for (I32 i = 0; i < disconnectedCount; i++) {
+            if (disconnected[i]) {
+                // TODO: call the monitor disconnected callback
+            }
+        }
+    }
+
+    return OK;
 }
 
 prv LRESULT CALLBACK _helperWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -75,7 +232,7 @@ prv LRESULT CALLBACK _helperWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 }
 
-prv Result _cacheInstanceHandle(void) {
+prv fn _cacheInstanceHandle(void) {
     Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 
     if (!GetModuleHandleExW(
@@ -89,18 +246,16 @@ prv Result _cacheInstanceHandle(void) {
     return OK;
 }
 
-prv Result _createHelperWindow(void) {
+prv fn _createHelperWindow(void) {
     Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 
-    WNDCLASSEXW windowClassCreateInfo = {
+    pWin32Platform->helperWindowClass = RegisterClassExW(&(WNDCLASSEXW) {
         .cbSize = sizeof(WNDCLASSEXW),
         .style = CS_OWNDC,
         .lpfnWndProc = (WNDPROC)_helperWindowProc,
         .hInstance = pWin32Platform->instance,
         .lpszClassName = L"DaisHelperWindow",
-    };
-
-    pWin32Platform->helperWindowClass = RegisterClassExW(&windowClassCreateInfo);
+    });
 
     if (!pWin32Platform->helperWindowClass) {
         panic("Failed to register helper window class");
@@ -151,7 +306,7 @@ prv Result _createHelperWindow(void) {
     return OK;
 }
 
-prv Result _destroyHelperWindow(void) {
+prv fn _destroyHelperWindow(void) {
     Win32Platform* pWin32Platform = pDais->pPlatform->pInternal;
 
     if (pWin32Platform->deviceNotificationHandle) {
@@ -179,7 +334,7 @@ prv Result _destroyHelperWindow(void) {
 }
 
 //
-pub Result platformInit(Arena* pArena) {
+pub fn platformInit(Arena* pArena) {
     pDais->pPlatform = arenaPushStructZero(pArena, Platform);
     pDais->pPlatform->pInternal = arenaPushStructZero(pArena, Win32Platform);
 
@@ -188,12 +343,23 @@ pub Result platformInit(Arena* pArena) {
     try(_cacheInstanceHandle());
     try(_createHelperWindow());
 
-    _pollMonitors();
+    if (!pDais->pPlatform->pMonitorPool) {
+        pDais->pPlatform->pMonitorPool = poolCreate(
+            pArena,
+            (PoolCreateInfo) {
+                .slotSize = sizeof(Monitor),
+                .slotAlignment = 1,
+                .reservedSlots = 4,
+            }
+        );
+    }
+
+    try(_pollMonitors());
 
     return OK;
 }
 
-pub Result platformRelease(void) {
+pub fn platformRelease(void) {
     try(_destroyHelperWindow());
 
     return OK;

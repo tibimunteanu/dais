@@ -80,7 +80,7 @@
 
 #define alert(expr)                                                              \
     {                                                                            \
-        Result _result_ = (expr);                                                \
+        fn _result_ = (expr);                                                    \
         if (failed(_result_)) {                                                  \
             logError("    | -> %s() - %s:%d", __FUNCTION__, __FILE__, __LINE__); \
         }                                                                        \
@@ -88,7 +88,7 @@
 
 #define try(expr)                                                                \
     {                                                                            \
-        Result _result_ = (expr);                                                \
+        fn _result_ = (expr);                                                    \
         if (failed(_result_)) {                                                  \
             logFatal("    | -> %s() - %s:%d", __FUNCTION__, __FILE__, __LINE__); \
             return _result_;                                                     \

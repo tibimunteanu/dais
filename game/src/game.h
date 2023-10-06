@@ -3,8 +3,8 @@
 #include <dais.h>
 
 API GameConfig configure(void);
-API Result awake(void);
-API Result start(void);
-API Result update(void);
-API Result render(void);
-API Result shutdown(void);
+API fn awake(void);
+API fn start(void);
+API fn update(void);
+API fn render(void);
+API fn shutdown(void);

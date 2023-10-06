@@ -8,7 +8,7 @@ prv VkInstance vkInstance = VK_NULL_HANDLE;
 prv VkSurfaceKHR vkSurface = VK_NULL_HANDLE;
 prv VkPhysicalDevice vkPhysicalDevice = VK_NULL_HANDLE;
 
-prv Result _getDeviceSwapchainSupport(
+prv fn _getDeviceSwapchainSupport(
     VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, VulkanDeviceSwapchainSupport* out_pDeviceSwapchainSupport
 ) {
     // Surface capabilities
@@ -270,7 +270,7 @@ prv U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
 }
 
 //
-pub Result vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
+pub fn vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     if (volkInitialize() != VK_SUCCESS) {
         panic("Failed to initialize vulkan loader");
     }

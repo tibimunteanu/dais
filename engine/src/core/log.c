@@ -12,7 +12,7 @@ typedef struct LogState {
 prv LogState* pState;
 
 //
-pub Result logInit(Arena* pArena, LogConfig config) {
+pub fn logInit(Arena* pArena, LogConfig config) {
     pState = arenaPushStructZero(pArena, LogState);
     pState->config = config;
 

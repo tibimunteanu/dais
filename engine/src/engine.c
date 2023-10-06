@@ -7,7 +7,7 @@
 pub Engine* pDais = NULL;
 
 //
-prv Result _loadGameLibrary(void) {
+prv fn _loadGameLibrary(void) {
     void* pGameLib = libraryOpen("game.dll");
 
     if (!pGameLib) {
@@ -30,7 +30,7 @@ prv Result _loadGameLibrary(void) {
 }
 
 //
-pub Result engineRun(void) {
+pub fn engineRun(void) {
     Arena* pArena = arenaCreate(gigabytes(1));
 
     pDais = arenaPushStructZero(pArena, Engine);

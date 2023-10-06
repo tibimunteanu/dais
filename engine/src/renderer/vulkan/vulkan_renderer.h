@@ -4,13 +4,13 @@
 #include "platform/platform_types.h"
 #include "core/arena.h"
 
-API Result vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow);
+API fn vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow);
 
 API void vulkanRendererRelease(void);
 
 CStringLit vulkanPlatformGetSurfaceExtensionName(void);
 
-Result vulkanPlatformCreateSurface(
+fn vulkanPlatformCreateSurface(
     VkInstance vkInstance,
     Platform* pPlatform,
     Window* pWindow,
