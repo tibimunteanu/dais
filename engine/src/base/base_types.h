@@ -53,7 +53,7 @@ typedef const char* CStringLit;
 
 typedef I32 fn;
 
-// NOTE: any result set enum can be used with "panicErr(CUSTOM_RESULT)" macro
+// NOTE: any result set enum can be used with "panicMsg(CUSTOM_RESULT)" macro
 typedef enum BaseResult {
     ERROR = -1,
     INCOMPLETE = 0,

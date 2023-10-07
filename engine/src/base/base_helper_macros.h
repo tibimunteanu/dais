@@ -74,7 +74,7 @@
         memoryCopy((dst), (src), sizeof(src)); \
     } while (0)
 
-// BRIEF: Result
+// BRIEF: fn
 #define ok()        return OK
 #define noerr(expr) (expr) >= 0
 #define catch(expr) (expr) < 0
@@ -96,12 +96,12 @@
         }                                                                        \
     }
 
-#define panicErr(error, message, ...)                                                                     \
+#define panicMsg(error, message, ...)                                                                     \
     logFatal("PANIC -> %s() - %s:%d - error: " message, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); \
     return error
 
-#define panic(message, ...) panicErr(ERROR, message, ##__VA_ARGS__)
+#define panic(message, ...) panicMsg(ERROR, message, ##__VA_ARGS__)
 
-#define unreachable panic("Unreachable path")
+#define unreachable panic("Unreachable path!")
 
 // BRIEF: linked list helpers

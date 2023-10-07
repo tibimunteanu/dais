@@ -95,7 +95,7 @@
       "isWholeLine": false
     },
     {
-      "text": "panicErr",
+      "text": "panicMsg",
       "color": "#fb4934",
       "backgroundColor": "rgba(0,0,0,0)",
       "overviewRulerColor": "rgba(0,0,0,0)",

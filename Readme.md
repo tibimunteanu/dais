@@ -26,10 +26,10 @@
 
 - favor `out_pResult` pointers for out values
 - most functions should either be `fn` or `void`
-- if a function is `fn`, we can use `try()`, `alert()`, `panic()`, `panicErr()` to propagate errors
+- if a function is `fn`, we can use `try()`, `alert()`, `panic()`, `panicMsg()` to propagate errors
 - we can just test a `fn` result with `catch()` and `noerr()`
 - use `ok()` to signal that a function executed successfully
-- we can define new result set enums and use them with `panicErr()`
+- we can define new result set enums and use them with `panicMsg()`
 - result set enums can alternatively be handled in switch cases
 - when a `panic()` occurs, the full stack trace is logged
 
