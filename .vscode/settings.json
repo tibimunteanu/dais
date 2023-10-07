@@ -52,6 +52,7 @@
     { "text": "OK", "color": "#009900" },
     { "text": "ok", "color": "#009900" },
     { "text": "noerr", "color": "#009900" },
-    { "text": "API ", "color": "#1f9cf0" }
+    { "text": "API ", "color": "#1f9cf0" },
+    { "text": "BRIEF", "color": "#99ffa0", "isWholeLine": true }
   ]
 }
