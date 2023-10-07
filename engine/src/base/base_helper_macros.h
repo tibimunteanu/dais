@@ -17,6 +17,17 @@
 
 #define IDENTIFIER_FROM_LINE(name) GLUE(name, __LINE__)
 
+#define _GET_NTH_ARG(_1, _2, _3, _4, _5, N, ...) N
+#define COUNT_VARARGS(...)                       _GET_NTH_ARG("ignored", ##__VA_ARGS__, 4, 3, 2, 1, 0)
+
+#define _GET_OVERRIDE_01(_1, _2, NAME, ...)           NAME
+#define _GET_OVERRIDE_012(_1, _2, _3, NAME, ...)      NAME
+#define _GET_OVERRIDE_0123(_1, _2, _3, _4, NAME, ...) NAME
+
+#define GET_OVERRIDE_01(A, B, ...)         _GET_OVERRIDE_01("ignored", __VA_ARGS__, B, A)(__VA_ARGS__)
+#define GET_OVERRIDE_012(A, B, C, ...)     _GET_OVERRIDE_012("ignored", __VA_ARGS__, C, B, A)(__VA_ARGS__)
+#define GET_OVERRIDE_0123(A, B, C, D, ...) _GET_OVERRIDE_0123("ignored", __VA_ARGS__, D, C, B, A)(__VA_ARGS__)
+
 // BRIEF: defer
 #define DEFER_BLOCK(start, end)         for (I32 _i_ = ((start), 0); _i_ == 0; _i_ += 1, (end))
 #define DEFER_BLOCK_CHECKED(start, end) for (I32 _i_ = 2 * !(start); (_i_ == 2 ? ((end), 0) : !_i_); _i_ += 1, (end))
@@ -96,11 +107,13 @@
         }                                                                        \
     }
 
-#define panicMsg(error, message, ...)                                                                     \
+#define panicCustomError(error, message, ...)                                                             \
     logFatal("PANIC -> %s() - %s:%d - error: " message, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); \
     return error
 
-#define panic(message, ...) panicMsg(ERROR, message, ##__VA_ARGS__)
+#define panicGenericError(message, ...) panicCustomError(ERROR, message, ##__VA_ARGS__)
+
+#define panic(...) GET_OVERRIDE_012(_, panicGenericError, panicCustomError, __VA_ARGS__)
 
 #define unreachable panic("Unreachable path!")
 

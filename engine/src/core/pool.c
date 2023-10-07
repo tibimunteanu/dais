@@ -28,7 +28,7 @@ Pool* poolCreate(Arena* pArena, PoolCreateInfo poolCreateInfo) {
         slotSize = alignUpPow2(slotSize, slotAlignment);
     }
 
-    assertMsg(slotSize >= sizeof(PoolFreeNode), "Pool slot size is too small");
+    assert(slotSize >= sizeof(PoolFreeNode), "Pool slot size is too small");
 
     Pool* pPool = arenaPushStruct(pArena, Pool);
     pPool->slotSize = slotSize;

@@ -15,7 +15,7 @@
         #define debugBreak() __builtin_trap()
     #endif
 
-    #define assert(expr)                                                                             \
+    #define assertNoMsg(expr)                                                                        \
         {                                                                                            \
             if (expr) {                                                                              \
             } else {                                                                                 \
@@ -39,9 +39,12 @@
                 debugBreak();                                       \
             }                                                       \
         }
+
+    #define assert(...) GET_OVERRIDE_012(_, assertNoMsg, assertMsg, __VA_ARGS__)
 #else
-    #define assert(expr)
+    #define assertNoMsg(expr)
     #define assertMsg(expr, message)
+    #define assert(...)
 #endif
 
 #if defined(COMP_CLANG) || defined(COMP_GCC)
