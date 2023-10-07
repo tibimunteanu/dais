@@ -23,188 +23,35 @@
     "xlocale": "c",
     "win32_base.h": "c"
   },
+  "todohighlight.defaultStyle": {
+    "color": "#fb4934",
+    "backgroundColor": "rgba(0,0,0,0)",
+    "overviewRulerColor": "rgba(0,0,0,0)",
+    "isWholeLine": false
+  },
   "todohighlight.keywords": [
-    {
-      "text": "private",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "public",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "internal",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "global",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "fn",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "prv",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "pub",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "inl",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "noinl",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "API",
-      "color": "#1f9cf0",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "panicMsg",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "panic",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "try",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "catch",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "noerr",
-      "color": "#009900",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "alert",
-      "color": "#ff8800",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "unreachable",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "ok",
-      "color": "#009900",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "OK",
-      "color": "#009900",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "INCOMPLETE",
-      "color": "#ff8800",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "ERROR",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "assertMsg",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "assert",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "staticAssert",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "logFatal",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    },
-    {
-      "text": "logError",
-      "color": "#fb4934",
-      "backgroundColor": "rgba(0,0,0,0)",
-      "overviewRulerColor": "rgba(0,0,0,0)",
-      "isWholeLine": false
-    }
+    "global ",
+    "prv ",
+    "pub ",
+    "fn ",
+    "inl ",
+    "noinl ",
+    "panicMsg",
+    "panic",
+    "try",
+    "catch",
+    "unreachable",
+    "assertMsg",
+    "assert",
+    "staticAssert",
+    "logFatal",
+    "logError",
+    "ERROR",
+    { "text": "alert", "color": "#ff8800" },
+    { "text": "INCOMPLETE", "color": "#ff8800" },
+    { "text": "OK", "color": "#009900" },
+    { "text": "ok", "color": "#009900" },
+    { "text": "noerr", "color": "#009900" },
+    { "text": "API ", "color": "#1f9cf0" }
   ]
 }
