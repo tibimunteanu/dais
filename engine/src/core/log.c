@@ -16,7 +16,7 @@ pub fn logInit(Arena* pArena, LogConfig config) {
     pState = arenaPushStructZero(pArena, LogState);
     pState->config = config;
 
-    return OK;
+    ok();
 }
 
 pub void logRelease(void) {

@@ -67,7 +67,7 @@ prv fn _getDeviceSwapchainSupport(
         }
     }
 
-    return OK;
+    ok();
 }
 
 prv U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
@@ -91,7 +91,7 @@ prv U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
     I32 computeQueueFamilyIndex = -1;
     I32 transferQueueFamilyIndex = -1;
 
-    // try to find a queue family that can do graphics and present to surface
+    // find a queue family that can do graphics and present to surface
     for (U32 i = 0; i < queueFamilyCount; i++) {
         VkQueueFlags flags = queueFamilyProperties[i].queueFlags;
 
@@ -146,7 +146,7 @@ prv U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
 
     // Check for swapchain support
     VulkanDeviceSwapchainSupport vulkanDeviceSwapchainSupport = {0};
-    if (failed(_getDeviceSwapchainSupport(physicalDevice, vkSurface, &vulkanDeviceSwapchainSupport))) {
+    if (catch (_getDeviceSwapchainSupport(physicalDevice, vkSurface, &vulkanDeviceSwapchainSupport))) {
         return 0;
     }
     if (vulkanDeviceSwapchainSupport.formatCount == 0 || vulkanDeviceSwapchainSupport.presentModeCount == 0) {
@@ -362,7 +362,8 @@ pub fn vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     vkPhysicalDevice = physicalDevices[maxScoreIndex];
 
     logInfo("Vulkan renderer initialized");
-    return OK;
+
+    ok();
 }
 
 pub void vulkanRendererRelease(void) {

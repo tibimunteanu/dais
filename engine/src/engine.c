@@ -26,7 +26,7 @@ prv fn _loadGameLibrary(void) {
         panic("Failed to load game function pointers");
     }
 
-    return OK;
+    ok();
 }
 
 //
@@ -87,5 +87,5 @@ pub fn engineRun(void) {
     arenaDestroy(pArena);
     pArena = NULL;
 
-    return OK;
+    ok();
 }

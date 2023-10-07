@@ -75,13 +75,14 @@
     } while (0)
 
 // BRIEF: Result
-#define ok(expr)     (expr) >= 0
-#define failed(expr) (expr) < 0
+#define ok()        return OK
+#define noerr(expr) (expr) >= 0
+#define catch(expr) (expr) < 0
 
 #define alert(expr)                                                              \
     {                                                                            \
         fn _result_ = (expr);                                                    \
-        if (failed(_result_)) {                                                  \
+        if (catch (_result_)) {                                                  \
             logError("    | -> %s() - %s:%d", __FUNCTION__, __FILE__, __LINE__); \
         }                                                                        \
     }
@@ -89,15 +90,15 @@
 #define try(expr)                                                                \
     {                                                                            \
         fn _result_ = (expr);                                                    \
-        if (failed(_result_)) {                                                  \
+        if (catch (_result_)) {                                                  \
             logFatal("    | -> %s() - %s:%d", __FUNCTION__, __FILE__, __LINE__); \
             return _result_;                                                     \
         }                                                                        \
     }
 
-#define panicErr(err, message, ...)                                                                       \
+#define panicErr(error, message, ...)                                                                     \
     logFatal("PANIC -> %s() - %s:%d - error: " message, __FUNCTION__, __FILE__, __LINE__, ##__VA_ARGS__); \
-    return err
+    return error
 
 #define panic(message, ...) panicErr(ERROR, message, ##__VA_ARGS__)
 

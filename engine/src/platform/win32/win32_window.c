@@ -67,7 +67,7 @@ pub fn windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_p
 
     ShowWindow(windowHandle, SW_SHOW);
 
-    return OK;
+    ok();
 }
 
 #endif /* if defined(OS_WINDOWS) */

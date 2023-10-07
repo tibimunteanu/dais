@@ -42,7 +42,7 @@ prv fn _utf8FromWideString(Arena* pArena, const WCHAR* source, char** out_pResul
         panic("Failed to convert string to UTF-8");
     }
 
-    return OK;
+    ok();
 }
 
 prv fn _pollMonitors(void) {
@@ -198,7 +198,7 @@ prv fn _pollMonitors(void) {
         }
     }
 
-    return OK;
+    ok();
 }
 
 prv LRESULT CALLBACK _helperWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -243,7 +243,7 @@ prv fn _cacheInstanceHandle(void) {
         panic("Failed to get the module handle");
     }
 
-    return OK;
+    ok();
 }
 
 prv fn _createHelperWindow(void) {
@@ -303,7 +303,7 @@ prv fn _createHelperWindow(void) {
         DispatchMessageW(&msg);
     }
 
-    return OK;
+    ok();
 }
 
 prv fn _destroyHelperWindow(void) {
@@ -330,7 +330,7 @@ prv fn _destroyHelperWindow(void) {
         pWin32Platform->helperWindowClass = 0;
     }
 
-    return OK;
+    ok();
 }
 
 //
@@ -356,13 +356,13 @@ pub fn platformInit(Arena* pArena) {
 
     try(_pollMonitors());
 
-    return OK;
+    ok();
 }
 
 pub fn platformRelease(void) {
     try(_destroyHelperWindow());
 
-    return OK;
+    ok();
 }
 
 #endif /* if defined(OS_WINDOWS) */

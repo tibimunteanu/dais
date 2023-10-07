@@ -116,6 +116,20 @@
       "isWholeLine": false
     },
     {
+      "text": "catch",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "noerr",
+      "color": "#009900",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
       "text": "alert",
       "color": "#ff8800",
       "backgroundColor": "rgba(0,0,0,0)",
@@ -144,14 +158,14 @@
       "isWholeLine": false
     },
     {
-      "text": "ERROR",
-      "color": "#fb4934",
+      "text": "INCOMPLETE",
+      "color": "#ff8800",
       "backgroundColor": "rgba(0,0,0,0)",
       "overviewRulerColor": "rgba(0,0,0,0)",
       "isWholeLine": false
     },
     {
-      "text": "failed",
+      "text": "ERROR",
       "color": "#fb4934",
       "backgroundColor": "rgba(0,0,0,0)",
       "overviewRulerColor": "rgba(0,0,0,0)",
@@ -180,6 +194,13 @@
     },
     {
       "text": "logFatal",
+      "color": "#fb4934",
+      "backgroundColor": "rgba(0,0,0,0)",
+      "overviewRulerColor": "rgba(0,0,0,0)",
+      "isWholeLine": false
+    },
+    {
+      "text": "logError",
       "color": "#fb4934",
       "backgroundColor": "rgba(0,0,0,0)",
       "overviewRulerColor": "rgba(0,0,0,0)",

@@ -39,7 +39,7 @@ pub fn vulkanPlatformCreateSurface(
         panic("Failed to create vulkan surface");
     }
 
-    return OK;
+    ok();
 }
 
 #endif /* if defined(OS_WINDOWS) */

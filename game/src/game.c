@@ -56,7 +56,7 @@ pub fn awake(void) {
     }
     logInfo("After temp block pos is %llu", pArena->pos);
 
-    return OK;
+    ok();
 }
 
 pub fn start(void) {
@@ -68,15 +68,15 @@ pub fn start(void) {
     while (stall--) {
     }
 
-    return OK;
+    ok();
 }
 
 pub fn update(void) {
-    return OK;
+    ok();
 }
 
 pub fn render(void) {
-    return OK;
+    ok();
 }
 
 pub fn shutdown(void) {
@@ -85,5 +85,5 @@ pub fn shutdown(void) {
     arenaDestroy(pArena);
     pArena = NULL;
 
-    return OK;
+    ok();
 }
