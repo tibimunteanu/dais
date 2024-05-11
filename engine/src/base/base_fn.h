@@ -20,8 +20,8 @@ typedef int fn;
 // NOTE: any result set enum can be used with "error(CUSTOM_RESULT)" macro
 typedef enum FnResult {
     ERROR = -1,
-    INCOMPLETE = 0,
-    OK = 1,
+    OK = 0,
+    INCOMPLETE = 5,
 } FnResult;
 
 #define ok()        return OK

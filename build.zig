@@ -10,20 +10,20 @@ pub fn build(b: *std.Build) !void {
         "-fno-sanitize=undefined",
     };
 
-    const engine = try buildEngine(b, target, optimize, &cflags);
+    const engine = try buildEngineSharedLib(b, target, optimize, &cflags);
 
-    const game = try buildGame(b, target, optimize, &cflags);
+    const game = try buildGameSharedLib(b, target, optimize, &cflags);
     game.linkLibrary(engine);
     game.step.dependOn(&engine.step);
 
-    const exe = try buildExe(b, target, optimize, &cflags);
+    const exe = try buildDaisExecutable(b, target, optimize, &cflags);
     exe.linkLibrary(engine);
     exe.step.dependOn(&game.step);
 
     addRunCommand(b, exe);
 }
 
-fn buildEngine(
+fn buildEngineSharedLib(
     b: *std.Build,
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
@@ -82,7 +82,7 @@ fn buildEngine(
     return engine;
 }
 
-fn buildGame(
+fn buildGameSharedLib(
     b: *std.Build,
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
@@ -138,7 +138,7 @@ fn buildGame(
     return game;
 }
 
-fn buildExe(
+fn buildDaisExecutable(
     b: *std.Build,
     target: std.Build.ResolvedTarget,
     optimize: std.builtin.OptimizeMode,
