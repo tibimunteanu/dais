@@ -1,29 +1,45 @@
 {
+  "env": {
+    "myIncludePaths": [
+      "${workspaceFolder}/engine/src",
+      "${workspaceFolder}/game/src",
+      "${VULKAN_SDK}/Include"
+    ],
+    "myDefines": ["_DEBUG", "EXPORT"]
+  },
   "configurations": [
     {
       "name": "Win32",
-      "includePath": [
-        "${workspaceFolder}/engine/src/**",
-        "${VULKAN_SDK}/include"
+      "includePath": ["${myIncludePaths}"],
+      "defines": [
+        "${myDefines}",
+        "OS_WINDOWS",
+        "NOMINMAX",
+        "WIN32_LEAN_AND_MEAN",
+        "_CRT_SECURE_NO_WARNINGS",
+        "VK_USE_PLATFORM_WIN32_KHR"
       ],
-      "defines": ["_DEBUG", "UNICODE", "_UNICODE", "EXPORT"],
-      "windowsSdkVersion": "10.0.22000.0",
-      "compilerPath": "C:\\Program Files\\LLVM\\bin\\clang.exe",
+      "windowsSdkVersion": "10.0.22621.0",
+      "compilerPath": "C:/llvm-mingw/bin/clang.exe",
       "cStandard": "c17",
-      "cppStandard": "c++17",
       "intelliSenseMode": "clang-x64"
     },
     {
       "name": "Linux",
-      "includePath": [
-        "${workspaceFolder}/engine/src/**",
-        "${VULKAN_SDK}/include"
-      ],
-      "defines": ["_DEBUG", "UNICODE", "_UNICODE", "EXPORT"],
+      "includePath": ["${myIncludePaths}"],
+      "defines": ["${myDefines}", "OS_LINUX", "VK_USE_PLATFORM_WAYLAND_KHR"],
       "compilerPath": "/usr/bin/clang",
       "cStandard": "c17",
-      "cppStandard": "c++17",
       "intelliSenseMode": "clang-x64"
+    },
+    {
+      "name": "Mac",
+      "includePath": ["${myIncludePaths}"],
+      "defines": ["${myDefines}", "OS_MACOS", "VK_USE_PLATFORM_METAL_EXT"],
+      "compilerPath": "/usr/bin/clang",
+      "cStandard": "c17",
+      "macFrameworkPath": ["/System/Library/Frameworks", "/Library/Frameworks"],
+      "intelliSenseMode": "macos-clang-arm64"
     }
   ],
   "version": 4

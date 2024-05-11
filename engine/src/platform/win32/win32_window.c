@@ -25,7 +25,7 @@ pub fn windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_p
         .lpszClassName = "DaisWindowClass"};
 
     if (!RegisterClassA(&windowClass)) {
-        panic("Failed to register window class");
+        error("Failed to register window class");
     }
 
     Vec4U32 windowRect = rect;
@@ -56,7 +56,7 @@ pub fn windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_p
     );
 
     if (!windowHandle) {
-        panic("Failed to create window");
+        error("Failed to create window");
     }
 
     Win32Window* win32Window = arenaPushStructZero(pArena, Win32Window);

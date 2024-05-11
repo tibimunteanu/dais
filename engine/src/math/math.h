@@ -27,7 +27,6 @@
 #define SQRT_ONE_OVER_THREE_F32 0.57735026918962576450f
 #define SQRT_ONE_OVER_THREE_F64 0.57735026918962576450
 
-API inl F32 test(void);
 API inl F32 f32Inf(void);
 API inl F64 f64Inf(void);
 API inl F32 f32NegInf(void);

@@ -50,12 +50,3 @@ typedef signed char B8;
 
 typedef char* CString;
 typedef const char* CStringLit;
-
-typedef I32 fn;
-
-// NOTE: any result set enum can be used with "panic(CUSTOM_RESULT)" macro
-typedef enum BaseResult {
-    ERROR = -1,
-    INCOMPLETE = 0,
-    OK = 1,
-} BaseResult;

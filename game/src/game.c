@@ -16,6 +16,7 @@ pub fn awake(void) {
     pArena = arenaCreate(gigabytes(1));
 
     arenaTempBlock(pArena) {
+        // TODO: turn this into arena tests
         logInfo("Begin arena temp with reserved %llu bytes and pos %llu", pArena->size, pArena->pos);
         arenaPush(pArena, 100);
         arenaPushArrayAligned(pArena, U8, 100, 8);
@@ -62,7 +63,7 @@ pub fn awake(void) {
 pub fn start(void) {
     logInfo("Starting game");
 
-    panic("Panic at START");
+    error("Error at START");
 
     U64 stall = 10000000000;
     while (stall--) {

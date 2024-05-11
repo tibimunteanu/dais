@@ -16,7 +16,7 @@ prv fn _getDeviceSwapchainSupport(
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(physicalDevice, surface, &out_pDeviceSwapchainSupport->capabilities);
 
     if (result != VK_SUCCESS) {
-        panic("Failed to get physical device surface caps");
+        error("Failed to get physical device surface caps");
     }
 
     // Surface formats
@@ -24,7 +24,7 @@ prv fn _getDeviceSwapchainSupport(
         vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &out_pDeviceSwapchainSupport->formatCount, NULL);
 
     if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-        panic("Failed to get physical device surface formats");
+        error("Failed to get physical device surface formats");
     }
 
     if (out_pDeviceSwapchainSupport->formatCount != 0) {
@@ -37,7 +37,7 @@ prv fn _getDeviceSwapchainSupport(
         );
 
         if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-            panic("Failed to get physical device surface formats");
+            error("Failed to get physical device surface formats");
         }
     }
 
@@ -47,7 +47,7 @@ prv fn _getDeviceSwapchainSupport(
     );
 
     if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-        panic("Failed to get surface present modes");
+        error("Failed to get surface present modes");
     }
 
     if (out_pDeviceSwapchainSupport->presentModeCount != 0) {
@@ -63,7 +63,7 @@ prv fn _getDeviceSwapchainSupport(
         );
 
         if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-            panic("Failed to get surface present modes");
+            error("Failed to get surface present modes");
         }
     }
 
@@ -272,7 +272,7 @@ prv U32 _getPhysicalDeviceScore(VkPhysicalDevice physicalDevice) {
 //
 pub fn vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     if (volkInitialize() != VK_SUCCESS) {
-        panic("Failed to initialize vulkan loader");
+        error("Failed to initialize vulkan loader");
     }
 
     // Instance
@@ -302,7 +302,7 @@ pub fn vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     };
 
     if (vkCreateInstance(&instanceCreateInfo, pVkAllocator, &vkInstance) != VK_SUCCESS) {
-        panic("Failed to create vulkan instance");
+        error("Failed to create vulkan instance");
     }
 
     volkLoadInstanceOnly(vkInstance);
@@ -310,7 +310,7 @@ pub fn vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     // Version
     U32 vkInstanceVersion;
     if (vkEnumerateInstanceVersion(&vkInstanceVersion) != VK_SUCCESS) {
-        panic("Failed to get vulkan instance version");
+        error("Failed to get vulkan instance version");
     }
 
     logTrace(
@@ -327,20 +327,22 @@ pub fn vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     U32 physicalDeviceCount = 0;
     VkResult result = vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, NULL);
 
-    if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-        panic("Failed to get physical device count");
+    if (result != VK_SUCCESS) {
+        error("Failed to get physical device count");
     }
 
     if (physicalDeviceCount == 0) {
-        panic("No physical devices found");
+        error("No physical devices found");
     }
 
     physicalDeviceCount = min(physicalDeviceCount, 32);
     VkPhysicalDevice physicalDevices[32];
     result = vkEnumeratePhysicalDevices(vkInstance, &physicalDeviceCount, physicalDevices);
 
-    if (result != VK_SUCCESS && result != VK_INCOMPLETE) {
-        panic("Failed to enumerate physical devices");
+    if (result == VK_INCOMPLETE) {
+        alert("Enumerate physical devices was incomplete");
+    } else if (result != VK_SUCCESS) {
+        error("Failed to enumerate physical devices");
     }
 
     U32 maxScore = 0;
@@ -356,7 +358,7 @@ pub fn vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow) {
     }
 
     if (maxScoreIndex == -1) {
-        panic("Failed to find suitable physical devices");
+        error("Failed to find suitable physical devices");
     }
 
     vkPhysicalDevice = physicalDevices[maxScoreIndex];

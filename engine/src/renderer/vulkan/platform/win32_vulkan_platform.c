@@ -21,7 +21,7 @@ pub fn vulkanPlatformCreateSurface(
         (PFN_vkCreateWin32SurfaceKHR)vkGetInstanceProcAddr(vkInstance, "vkCreateWin32SurfaceKHR");
 
     if (vkCreateWin32SurfaceKHR == NULL) {
-        panic("Failed to load vulkan create surface function pointer");
+        error("Failed to load vulkan create surface function pointer");
     }
 
     Win32Platform* win32Platform = pPlatform->pInternal;
@@ -36,7 +36,7 @@ pub fn vulkanPlatformCreateSurface(
     };
 
     if (vkCreateWin32SurfaceKHR(vkInstance, &surfaceCreateInfo, pVkAllocator, out_pVkSurface) != VK_SUCCESS) {
-        panic("Failed to create vulkan surface");
+        error("Failed to create vulkan surface");
     }
 
     ok();

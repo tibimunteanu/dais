@@ -8,10 +8,10 @@ pub Engine* pDais = NULL;
 
 //
 prv fn _loadGameLibrary(void) {
-    void* pGameLib = libraryOpen("game.dll");
+    void* pGameLib = libraryOpen("../lib/game.dll");
 
     if (!pGameLib) {
-        panic("Failed to open game library");
+        error("Failed to open game library");
     }
 
     pDais->pGame->configure = libraryLoadFunction(pGameLib, "configure");
@@ -23,7 +23,7 @@ prv fn _loadGameLibrary(void) {
 
     if (!pDais->pGame->configure || !pDais->pGame->awake || !pDais->pGame->start || !pDais->pGame->update ||
         !pDais->pGame->render || !pDais->pGame->shutdown) {
-        panic("Failed to load game function pointers");
+        error("Failed to load game function pointers");
     }
 
     ok();

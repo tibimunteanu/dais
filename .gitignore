@@ -1,2 +1,4 @@
-bin/*
-obj/*
+*.spv
+.DS_STORE
+zig-cache
+zig-out

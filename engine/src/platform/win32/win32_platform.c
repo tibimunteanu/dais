@@ -31,7 +31,7 @@ prv Monitor* _createMonitor(DISPLAY_DEVICEW* pAdapter, DISPLAY_DEVICEW* pDisplay
 prv fn _utf8FromWideString(Arena* pArena, const WCHAR* source, char** out_pResult) {
     U64 size = WideCharToMultiByte(CP_UTF8, 0, source, -1, NULL, 0, NULL, NULL);
     if (!size) {
-        panic("Failed to convert string to UTF-8");
+        error("Failed to convert string to UTF-8");
     }
 
     U64 arenaPos = pArena->pos;
@@ -39,7 +39,7 @@ prv fn _utf8FromWideString(Arena* pArena, const WCHAR* source, char** out_pResul
 
     if (!WideCharToMultiByte(CP_UTF8, 0, source, -1, *out_pResult, size, NULL, NULL)) {
         arenaPopTo(pArena, arenaPos);
-        panic("Failed to convert string to UTF-8");
+        error("Failed to convert string to UTF-8");
     }
 
     ok();
@@ -240,7 +240,7 @@ prv fn _cacheInstanceHandle(void) {
             (const WCHAR*)&pDais,
             &pWin32Platform->instance
         )) {
-        panic("Failed to get the module handle");
+        error("Failed to get the module handle");
     }
 
     ok();
@@ -258,7 +258,7 @@ prv fn _createHelperWindow(void) {
     });
 
     if (!pWin32Platform->helperWindowClass) {
-        panic("Failed to register helper window class");
+        error("Failed to register helper window class");
     }
 
     pWin32Platform->helperWindowHandle = CreateWindowExW(
@@ -277,7 +277,7 @@ prv fn _createHelperWindow(void) {
     );
 
     if (!pWin32Platform->helperWindowHandle) {
-        panic("Failed to create helper window");
+        error("Failed to create helper window");
     }
 
     // NOTE: if a STARTUPINFO is passed along, the first ShowWindow is ignored
@@ -294,7 +294,7 @@ prv fn _createHelperWindow(void) {
     );
 
     if (!pWin32Platform->deviceNotificationHandle) {
-        panic("Failed to register for device notifications");
+        error("Failed to register for device notifications");
     }
 
     MSG msg;
@@ -311,21 +311,21 @@ prv fn _destroyHelperWindow(void) {
 
     if (pWin32Platform->deviceNotificationHandle) {
         if (UnregisterDeviceNotification(pWin32Platform->deviceNotificationHandle) == 0) {
-            panic("Failed to unregister device notification");
+            error("Failed to unregister device notification");
         }
         pWin32Platform->deviceNotificationHandle = 0;
     }
 
     if (pWin32Platform->helperWindowHandle) {
         if (DestroyWindow(pWin32Platform->helperWindowHandle) == 0) {
-            panic("Failed to destroy helper window");
+            error("Failed to destroy helper window");
         }
         pWin32Platform->helperWindowHandle = 0;
     }
 
     if (pWin32Platform->helperWindowClass) {
         if (UnregisterClassW(MAKEINTATOM(pWin32Platform->helperWindowClass), pWin32Platform->instance) == 0) {
-            panic("Failed to unregister helper window class");
+            error("Failed to unregister helper window class");
         }
         pWin32Platform->helperWindowClass = 0;
     }

@@ -26,12 +26,12 @@
 
 - favor `out_pResult` pointers for out values
 - most functions should either be `fn` or `void`
-- if a function is `fn`, we can use `try()`, `alert()`, `panic()`, to propagate errors
+- if a function is `fn`, we can use `try()`, `alert()`, `error()`, to propagate errors
 - we can just test a `fn` result with `catch()` and `noerr()`
 - use `ok()` to signal that a function executed successfully
-- we can define new result set enums and use them with `panic()`
+- we can define new result set enums and use them with `error()`
 - result set enums can alternatively be handled in switch cases
-- when a `panic()` occurs, the full stack trace is logged
+- when an `error()` occurs, the full stack trace is logged
 
 - IDEA: we can actually make Result a union and use a macro like `Result(T)` for convenience.
   error sets could use the range [MIN_I16, MAX_I16] and we use the top 16 bits

@@ -2,13 +2,13 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Launch Sandbox",
+      "name": "Launch Dais",
       "type": "cppdbg",
       "request": "launch",
       "stopAtEntry": false,
-      "cwd": "${workspaceFolder}/bin/",
+      "cwd": "${workspaceFolder}/",
       "environment": [],
-      "program": "${workspaceFolder}/bin/dais",
+      "program": "${workspaceFolder}/zig-out/bin/dais",
       "osx": {
         "MIMode": "lldb",
         "targetArchitecture": "arm64",
@@ -19,7 +19,7 @@
       },
       "windows": {
         "type": "cppvsdbg",
-        "program": "${workspaceFolder}/bin/dais.exe",
+        "program": "${workspaceFolder}/zig-out/bin/dais.exe",
         "console": "integratedTerminal"
       }
     }
