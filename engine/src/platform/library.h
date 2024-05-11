@@ -2,6 +2,6 @@
 
 #include "base/base.h"
 
-API void* libraryOpen(CStringLit path);
+API void* libraryOpen(const CString path);
 API void libraryClose(void* pHandle);
-API void* libraryLoadFunction(void* pHandle, CStringLit name);
+API void* libraryLoadFunction(void* pHandle, const CString name);

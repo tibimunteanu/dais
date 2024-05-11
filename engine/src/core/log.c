@@ -23,7 +23,7 @@ pub void logRelease(void) {
     pState = NULL;
 }
 
-pub void logOutput(LogLevel level, CStringLit message, ...) {
+pub void logOutput(LogLevel level, const CString message, ...) {
     if (pState == NULL) {
         return;
     }

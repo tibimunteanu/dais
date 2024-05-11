@@ -29,7 +29,7 @@ API fn logInit(Arena* pArena, LogConfig config);
 
 API void logRelease(void);
 
-API void logOutput(LogLevel level, CStringLit message, ...);
+API void logOutput(LogLevel level, const CString message, ...);
 
 //
 #define logFatal(message, ...) logOutput(LOG_LEVEL_FATAL, message, ##__VA_ARGS__);

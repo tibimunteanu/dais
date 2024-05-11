@@ -9,7 +9,7 @@
     #include "core/arena.h"
     #include "math/math_types.h"
 
-pub fn windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_pWindow) {
+pub fn windowCreate(Arena* pArena, const CString title, Vec4U32 rect, Window* out_pWindow) {
     Win32Platform* win32Platform = pDais->pPlatform->pInternal;
 
     memoryZero(out_pWindow, sizeof(Window));
@@ -22,7 +22,8 @@ pub fn windowCreate(Arena* pArena, CStringLit title, Vec4U32 rect, Window* out_p
         .hInstance = win32Platform->instance,
         .hIcon = icon,
         .hCursor = LoadCursor(NULL, IDC_ARROW),
-        .lpszClassName = "DaisWindowClass"};
+        .lpszClassName = "DaisWindowClass"
+    };
 
     if (!RegisterClassA(&windowClass)) {
         error("Failed to register window class");

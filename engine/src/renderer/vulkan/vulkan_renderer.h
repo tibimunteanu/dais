@@ -8,7 +8,7 @@ API fn vulkanRendererInit(Arena* pArena, Platform* pPlatform, Window* pWindow);
 
 API void vulkanRendererRelease(void);
 
-CStringLit vulkanPlatformGetSurfaceExtensionName(void);
+const CString vulkanPlatformGetSurfaceExtensionName(void);
 
 fn vulkanPlatformCreateSurface(
     VkInstance vkInstance,
